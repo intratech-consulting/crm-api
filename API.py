@@ -3,6 +3,7 @@ import re
 import requests
 import json
 from datetime import datetime
+import xml.etree.ElementTree as ET
 
 ACCESS_TOKEN = ''
 DOMAIN_NAME = ''
@@ -25,30 +26,47 @@ def authenticate():
     print("Domain Name:", DOMAIN_NAME)
     print("Access Token:", ACCESS_TOKEN)
 
-# Get the leads
-def get_lead():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,FirstName,LastName,Email,Phone,Company+FROM+Lead'
+# Get users api call
+def get_users():
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Name,First_name__c,Last_name__c,Email__c,Company__c,Company_email__c+FROM+Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
     payload = {}
 
     response = requests.request("GET", url, headers=headers, data=payload)
-    print(response.text)
+    data = response.json().get("records", [])
+    root = ET.Element("Portal_Users")
 
-# Add a lead
-def add_lead(Salutation = None, FirstName = None, LastName = None, Company = None):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Lead'
+    # Makes json data into xml data
+    for record in data:
+        user_element = ET.SubElement(root, "Portal_user__c")
+        for field, value in record.items():
+            if field == "attributes":
+                continue
+            field_element = ET.SubElement(user_element, field)
+            field_element.text = str(value)
+
+    xml_string = ET.tostring(root, encoding="unicode", method="xml")
+    print(xml_string)
+
+# Add an user api call
+def add_user(FirstName = None, LastName = None, Email = None, Company = None, CompanyEmail = None, SignupSource = None):
+    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/xml'
     }
-    payload = json.dumps({
-        "Salutation": Salutation,
-        "FirstName": FirstName,
-        "LastName": LastName,
-        "Company": Company
-    })
+    payload = f'''
+        <Portal_user__c>
+            <First_name__c>{FirstName}</First_name__c>
+            <Last_name__c>{LastName}</Last_name__c>
+            <Email__c>{Email}</Email__c>
+            <Company__c>{Company}</Company__c>
+            <Company_email__c>{CompanyEmail}</Company_email__c>
+            <Signup_source__c>{SignupSource}</Signup_source__c>
+        </Portal_user__c>
+    '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
@@ -190,11 +208,6 @@ def add_company(Name = None, Phone = None, HouseNumber = None, PostalCode = None
 
 if __name__ == '__main__':
     authenticate()
-    get_lead()
-    get_contact()
-    get_account()
-    get_talk()
-    get_attendance()
-    get_company()
+    get_users()
 
     print('Done!')
