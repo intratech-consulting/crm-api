@@ -28,7 +28,7 @@ def authenticate():
 
 # Get users api call
 def get_users():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Name,First_name__c,Last_name__c,Email__c,Company__c,Company_email__c,Signup_source__c+FROM+Portal_user__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,First_name__c,Last_name__c,Email__c,Company__c,Company_email__c,Signup_source__c+FROM+Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -159,26 +159,41 @@ def add_talk(Name = None, Date = None):
 
 # Get the attendances
 def get_attendance():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Talk__c,Contact__c+FROM+talkAttendance__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Talk__c,Portal_user__c+FROM+talkAttendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
     payload = {}
 
     response = requests.request("GET", url, headers=headers, data=payload)
-    print(response.text)
+    data = response.json().get("records", [])
+    root = ET.Element("Attendance")
+
+    # Makes json data into xml data
+    for record in data:
+        user_element = ET.SubElement(root, "Attendance__c")
+        for field, value in record.items():
+            if field == "attributes":
+                continue
+            field_element = ET.SubElement(user_element, field)
+            field_element.text = str(value)
+
+    xml_string = ET.tostring(root, encoding="unicode", method="xml")
+    print(xml_string)
 
 # Add an attendance
-def add_attendance(Talk = None, Contact = None):
+def add_attendance(User = None, Talk = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/talkAttendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/xml'
     }
-    payload = json.dumps({
-        "Talk__c": Talk,
-        "Contact__c": Contact
-    })
+    payload = f'''
+        <TalkAttendance__c>
+            <Portal_user__c>{User}</Portal_user__c>
+            <Talk__c>{Talk}</Talk__c>
+        </TalkAttendance__c>
+    '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
@@ -186,7 +201,7 @@ def add_attendance(Talk = None, Contact = None):
 
 if __name__ == '__main__':
     authenticate()
-    add_talk('Test Talk', datetime.now())
-    get_talk()
+    add_attendance('a04Qy000000C0fNIAS', 'a00Qy00000Be2ZTIAZ')
+    get_attendance()
 
     print('Done!')
