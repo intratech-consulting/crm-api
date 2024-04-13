@@ -116,7 +116,7 @@ def add_company(Name = None, Phone = None, StreetName = None, HouseNumber = None
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
 
-# Get the talks
+# Get talks api call
 def get_talk():
     url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Date__c+FROM+Talk__c'
     headers = {
@@ -125,19 +125,34 @@ def get_talk():
     payload = {}
 
     response = requests.request("GET", url, headers=headers, data=payload)
-    print(response.text)
+    data = response.json().get("records", [])
+    root = ET.Element("Talks")
 
-# Add a talk
+    # Makes json data into xml data
+    for record in data:
+        user_element = ET.SubElement(root, "Talk__c")
+        for field, value in record.items():
+            if field == "attributes":
+                continue
+            field_element = ET.SubElement(user_element, field)
+            field_element.text = str(value)
+
+    xml_string = ET.tostring(root, encoding="unicode", method="xml")
+    print(xml_string)
+
+# Add a talk api call
 def add_talk(Name = None, Date = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Talk__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/xml'
     }
-    payload = json.dumps({
-        "Name": Name,
-        "Date__c": Date.isoformat()
-    })
+    payload = f'''
+        <Talk__c>
+            <Name>{Name}</Name>
+            <Date__c>{Date.isoformat()}</Date__c>
+        </Talk__c>
+    '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
@@ -171,7 +186,7 @@ def add_attendance(Talk = None, Contact = None):
 
 if __name__ == '__main__':
     authenticate()
-    add_company(Name='TestCompany', Phone='123456789', StreetName='TestStreet', HouseNumber='1', PostalCode='1234', State='TestState')
-    get_companies()
+    add_talk('Test Talk', datetime.now())
+    get_talk()
 
     print('Done!')
