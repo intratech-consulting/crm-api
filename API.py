@@ -28,7 +28,7 @@ def authenticate():
 
 # Get users api call
 def get_users():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Name,First_name__c,Last_name__c,Email__c,Company__c,Company_email__c+FROM+Portal_user__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Name,First_name__c,Last_name__c,Email__c,Company__c,Company_email__c,Signup_source__c+FROM+Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -71,56 +71,47 @@ def add_user(FirstName = None, LastName = None, Email = None, Company = None, Co
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
 
-# Get the contacts
-def get_contact():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,FirstName,LastName,Email,Phone+FROM+Contact'
+# Get companies api call
+def get_companies():
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Phone__c,Street_name__c,House_number__c,Zip_Postal_code__c,State_Province__c+FROM+Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
     payload = {}
 
     response = requests.request("GET", url, headers=headers, data=payload)
-    print(response.text)
+    data = response.json().get("records", [])
+    root = ET.Element("Companies")
 
-# Add a contact
-def add_contact(Salutation = None, FirstName = None, LastName = None):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Contact'
+    # Makes json data into xml data
+    for record in data:
+        user_element = ET.SubElement(root, "Company__c")
+        for field, value in record.items():
+            if field == "attributes":
+                continue
+            field_element = ET.SubElement(user_element, field)
+            field_element.text = str(value)
+
+    xml_string = ET.tostring(root, encoding="unicode", method="xml")
+    print(xml_string)
+
+# Add a company api call
+def add_company(Name = None, Phone = None, StreetName = None, HouseNumber = None, PostalCode = None, State = None):
+    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/xml'
     }
-    payload = json.dumps({
-        "Salutation": Salutation,
-        "FirstName": FirstName,
-        "LastName": LastName
-    })
-
-    response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
-
-# Get the accounts
-def get_account():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Phone,Talk__c+FROM+Account'
-    headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
-    }
-    payload = {}
-
-    response = requests.request("GET", url, headers=headers, data=payload)
-    print(response.text)
-
-# Add an account
-def add_account(Name = None, Phone = None, Talk = None):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Account'
-    headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
-        'Content-Type': 'application/json'
-    }
-    payload = json.dumps({
-        "Name": Name,
-        "Phone": Phone,
-        "Talk__c": Talk
-    })
+    payload = f'''
+        <Company__c>
+            <Name>{Name}</Name>
+            <Phone__c>{Phone}</Phone__c>
+            <Street_name__c>{StreetName}</Street_name__c>
+            <House_number__c>{HouseNumber}</House_number__c>
+            <Zip_Postal_code__c>{PostalCode}</Zip_Postal_code__c>
+            <State_Province__c>{State}</State_Province__c>
+        </Company__c>
+    '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
@@ -177,37 +168,10 @@ def add_attendance(Talk = None, Contact = None):
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
 
-# Get the companies
-def get_company():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Phone__c+FROM+Company__c'
-    headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
-    }
-    payload = {}
-
-    response = requests.request("GET", url, headers=headers, data=payload)
-    print(response.text)
-
-# Add a company
-def add_company(Name = None, Phone = None, HouseNumber = None, PostalCode = None):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
-    headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
-        'Content-Type': 'application/json'
-    }
-    payload = json.dumps({
-        "Name": Name,
-        "Phone__c": Phone,
-        "House_number__c": HouseNumber,
-        "Zip_Postal_code__c": PostalCode
-    })
-
-    response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
-
 
 if __name__ == '__main__':
     authenticate()
-    get_users()
+    add_company(Name='TestCompany', Phone='123456789', StreetName='TestStreet', HouseNumber='1', PostalCode='1234', State='TestState')
+    get_companies()
 
     print('Done!')
