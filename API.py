@@ -1,29 +1,39 @@
-import subprocess
-import re
 import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
+import jwt
+import time
 
-ACCESS_TOKEN = ''
-DOMAIN_NAME = ''
+KEY_FILE = 'salesforce.key' #Key file
+ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
+SUBJECT = 'admin@ehb.be' #Subject
+DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/'
 
 # Get the access token and domain name
 def authenticate():
-    global ACCESS_TOKEN, DOMAIN_NAME
-    COMMAND = 'sf org display --target-org admin@ehb.be'
-    response = subprocess.run(COMMAND, shell=True, check=True, capture_output=True, text=True)
-    output = response.stdout
+    with open(KEY_FILE) as file:
+        private_key = file.read()
 
-    access_token_match = re.search(r'Access Token\s+(.*)', output)
-    if access_token_match:
-        ACCESS_TOKEN = access_token_match.group(1).strip()
+    claimSet = {
+        'iss': ISSUER,
+        'exp': int(datetime.now().timestamp()) + 300,
+        'aud': 'https://login.salesforce.com',
+        'sub': SUBJECT
+    }
 
-    domain_match = re.search(r'Instance Url\s+(.*)', output)
-    if domain_match:
-        DOMAIN_NAME = domain_match.group(1).strip()
+    assertion = jwt.encode(claimSet, private_key, algorithm='RS256', headers={'alg': 'RS256'})
+    print(assertion)
 
-    print("Domain Name:", DOMAIN_NAME)
-    print("Access Token:", ACCESS_TOKEN)
+    req = requests.post('https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/oauth2/token', data={
+        'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        'assertion': assertion
+    })
+
+    response = req.json()
+    global ACCESS_TOKEN
+    ACCESS_TOKEN = response['access_token']
+    print(ACCESS_TOKEN)
+
 
 # Get users api call
 def get_users():
@@ -202,3 +212,5 @@ def add_attendance(User = None, Talk = None):
 
 if __name__ == '__main__':
     authenticate()
+    while True:
+        time.sleep(.1)

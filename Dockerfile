@@ -21,6 +21,7 @@ ENV PATH="/root/cli/sf/bin:${PATH}"
 COPY consumer.py .
 COPY API.py .
 COPY requirements.txt .
+COPY salesforce.key .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
