@@ -200,7 +200,3 @@ def add_attendance(User = None, Talk = None):
 
 if __name__ == '__main__':
     authenticate()
-    add_attendance('a04Qy000000C0fNIAS', 'a00Qy00000Be2ZTIAZ')
-    get_attendance()
-
-    print('Done!')
