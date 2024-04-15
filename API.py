@@ -5,7 +5,7 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 
 ACCESS_TOKEN = ''
-DOMAIN_NAME = ''
+DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/'
 
 # Get the access token and domain name
 def authenticate():
