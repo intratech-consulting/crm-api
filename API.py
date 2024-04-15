@@ -50,7 +50,7 @@ def get_users():
     print(xml_string)
 
 # Add an user api call
-def add_user(FirstName = None, LastName = None, Email = None, Company = None, CompanyEmail = None, SignupSource = None):
+def add_user(FirstName = None, LastName = None, Email = None, Company = None, CompanyEmail = None, Source = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -63,7 +63,7 @@ def add_user(FirstName = None, LastName = None, Email = None, Company = None, Co
             <Email__c>{Email}</Email__c>
             <Company__c>{Company}</Company__c>
             <Company_email__c>{CompanyEmail}</Company_email__c>
-            <Signup_source__c>{SignupSource}</Signup_source__c>
+            <Signup_source__c>{Source}</Signup_source__c>
         </Portal_user__c>
     '''
 
@@ -95,7 +95,7 @@ def get_companies():
     print(xml_string)
 
 # Add a company api call
-def add_company(Name = None, Phone = None, StreetName = None, HouseNumber = None, PostalCode = None, State = None):
+def add_company(Name = None, Type = None, PhoneNo = None, Email = None, Street = None, HouseNumber = None, zip = None, Province = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -104,11 +104,13 @@ def add_company(Name = None, Phone = None, StreetName = None, HouseNumber = None
     payload = f'''
         <Company__c>
             <Name>{Name}</Name>
-            <Phone__c>{Phone}</Phone__c>
-            <Street_name__c>{StreetName}</Street_name__c>
+            <Type__c>{Type}</Type__c>
+            <Phone__c>{PhoneNo}</Phone__c>
+            <Contact_email__c>{Email}</Contact_email__c>
+            <Street_name__c>{Street}</Street_name__c>
             <House_number__c>{HouseNumber}</House_number__c>
-            <Zip_Postal_code__c>{PostalCode}</Zip_Postal_code__c>
-            <State_Province__c>{State}</State_Province__c>
+            <Zip_Postal_code__c>{zip}</Zip_Postal_code__c>
+            <State_Province__c>{Province}</State_Province__c>
         </Company__c>
     '''
 
@@ -149,7 +151,7 @@ def add_talk(Name = None, Date = None):
     payload = f'''
         <Talk__c>
             <Name>{Name}</Name>
-            <Date__c>{Date.isoformat()}</Date__c>
+            <Date__c>{Date}</Date__c>
         </Talk__c>
     '''
 
