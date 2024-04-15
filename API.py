@@ -1,7 +1,6 @@
 import subprocess
 import re
 import requests
-import json
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
