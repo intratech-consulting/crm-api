@@ -11,30 +11,62 @@ def main():
     channel.queue_declare(queue='CRM')
 
     def callback(ch, method, properties, body):
-        print(f" [x] Received {body}")
+
+        # Parces the xml string
         xml_string = body
-
-        # Convert bytes to string and remove leading/trailing whitespace
         xml_string = xml_string.decode().strip()
-        # Parse XML
         root = ET.fromstring(xml_string)
-        
-        # Extract each field
-        fields = {}
-        for child in root:
-            fields[child.tag] = child.text.strip()
 
-        # Call the add_user function with extracted fields
-        API.add_user(
-            fields['First_name__c'],
-            fields['Last_name__c'],
-            fields['Email__c'],
-            fields['Company__c'],
-            fields['Company_email__c'],
-            fields['Signup_source__c']
-        )
+        match root.tag:
+            case 'portal_users':
+                try:
+                    for child in root:
+                        variables = {}
+                        for field in child:
+                            variables[field.tag] = field.text.strip()
+                        API.add_user(**variables)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag = method.delivery_tag)
+                    print("[ERROR] Requeued Message", e)
 
-    channel.basic_consume(queue='CRM', on_message_callback=callback, auto_ack=True)
+            case 'companies':
+                try:
+                    for child in root:
+                        variables = {}
+                        for field in child:
+                            if field.tag == "Address":
+                                for address_field in field:
+                                    variables[address_field.tag] = address_field.text.strip()
+                            else:
+                                variables[field.tag] = field.text.strip()
+                        API.add_company(**variables)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag = method.delivery_tag)
+                    print("[ERROR] Requeued Message", e)
+
+            case 'Talks':
+                try:
+                    for child in root:
+                        variables = {}
+                        for field in child:
+                            variables[field.tag] = field.text.strip()
+                        API.add_talk(**variables)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag = method.delivery_tag)
+                    print("[ERROR] Requeued Message", e)
+
+            case 'Talk_attendances':
+                print("add attendance")
+                pass
+
+            case _:
+                ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                print("[ERROR] This message is not valid")
+
+    channel.basic_consume(queue='CRM', on_message_callback=callback, auto_ack=False)
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
