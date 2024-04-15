@@ -1,9 +1,8 @@
-import subprocess
-import re
 import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import jwt
+import time
 
 KEY_FILE = 'salesforce.key' #Key file
 ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
@@ -213,3 +212,5 @@ def add_attendance(User = None, Talk = None):
 
 if __name__ == '__main__':
     authenticate()
+    while True:
+        time.sleep(.1)
