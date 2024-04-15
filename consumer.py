@@ -27,7 +27,7 @@ def main():
                         API.add_user(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag)
+                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                     print("[ERROR] Requeued Message", e)
 
             case 'companies':
@@ -43,7 +43,7 @@ def main():
                         API.add_company(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag)
+                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                     print("[ERROR] Requeued Message", e)
 
             case 'Talks':
@@ -55,7 +55,7 @@ def main():
                         API.add_talk(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag)
+                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                     print("[ERROR] Requeued Message", e)
 
             case 'Talk_attendances':
