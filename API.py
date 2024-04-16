@@ -57,7 +57,7 @@ def get_users():
     payload = {}
 
     try:
-        response = requests.request("GET", url, headers=headers)
+        response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
         
@@ -65,7 +65,7 @@ def get_users():
 
         # Makes json data into xml data
         for record in data:
-            user_element = ET.SubElement(root, "User__c")
+            user_element = ET.SubElement(root, "Users__c")
             for field, value in record.items():
                 if field == "attributes":
                     continue
@@ -74,6 +74,7 @@ def get_users():
 
         xml_string = ET.tostring(root, encoding="unicode", method="xml")
         logger.info("get users: " + xml_string)
+        return xml_string
     except Exception as e:
         print("Error fetching users from Salesforce:", e)
         return None
