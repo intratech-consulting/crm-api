@@ -130,7 +130,7 @@ def get_companies():
     logger.info("get companies: " + xml_string)
 
 # Add a company api call
-def add_company(Name = None, Type = None, PhoneNo = None, Email = None, Street = None, HouseNumber = None, zip = None, Province = None):
+def add_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -138,14 +138,18 @@ def add_company(Name = None, Type = None, PhoneNo = None, Email = None, Street =
     }
     payload = f'''
         <Company__c>
-            <Name>{Name}</Name>
-            <Type__c>{Type}</Type__c>
-            <Phone__c>{PhoneNo}</Phone__c>
-            <Contact_email__c>{Email}</Contact_email__c>
-            <Street_name__c>{Street}</Street_name__c>
-            <House_number__c>{HouseNumber}</House_number__c>
-            <Zip_Postal_code__c>{zip}</Zip_Postal_code__c>
-            <State_Province__c>{Province}</State_Province__c>
+            <id__c>{id}</id__c>
+            <name>{name}</name>
+            <email__c>{email}</email__c>
+            <telephone__c>{telephone}</telephone__c>
+            <country__c>{country}</country__c>
+            <state__c>{state}</state__c>
+            <city__c>{city}</city__c>
+            <zip__c>{zip}</zip__c>
+            <street__c>{street}</street__c>
+            <house_number__c>{house_number}</house_number__c>
+            <type__c>{type}</type__c>
+            <invoice__c>{invoice}</invoice__c>
         </Company__c>
     '''
 
@@ -233,7 +237,3 @@ def add_attendance(User = None, Talk = None):
 
     response = requests.request("POST", url, headers=headers, data=payload)
     logger.info("add attendance" + response.text)
-
-print("starting...")
-authenticate()
-get_companies()
