@@ -57,8 +57,10 @@ def get_users():
     payload = {}
 
     try:
-        response = requests.request("GET", url, headers=headers, data=payload)
+        response = requests.request("GET", url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        
         root = ET.Element("Users")
 
         # Makes json data into xml data
