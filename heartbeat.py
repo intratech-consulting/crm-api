@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import logging
 
+
 def main(timestamp):
     logger = logging.getLogger(__name__)
 
@@ -58,14 +59,15 @@ def main(timestamp):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
-    channel.queue_declare(queue='heartbeat_queue')
+    channel.queue_declare(queue='heartbeat_queue', durable=True)
     channel.basic_publish(exchange='', routing_key='heartbeat_queue', body=heartbeat_xml)
+
 
 if __name__ == '__main__':
     try:
         while True:
             main(datetime.now())
-            time.sleep(2)
+            time.sleep(1)
     except KeyboardInterrupt:
         print('Interrupted')
         try:
