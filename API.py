@@ -50,7 +50,7 @@ def authenticate():
 
 # Get users api call
 def get_users():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Name,First_name__c,Last_name__c,Email__c,PhoneNumber__c,Birthday__c,Country__c,State__c,City__c,Zip__c,Street__c,HouseNumber__c,Company_email__c,Company__c,Signup_source__c,Type__c,Invoice__c+FROM+Portal_user__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+user_id__c,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -58,7 +58,7 @@ def get_users():
 
     response = requests.request("GET", url, headers=headers, data=payload)
     data = response.json().get("records", [])
-    root = ET.Element("Portal_Users")
+    root = ET.Element("user")
 
     # Makes json data into xml data
     for record in data:
@@ -233,3 +233,7 @@ def add_attendance(User = None, Talk = None):
 
     response = requests.request("POST", url, headers=headers, data=payload)
     logger.info("add attendance" + response.text)
+
+print("starting...")
+authenticate()
+get_users()
