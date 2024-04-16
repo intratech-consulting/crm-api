@@ -34,29 +34,33 @@ def main():
         root = ET.fromstring(xml_string)
 
         match root.tag:
-            case 'portal_users':
+            case 'user':
                 try:
+                    variables = {}
                     for child in root:
-                        variables = {}
-                        for field in child:
-                            variables[field.tag] = field.text.strip()
-                        API.add_user(**variables)
+                        if child.tag == "address":
+                            for address_field in child:
+                                variables[address_field.tag] = address_field.text
+                        else:
+                            variables[child.tag] = child.text
+                    API.add_user(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                     logger.error("[ERROR] Requeued Message", e)
 
-            case 'companies':
+            case 'company':
                 try:
+                    variables = {}
                     for child in root:
-                        variables = {}
-                        for field in child:
-                            if field.tag == "Address":
-                                for address_field in field:
-                                    variables[address_field.tag] = address_field.text.strip()
-                            else:
-                                variables[field.tag] = field.text.strip()
-                        API.add_company(**variables)
+                        if child.tag == "address":
+                            for address_field in child:
+                                variables[address_field.tag] = address_field.text
+                        elif child.tag == "logo":
+                            pass
+                        else:
+                            variables[child.tag] = child.text
+                    API.add_company(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
