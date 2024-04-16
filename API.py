@@ -11,7 +11,17 @@ SUBJECT = 'admin@ehb.be' #Subject
 DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/'
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+
+# Create a file handler
+handler = logging.FileHandler('api.log')
+handler.setLevel(logging.INFO)
+
+# Create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(handler)
 
 # Get the access token and domain name
 def authenticate():
