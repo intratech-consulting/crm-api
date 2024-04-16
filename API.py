@@ -107,7 +107,7 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
 
 # Get companies api call
 def get_companies():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Phone__c,Street_name__c,House_number__c,Zip_Postal_code__c,State_Province__c+FROM+Company__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+id__c,name__c,email__c,telephone__c,country__c,state__c,city__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -236,4 +236,4 @@ def add_attendance(User = None, Talk = None):
 
 print("starting...")
 authenticate()
-get_users()
+get_companies()
