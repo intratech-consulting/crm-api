@@ -56,21 +56,27 @@ def get_users():
     }
     payload = {}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
-    data = response.json().get("records", [])
-    root = ET.Element("user")
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        data = response.json().get("records", [])
+        
+        root = ET.Element("Users")
 
-    # Makes json data into xml data
-    for record in data:
-        user_element = ET.SubElement(root, "Portal_user")
-        for field, value in record.items():
-            if field == "attributes":
-                continue
-            field_element = ET.SubElement(user_element, field)
-            field_element.text = str(value)
+        # Makes json data into xml data
+        for record in data:
+            user_element = ET.SubElement(root, "Users__c")
+            for field, value in record.items():
+                if field == "attributes":
+                    continue
+                field_element = ET.SubElement(user_element, field)
+                field_element.text = str(value)
 
-    xml_string = ET.tostring(root, encoding="unicode", method="xml")
-    logger.info("get users: " + xml_string)
+        xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        return xml_string
+    except Exception as e:
+        print("Error fetching users from Salesforce:", e)
+        return None
 
 # Add an user api call
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street, house_number, company_email = "", company_id = "", source = "", user_role = "", invoice = ""):
