@@ -23,6 +23,10 @@ COPY API.py .
 COPY requirements.txt .
 COPY salesforce.key .
 COPY heartbeat.py .
+COPY sender_users.py .
+COPY sender_companies.py .
+COPY sender_talks.py .
+COPY sender_attendances.py .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt

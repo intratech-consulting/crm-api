@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pika
 from API import get_companies, authenticate
+import time
 
 def send_message_to_rabbitmq(message):
     # Establish connection to RabbitMQ
@@ -22,12 +23,20 @@ def send_message_to_rabbitmq(message):
 # Authenticate to Salesforce
 authenticate()
 
-# Get users from Salesforce
-companies_xml = get_companies()
+# Initialize variable to keep track of the last retrieved companies
+last_company_xml = ""
 
-# Check if users_xml is not None before sending to RabbitMQ
-if companies_xml is not None:
-    # Send users to RabbitMQ
-    send_message_to_rabbitmq(companies_xml)
-else:
-    print("No users data retrieved from Salesforce.")
+# Infinite loop to continuously check for new companies
+while True:
+    # Get the current companies from Salesforce
+    company_xml = get_companies()
+    
+    # Check if there are new companies
+    if company_xml != last_company_xml:
+        # Send the new companies to RabbitMQ
+        send_message_to_rabbitmq(company_xml)
+        # Update the last retrieved companies
+        last_company_xml = company_xml
+
+    # Wait for 10 minutes before checking again
+    time.sleep(600)

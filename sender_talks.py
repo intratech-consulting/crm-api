@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pika
 from API import get_talk, authenticate
+import time
 
 def send_message_to_rabbitmq(message):
     # Establish connection to RabbitMQ
@@ -22,12 +23,20 @@ def send_message_to_rabbitmq(message):
 # Authenticate to Salesforce
 authenticate()
 
-# Get users from Salesforce
-talk_xml = get_talk()
+# Initialize variable to keep track of the last retrieved talks
+last_talk_xml = ""
 
-# Check if users_xml is not None before sending to RabbitMQ
-if talk_xml is not None:
-    # Send users to RabbitMQ
-    send_message_to_rabbitmq(talk_xml)
-else:
-    print("No users data retrieved from Salesforce.")
+# Infinite loop to continuously check for new talks
+while True:
+    # Get the current talks from Salesforce
+    talk_xml = get_talk()
+    
+    # Check if there are new talks
+    if talk_xml != last_talk_xml:
+        # Send the new talks to RabbitMQ
+        send_message_to_rabbitmq(talk_xml)
+        # Update the last retrieved talks
+        last_talk_xml = talk_xml
+
+    # Wait for 10 minutes before checking again
+    time.sleep(600)
