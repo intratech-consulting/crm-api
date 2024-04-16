@@ -9,6 +9,7 @@ KEY_FILE = 'salesforce.key' #Key file
 ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
 SUBJECT = 'admin@ehb.be' #Subject
 DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/'
+ACCESS_TOKEN = ''
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ def authenticate():
 
 # Get users api call
 def get_users():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,First_name__c,Last_name__c,Email__c,Company__c,Company_email__c,Signup_source__c+FROM+Portal_user__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Name,First_name__c,Last_name__c,Email__c,PhoneNumber__c,Birthday__c,Country__c,State__c,City__c,Zip__c,Street__c,HouseNumber__c,Company_email__c,Company__c,Signup_source__c,Type__c,Invoice__c+FROM+Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -61,7 +62,7 @@ def get_users():
 
     # Makes json data into xml data
     for record in data:
-        user_element = ET.SubElement(root, "Portal_user__c")
+        user_element = ET.SubElement(root, "Portal_user")
         for field, value in record.items():
             if field == "attributes":
                 continue
@@ -70,9 +71,10 @@ def get_users():
 
     xml_string = ET.tostring(root, encoding="unicode", method="xml")
     logger.info("get users: " + xml_string)
+    print(xml_string)
 
 # Add an user api call
-def add_user(FirstName = None, LastName = None, Email = None, Company = None, CompanyEmail = None, Source = None):
+def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street, house_number, company_email = "", company_id = "", source = "", user_role = "", invoice = ""):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Portal_user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -80,12 +82,23 @@ def add_user(FirstName = None, LastName = None, Email = None, Company = None, Co
     }
     payload = f'''
         <Portal_user__c>
-            <First_name__c>{FirstName}</First_name__c>
-            <Last_name__c>{LastName}</Last_name__c>
-            <Email__c>{Email}</Email__c>
-            <Company__c>{Company}</Company__c>
-            <Company_email__c>{CompanyEmail}</Company_email__c>
-            <Signup_source__c>{Source}</Signup_source__c>
+            <user_id__c>{user_id}</user_id__c>
+            <first_name__c>{first_name}</first_name__c>
+            <last_name__c>{last_name}</last_name__c>
+            <email__c>{email}</email__c>
+            <telephone__c>{telephone}</telephone__c>
+            <birthday__c>{birthday}</birthday__c>
+            <country__c>{country}</country__c>
+            <state__c>{state}</state__c>
+            <city__c>{city}</city__c>
+            <zip__c>{zip}</zip__c>
+            <street__c>{street}</street__c>
+            <house_number__c>{house_number}</house_number__c>
+            <company_email__c>{company_email}</company_email__c>
+            <company_id__c>{company_id}</company_id__c>
+            <source__c>{source}</source__c>
+            <user_role__c>{user_role}</user_role__c>
+            <invoice__c>{invoice}</invoice__c>
         </Portal_user__c>
     '''
 
