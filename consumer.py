@@ -59,8 +59,16 @@ def main():
                     print("[ERROR] Requeued Message", e)
 
             case 'Talk_attendances':
-                print("add attendance")
-                pass
+                try:
+                    for child in root:
+                        variables = {}
+                        for field in child:
+                            variables[field.tag] = field.text.strip()
+                        API.add_attendance(**variables)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    print("[ERROR] Requeued Message", e)
 
             case _:
                 ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
