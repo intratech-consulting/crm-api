@@ -1,6 +1,7 @@
-pika==1.2.0
-requests==2.26.0
+pika
+requests
 PyJWT
 cryptography
-lxml==5.2.1
+lxml
+logging
 

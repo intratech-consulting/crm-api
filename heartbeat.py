@@ -2,8 +2,22 @@ from lxml import etree
 import pika, sys, os
 import time
 from datetime import datetime
+import logging
 
 def main(timestamp):
+    logger = logging.getLogger(__name__)
+
+    # Create a file handler
+    handler = logging.FileHandler('heartbeat.log')
+    handler.setLevel(logging.INFO)
+
+    # Create a logging format
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(handler)
+
     # Define your XML and XSD as strings
     heartbeat_xml = f'''
     <Heartbeat>
@@ -36,9 +50,9 @@ def main(timestamp):
 
     # Validate
     if schema.validate(xml_doc):
-        print('XML is valid')
+        logger.info('XML is valid')
     else:
-        print('XML is not valid')
+        logger.error('XML is not valid')
 
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
