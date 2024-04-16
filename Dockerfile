@@ -22,6 +22,7 @@ COPY consumer.py .
 COPY API.py .
 COPY requirements.txt .
 COPY salesforce.key .
+COPY heartbeat.py .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
