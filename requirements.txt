@@ -3,5 +3,4 @@ requests
 PyJWT
 cryptography
 lxml
-logging
 
