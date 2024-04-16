@@ -1,23 +1,35 @@
+name: CI/CD crm
+
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
-  
+      - dev
+
 jobs:
-  run_pull:
-    name: run pull
+  build_and_deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: install ssh keys
-      # check this thread to understand why its needed:
-      # https://stackoverflow.com/a/70447517
-      run: |
-        install -m 600 -D /dev/null ~/.ssh/githubactions
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/githubactions
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
-    - name: connect and pull
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout ${{ secrets.MAIN_BRANCH }} && git pull && exit"
-    - name: cleanup
-      run: rm -rf ~/.ssh
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: gillm/crm-con-prod-api:latest
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          docker pull gillm/crm-con-prod-api:latest
+          docker stop crm/con-prod-api
+          docker rm crm/con-prod-api
+          docker run -d --name crm/con-prod-api -p 9966:9966 gillm/crm-con-prod-api:latest
