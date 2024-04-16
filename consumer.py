@@ -4,6 +4,8 @@ import API
 import xml.etree.ElementTree as ET
 import logging
 
+#Test CI/CD
+
 def main():
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
