@@ -208,9 +208,3 @@ def add_attendance(User = None, Talk = None):
 
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response.text)
-
-
-if __name__ == '__main__':
-    authenticate()
-    while True:
-        time.sleep(.1)
