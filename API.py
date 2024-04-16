@@ -73,6 +73,7 @@ def get_users():
                 field_element.text = str(value)
 
         xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        logger.info("get users: " + xml_string)
         return xml_string
     except Exception as e:
         print("Error fetching users from Salesforce:", e)
