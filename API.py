@@ -3,11 +3,25 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 import jwt
 import time
+import logging
 
 KEY_FILE = 'salesforce.key' #Key file
 ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
 SUBJECT = 'admin@ehb.be' #Subject
 DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/'
+
+logger = logging.getLogger(__name__)
+
+# Create a file handler
+handler = logging.FileHandler('api.log')
+handler.setLevel(logging.INFO)
+
+# Create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(handler)
 
 # Get the access token and domain name
 def authenticate():
@@ -22,7 +36,6 @@ def authenticate():
     }
 
     assertion = jwt.encode(claimSet, private_key, algorithm='RS256', headers={'alg': 'RS256'})
-    print(assertion)
 
     req = requests.post('https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/oauth2/token', data={
         'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
@@ -32,7 +45,6 @@ def authenticate():
     response = req.json()
     global ACCESS_TOKEN
     ACCESS_TOKEN = response['access_token']
-    print(ACCESS_TOKEN)
 
 
 # Get users api call
@@ -65,7 +77,6 @@ def get_users():
         print("Error fetching users from Salesforce:", e)
         return None
 
-
 # Add an user api call
 def add_user(FirstName = None, LastName = None, Email = None, Company = None, CompanyEmail = None, Source = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Portal_user__c'
@@ -85,7 +96,7 @@ def add_user(FirstName = None, LastName = None, Email = None, Company = None, Co
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
+    logger.info("add user" + response.text)
 
 # Get companies api call
 def get_companies():
@@ -117,7 +128,6 @@ def get_companies():
         print("Error fetching companies from Salesforce:", e)
         return None
 
-
 # Add a company api call
 def add_company(Name = None, Type = None, PhoneNo = None, Email = None, Street = None, HouseNumber = None, zip = None, Province = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
@@ -139,7 +149,7 @@ def add_company(Name = None, Type = None, PhoneNo = None, Email = None, Street =
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
+    logger.info("add company" + response.text)
 
 # Get talks api call
 def get_talk():
@@ -171,7 +181,6 @@ def get_talk():
         print("Error fetching talks from Salesforce:", e)
         return None
 
-
 # Add a talk api call
 def add_talk(Name = None, Date = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Talk__c'
@@ -187,7 +196,7 @@ def add_talk(Name = None, Date = None):
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
+    logger.info("add talk" + response.text)
 
 # Get the attendances
 def get_attendance():
@@ -219,7 +228,6 @@ def get_attendance():
         print("Error fetching attendance from Salesforce:", e)
         return None
 
-
 # Add an attendance
 def add_attendance(User = None, Talk = None):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/talkAttendance__c'
@@ -235,4 +243,4 @@ def add_attendance(User = None, Talk = None):
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.text)
+    logger.info("add attendance" + response.text)

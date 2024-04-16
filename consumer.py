@@ -2,6 +2,9 @@
 import pika, sys, os
 import API
 import xml.etree.ElementTree as ET
+import logging
+
+#Test CI/CD
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
@@ -9,6 +12,19 @@ def main():
     channel = connection.channel()
 
     channel.queue_declare(queue='CRM')
+
+    logger = logging.getLogger(__name__)
+
+    # Create a file handler
+    handler = logging.FileHandler('consumer.log')
+    handler.setLevel(logging.INFO)
+
+    # Create a logging format
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(handler)
 
     def callback(ch, method, properties, body):
 
@@ -28,7 +44,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    print("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Requeued Message", e)
 
             case 'companies':
                 try:
@@ -44,7 +60,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    print("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Requeued Message", e)
 
             case 'Talks':
                 try:
@@ -56,15 +72,23 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    print("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Requeued Message", e)
 
             case 'Talk_attendances':
-                print("add attendance")
-                pass
+                try:
+                    for child in root:
+                        variables = {}
+                        for field in child:
+                            variables[field.tag] = field.text.strip()
+                        API.add_attendance(**variables)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    logger.error("[ERROR] Requeued Message", e)
 
             case _:
                 ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                print("[ERROR] This message is not valid")
+                logger.error("[ERROR] This message is not valid")
 
     channel.basic_consume(queue='CRM', on_message_callback=callback, auto_ack=False)
 
