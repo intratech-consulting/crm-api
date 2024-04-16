@@ -55,21 +55,27 @@ def get_users():
     }
     payload = {}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
-    data = response.json().get("records", [])
-    root = ET.Element("Portal_Users")
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        data = response.json().get("records", [])
+        
+        root = ET.Element("Portal_Users")
 
-    # Makes json data into xml data
-    for record in data:
-        user_element = ET.SubElement(root, "Portal_user__c")
-        for field, value in record.items():
-            if field == "attributes":
-                continue
-            field_element = ET.SubElement(user_element, field)
-            field_element.text = str(value)
+        # Makes json data into xml data
+        for record in data:
+            user_element = ET.SubElement(root, "Portal_user__c")
+            for field, value in record.items():
+                if field == "attributes":
+                    continue
+                field_element = ET.SubElement(user_element, field)
+                field_element.text = str(value)
 
-    xml_string = ET.tostring(root, encoding="unicode", method="xml")
-    logger.info("get users: " + xml_string)
+        xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        return xml_string
+    except Exception as e:
+        print("Error fetching users from Salesforce:", e)
+        return None
 
 # Add an user api call
 def add_user(FirstName = None, LastName = None, Email = None, Company = None, CompanyEmail = None, Source = None):
@@ -100,21 +106,27 @@ def get_companies():
     }
     payload = {}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
-    data = response.json().get("records", [])
-    root = ET.Element("Companies")
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        data = response.json().get("records", [])
+        
+        root = ET.Element("Companies")
 
-    # Makes json data into xml data
-    for record in data:
-        user_element = ET.SubElement(root, "Company__c")
-        for field, value in record.items():
-            if field == "attributes":
-                continue
-            field_element = ET.SubElement(user_element, field)
-            field_element.text = str(value)
+        # Makes json data into xml data
+        for record in data:
+            company_element = ET.SubElement(root, "Company__c")
+            for field, value in record.items():
+                if field == "attributes":
+                    continue
+                field_element = ET.SubElement(company_element, field)
+                field_element.text = str(value)
 
-    xml_string = ET.tostring(root, encoding="unicode", method="xml")
-    logger.info("get companies: " + xml_string)
+        xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        return xml_string
+    except Exception as e:
+        print("Error fetching companies from Salesforce:", e)
+        return None
 
 # Add a company api call
 def add_company(Name = None, Type = None, PhoneNo = None, Email = None, Street = None, HouseNumber = None, zip = None, Province = None):
@@ -147,21 +159,27 @@ def get_talk():
     }
     payload = {}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
-    data = response.json().get("records", [])
-    root = ET.Element("Talks")
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        data = response.json().get("records", [])
+        
+        root = ET.Element("Talks")
 
-    # Makes json data into xml data
-    for record in data:
-        user_element = ET.SubElement(root, "Talk__c")
-        for field, value in record.items():
-            if field == "attributes":
-                continue
-            field_element = ET.SubElement(user_element, field)
-            field_element.text = str(value)
+        # Makes json data into xml data
+        for record in data:
+            talk_element = ET.SubElement(root, "Talk__c")
+            for field, value in record.items():
+                if field == "attributes":
+                    continue
+                field_element = ET.SubElement(talk_element, field)
+                field_element.text = str(value)
 
-    xml_string = ET.tostring(root, encoding="unicode", method="xml")
-    logger.info("get talk: " + xml_string)
+        xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        return xml_string
+    except Exception as e:
+        print("Error fetching talks from Salesforce:", e)
+        return None
 
 # Add a talk api call
 def add_talk(Name = None, Date = None):
@@ -188,21 +206,27 @@ def get_attendance():
     }
     payload = {}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
-    data = response.json().get("records", [])
-    root = ET.Element("Attendance")
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        data = response.json().get("records", [])
+        
+        root = ET.Element("Attendance")
 
-    # Makes json data into xml data
-    for record in data:
-        user_element = ET.SubElement(root, "Attendance__c")
-        for field, value in record.items():
-            if field == "attributes":
-                continue
-            field_element = ET.SubElement(user_element, field)
-            field_element.text = str(value)
+        # Makes json data into xml data
+        for record in data:
+            attendance_element = ET.SubElement(root, "Attendance__c")
+            for field, value in record.items():
+                if field == "attributes":
+                    continue
+                field_element = ET.SubElement(attendance_element, field)
+                field_element.text = str(value)
 
-    xml_string = ET.tostring(root, encoding="unicode", method="xml")
-    logger.info("get attendance: " + xml_string)
+        xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        return xml_string
+    except Exception as e:
+        print("Error fetching attendance from Salesforce:", e)
+        return None
 
 # Add an attendance
 def add_attendance(User = None, Talk = None):
