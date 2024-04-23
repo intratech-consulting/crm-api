@@ -11,7 +11,7 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
-    queues = ['user', 'company']
+    queues = ['user', 'company', 'event']
     for queue in queues:
         channel.queue_declare(queue=queue)
 
@@ -68,11 +68,17 @@ def main():
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                     logger.error("[ERROR] Requeued Message", e)
 
-            case 'Talks':
+            case 'event':
                 try:
+                    variables = {}
                     for child in root:
-                        variables = {}
-                        for field in child:
+                        if child.tag == "speaker":
+                            for speaker_field in child:
+                                if speaker_field.tag == "user_id":
+                                    variables[speaker_field.tag] = speaker_field.text
+                        elif child.tag == "location" or child.tag == "max_registrations":
+                            pass    
+                        else:
                             variables[field.tag] = field.text.strip()
                         API.add_talk(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
