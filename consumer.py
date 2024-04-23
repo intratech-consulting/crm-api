@@ -13,7 +13,7 @@ def main():
 
     queues = ['user', 'company', 'event']
     for queue in queues:
-        channel.queue_declare(queue=queue)
+        channel.queue_declare(queue=queue, durable=True)
 
     logger = logging.getLogger(__name__)
 
