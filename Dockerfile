@@ -25,3 +25,5 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Command to run supervisord
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+
