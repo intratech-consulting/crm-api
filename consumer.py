@@ -11,7 +11,9 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
-    channel.queue_declare(queue='CRM')
+    queues = ['user', 'company']
+    for queue in queues:
+        channel.queue_declare(queue=queue)
 
     logger = logging.getLogger(__name__)
 
@@ -94,7 +96,8 @@ def main():
                 ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                 logger.error("[ERROR] This message is not valid")
 
-    channel.basic_consume(queue='CRM', on_message_callback=callback, auto_ack=False)
+    for queue in queues:
+        channel.basic_consume(queue=queue, on_message_callback=callback, auto_ack=True)
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
