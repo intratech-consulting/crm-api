@@ -12,8 +12,8 @@ def main():
     channel = connection.channel()
 
     queues = ['user', 'company', 'event']
-    for queue in queues:
-        channel.queue_declare(queue=queue, durable=True)
+    for queue_name in queues:
+        channel.queue_declare(queue=queue_name, durable=True)
 
     logger = logging.getLogger(__name__)
 
@@ -79,8 +79,9 @@ def main():
                         elif child.tag == "location" or child.tag == "max_registrations":
                             pass    
                         else:
-                            variables[field.tag] = field.text.strip()
-                        API.add_talk(**variables)
+                            variables[child.tag] = child.text.strip()
+                    print(variables)
+                    API.add_talk(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
@@ -102,8 +103,8 @@ def main():
                 ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                 logger.error("[ERROR] This message is not valid")
 
-    for queue in queues:
-        channel.basic_consume(queue=queue, on_message_callback=callback, auto_ack=True)
+    for queue_name in queues:
+        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=False)
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
