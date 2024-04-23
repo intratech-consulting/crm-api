@@ -11,7 +11,9 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
-    channel.queue_declare(queue='CRM')
+    queues = ['user', 'company', 'event']
+    for queue_name in queues:
+        channel.queue_declare(queue=queue_name, durable=True)
 
     logger = logging.getLogger(__name__)
 
@@ -66,13 +68,20 @@ def main():
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                     logger.error("[ERROR] Requeued Message", e)
 
-            case 'Talks':
+            case 'event':
                 try:
+                    variables = {}
                     for child in root:
-                        variables = {}
-                        for field in child:
-                            variables[field.tag] = field.text.strip()
-                        API.add_talk(**variables)
+                        if child.tag == "speaker":
+                            for speaker_field in child:
+                                if speaker_field.tag == "user_id":
+                                    variables[speaker_field.tag] = speaker_field.text
+                        elif child.tag == "location" or child.tag == "max_registrations":
+                            pass    
+                        else:
+                            variables[child.tag] = child.text.strip()
+                    print(variables)
+                    API.add_talk(**variables)
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
@@ -94,7 +103,8 @@ def main():
                 ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
                 logger.error("[ERROR] This message is not valid")
 
-    channel.basic_consume(queue='CRM', on_message_callback=callback, auto_ack=False)
+    for queue_name in queues:
+        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=False)
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()

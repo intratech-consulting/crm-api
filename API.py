@@ -8,7 +8,7 @@ import logging
 KEY_FILE = 'salesforce.key' #Key file
 ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
 SUBJECT = 'admin@ehb.be' #Subject
-DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/'
+DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com'
 ACCESS_TOKEN = ''
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def authenticate():
 
 # Get users api call
 def get_users():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+user_id__c,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+Portal_user__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+user_id__c,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -65,7 +65,7 @@ def get_users():
 
         # Makes json data into xml data
         for record in data:
-            user_element = ET.SubElement(root, "Users__c")
+            user_element = ET.SubElement(root, "user__c")
             for field, value in record.items():
                 if field == "attributes":
                     continue
@@ -87,7 +87,7 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
         'Content-Type': 'application/xml'
     }
     payload = f'''
-        <Portal_user__c>
+        <user__c>
             <user_id__c>{user_id}</user_id__c>
             <first_name__c>{first_name}</first_name__c>
             <last_name__c>{last_name}</last_name__c>
@@ -105,7 +105,7 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
             <source__c>{source}</source__c>
             <user_role__c>{user_role}</user_role__c>
             <invoice__c>{invoice}</invoice__c>
-        </Portal_user__c>
+        </user__c>
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -167,6 +167,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
 
     response = requests.request("POST", url, headers=headers, data=payload)
     logger.info("add company" + response.text)
+    print(response.text)
 
 # Get talks api call
 def get_talk():
@@ -199,17 +200,22 @@ def get_talk():
         return None
 
 # Add a talk api call
-def add_talk(Name = None, Date = None):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Talk__c'
+def add_talk(id, date, start_time, end_time, user_id, available_seats, description):
+    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
-        <Talk__c>
-            <Name>{Name}</Name>
-            <Date__c>{Date}</Date__c>
-        </Talk__c>
+        <event__c>
+            <id__c>{id}</id__c>
+            <date__c>{date}</date__c>
+            <start_time__c>{datetime.strptime(start_time, '%H:%M').strftime('%H:%M:%S')}</start_time__c>
+            <end_time__c>{datetime.strptime(end_time, '%H:%M').strftime('%H:%M:%S')}</end_time__c>
+            <user_id__c>{user_id}</user_id__c>
+            <available_seats__c>{available_seats}</available_seats__c>
+            <description__c>{description}</description__c>
+        </event__c>
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)

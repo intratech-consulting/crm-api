@@ -4,8 +4,10 @@ import time
 from datetime import datetime
 import logging
 
+TEAM = 'crm'
 
 def main(timestamp):
+    global TEAM
     logger = logging.getLogger(__name__)
 
     # Create a file handler
@@ -24,7 +26,7 @@ def main(timestamp):
     <Heartbeat>
         <Timestamp>{timestamp.isoformat()}</Timestamp>
         <Status>Active</Status>
-        <SystemName>CRM</SystemName>
+        <SystemName>{TEAM}</SystemName>
     </Heartbeat>
     '''
 
