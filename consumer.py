@@ -49,7 +49,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Request Failed", e)
 
             case 'company':
                 try:
@@ -66,7 +66,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Request Failed", e)
 
             case 'event':
                 try:
@@ -85,7 +85,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Request Failed", e)
 
             case 'Talk_attendances':
                 try:
@@ -97,7 +97,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Request Failed", e)
 
             case 'order':
                 try:
@@ -128,7 +128,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Requeued Message", e)
+                    logger.error("[ERROR] Request Failed", e)
 
             case _:
                 ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
