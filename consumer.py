@@ -11,7 +11,7 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
-    queues = ['user', 'company', 'event']
+    queues = ['user', 'company', 'event', 'order']
     for queue_name in queues:
         channel.queue_declare(queue=queue_name, durable=True)
 
@@ -94,6 +94,37 @@ def main():
                         for field in child:
                             variables[field.tag] = field.text.strip()
                         API.add_attendance(**variables)
+                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    logger.error("[ERROR] Requeued Message", e)
+
+            case 'order':
+                try:
+                    variables = {}
+                    for child in root:
+                        if child.tag == "user_id":
+                            variables[child.tag] = child.text.strip()
+                        elif child.tag == "products":
+                            for products in child:
+                                for product_field in products:
+                                    if product_field.tag == "name":
+                                        product_id = API.product_exists(product_field.text.strip())
+                                        if product_id == None:
+                                            API.add_product(product_field.text.strip())
+                                            product_id = API.product_exists(product_field.text.strip())
+                                        variables["product"] = product_id
+                                    elif product_field.tag == "amount":
+                                        variables[product_field.tag] = product_field.text.strip()
+                                id, old_amount = API.get_order(variables["user_id"], variables["product"])
+                                print(id, old_amount)
+                                if id != None:
+                                    variables["amount"] = str(int(old_amount) + int(variables["amount"]))
+                                    API.update_order(id, variables["amount"])
+                                else:
+                                    API.add_order(**variables)
+                        else:
+                            pass
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)

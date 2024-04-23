@@ -267,3 +267,97 @@ def add_attendance(User = None, Talk = None):
 
     response = requests.request("POST", url, headers=headers, data=payload)
     logger.info("add attendance" + response.text)
+
+# Add a product
+def add_product(name):
+    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/product__c'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = f'''
+        <product__c>
+            <Name>{name}</Name>
+        </product__c>
+    '''
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    logger.info("add product" + response.text)
+    print(response.text)
+
+# Returns product id if exists
+def product_exists(name):
+    url = DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Name=\'{name}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+
+        if data:
+            return data[0]['Id']
+        else:
+            return None
+    except Exception as e:
+        print("Error fetching product from Salesforce:", e)
+        return False
+    
+# Add an order
+def add_order(user_id, product, amount):
+    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/order__c'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = f'''
+        <order__c>
+            <user_id__c>{user_id}</user_id__c>
+            <product__c>{product}</product__c>
+            <amount__c>{amount}</amount__c>
+        </order__c>
+    '''
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    logger.info("add order" + response.text)
+
+def update_order(order_id, amount):
+    url = DOMAIN_NAME + f'/services/data/v60.0/sobjects/order__c/{order_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = f'''
+        <order__c>
+            <amount__c>{amount}</amount__c>
+        </order__c>
+    '''
+    response = requests.request("PATCH", url, headers=headers, data=payload)
+    logger.info("add order" + response.text)
+
+# Get order to change amount
+def get_order(user_id, product):
+    url = DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        print(data)
+
+        if data:
+            return data[0]['Id'], data[0]['amount__c']
+        else:
+            return None, None
+    except Exception as e:
+        print("Error fetching order from Salesforce:", e)
+        return None, None
