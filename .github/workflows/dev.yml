@@ -1,0 +1,23 @@
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  run_pull:
+    name: run pull
+    runs-on: self-hosted
+
+    steps:
+      - name: install ssh keys
+        # check this thread to understand why its needed:
+        # https://stackoverflow.com/a/70447517
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/githubactions
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/githubactions
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+      - name: connect and pull
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout main ${{ secrets.MAIN_BRANCH }} && git pull && exit"
+      - name: cleanup
+        run: rm -rf ~/.ssh
