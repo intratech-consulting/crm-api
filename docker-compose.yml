@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  crm/con-pub-api:
+  crm-con-pub-api:
     build:
       context: .
       dockerfile: Dockerfile
