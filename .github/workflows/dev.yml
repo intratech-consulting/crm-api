@@ -19,9 +19,6 @@ jobs:
       SSH_PORT: ${{ secrets.SSH_PORT }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Check if latest image exists
         id: check_latest_image
         run: |
