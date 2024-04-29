@@ -11,6 +11,12 @@ jobs:
     name: Deploy
     runs-on: [self-hosted]
     environment: dev
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
 
     steps:
       - name: Checkout code
@@ -18,20 +24,20 @@ jobs:
 
       - name: debug
         run: |
-          echo ${{ secrets.SH_HOST }}
-          echo ${{ secrets.SSH_USER }}
-          echo ${{ secrets.SSH_PASSWORD }}
-          echo ${{ secrets.SSH_PRIVATE_KEY }}
-          echo ${{ secrets.SSH_PORT }}
+          echo "ssh: host ${{ env.SH_HOST }}"
+          echo "ssh: user ${{ env.SSH_USER }}"
+          echo "ssh: password ${{ env.SSH_PASSWORD }}" 
+          echo "ssh: key ${{ env.SSH_PRIVATE_KEY }}"
+          echo "ssh: port ${{ env.SSH_PORT }}"
 
       - name: SSH into dev VM and deploy
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
+          host: ${{ env.SH_HOST }}
+          username: ${{ env.SSH_USER }}
+          password: ${{ env.SSH_PASSWORD }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: ${{ env.SSH_PORT }}
           script: |
             cd ~/TestServer/crm/crm-api
             git checkout dev
