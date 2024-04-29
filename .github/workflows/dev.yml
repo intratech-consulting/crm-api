@@ -1,0 +1,45 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: [self-hosted]
+    environment: dev
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: debug
+        run: |
+          echo "ssh: host ${{ env.SH_HOST }}"
+          echo "ssh: user ${{ env.SSH_USER }}"
+          echo "ssh: password ${{ env.SSH_PASSWORD }}" 
+          echo "ssh: key ${{ env.SSH_PRIVATE_KEY }}"
+          echo "ssh: port ${{ env.SSH_PORT }}"
+
+      - name: SSH into dev VM and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.SH_HOST }}
+          username: ${{ env.SSH_USER }}
+          password: ${{ env.SSH_PASSWORD }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: ${{ env.SSH_PORT }}
+          script: |
+            cd ~/TestServer/crm/crm-api
+            git checkout dev
+            git pull
+            docker compose up -d
