@@ -22,18 +22,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: debug
-        run: |
-          echo "ssh: host ${{ env.SH_HOST }}"
-          echo "ssh: user ${{ env.SSH_USER }}"
-          echo "ssh: password ${{ env.SSH_PASSWORD }}" 
-          echo "ssh: key ${{ env.SSH_PRIVATE_KEY }}"
-          echo "ssh: port ${{ env.SSH_PORT }}"
-
-      - name: SSH into dev VM and deploy
+      - name: Backup previous state
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ env.SH_HOST }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          password: ${{ env.SSH_PASSWORD }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: ${{ env.SSH_PORT }}
+          script: |
+            cd ~/TestServer/crm/crm-api
+            docker tag crm/api-publisher-consumer crm/api-publisher-consumer:backup
+
+      - name: Deploy new version
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
           password: ${{ env.SSH_PASSWORD }}
           key: ${{ env.SSH_PRIVATE_KEY }}
@@ -42,4 +46,32 @@ jobs:
             cd ~/TestServer/crm/crm-api
             git checkout dev
             git pull
-            docker compose up -d
+            docker-compose up -d
+
+      - name: Check deployment status
+        uses: appleboy/ssh-action@master
+        id: check_status
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          password: ${{ env.SSH_PASSWORD }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: ${{ env.SSH_PORT }}
+          script: |
+            cd ~/TestServer/crm/crm-api
+            docker-compose ps | grep crm-api-publisher-consumer
+
+      - name: Rollback on failure
+        if: steps.check_status.outcome != 'success'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          password: ${{ env.SSH_PASSWORD }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: ${{ env.SSH_PORT }}
+          script: |
+            cd ~/TestServer/crm/crm-api
+            docker-compose down
+            docker run -d --name restored_container crm/api-publisher-consumer:backup
+            docker-compose up -d
