@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check if latest image exists
-        id:
+        id: check_latest_image
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.SSH_HOST }}
