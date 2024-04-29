@@ -29,5 +29,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd ~/TestServer/crm/crm-api
+            git checkout dev
             git pull
             docker-compose up -d
