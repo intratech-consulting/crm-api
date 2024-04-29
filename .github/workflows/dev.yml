@@ -22,7 +22,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Check if latest image exists
+        id: check_latest_image
+        run: |
+          ssh ${{ env.SSH_USER }}@${{ env.SSH_HOST }} -p ${{ env.SSH_PORT }} "docker image inspect crm/api-publisher-consumer:latest &> /dev/null && echo 'exists' || echo 'not found'"
+
       - name: Backup previous state
+        if: steps.check_latest_image.outputs.result == 'exists'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.SSH_HOST }}
@@ -32,7 +38,7 @@ jobs:
           port: ${{ env.SSH_PORT }}
           script: |
             cd ~/TestServer/crm/crm-api
-            docker tag crm/api-publisher-consumer crm/api-publisher-consumer:backup
+            docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
 
       - name: Deploy new version
         uses: appleboy/ssh-action@master
@@ -59,6 +65,7 @@ jobs:
           port: ${{ env.SSH_PORT }}
           script: |
             cd ~/TestServer/crm/crm-api
+            # Implement logic to check if the application is running
             docker-compose ps | grep crm-api-publisher-consumer
 
       - name: Rollback on failure
