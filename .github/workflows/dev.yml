@@ -16,6 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: debug
+        run: |
+          echo ${{ secrets.SH_HOST }}
+          echo ${{ secrets.SSH_USER }}
+          echo ${{ secrets.SSH_PASSWORD }}
+          echo ${{ secrets.SSH_PRIVATE_KEY }}
+          echo ${{ secrets.SSH_PORT }}
+
       - name: SSH into dev VM and deploy
         uses: appleboy/ssh-action@master
         with:
