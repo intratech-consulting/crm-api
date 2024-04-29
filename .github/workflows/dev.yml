@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check if latest image exists
-        id: check_latest_image
+        id:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.SSH_HOST }}
@@ -32,7 +32,11 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: ${{ env.SSH_PORT }}
           script: |
-            docker image inspect crm/api-publisher-consumer:latest &> /dev/null && echo 'exists' || echo 'not found'
+            if docker image inspect crm/api-publisher-consumer:latest &> /dev/null; then
+            echo "::set-output name=image_exists::true"
+            else
+            echo "::set-output name=image_exists::false"
+            fi
 
       - name: Backup previous state
         if: steps.check_latest_image.outputs.result == 'exists'
@@ -59,7 +63,7 @@ jobs:
             cd ~/TestServer/crm/crm-api
             git checkout dev
             git pull
-            docker-compose up -d
+            docker compose up -d
 
       - name: Check deployment status
         uses: appleboy/ssh-action@master
@@ -72,7 +76,7 @@ jobs:
           port: ${{ env.SSH_PORT }}
           script: |
             cd ~/TestServer/crm/crm-api
-            docker-compose ps | grep crm-api-publisher-consumer
+            docker compose ps | grep crm-api-publisher-consumer
 
       - name: Rollback on failure
         if: steps.check_status.outcome != 'success'
@@ -87,4 +91,4 @@ jobs:
             cd ~/TestServer/crm/crm-api
             docker-compose down
             docker run -d --name restored_container crm/api-publisher-consumer:backup
-            docker-compose up -d
+            docker compose up -d
