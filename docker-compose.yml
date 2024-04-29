@@ -1,7 +1,9 @@
 version: '3.8'
 
 services:
-  crm-con-pub-api:
+  container:
+    image: crm/api-publisher-consumer:latest
+    container_name: crm-api-publisher-consumer
     build:
       context: .
       dockerfile: Dockerfile
