@@ -33,13 +33,13 @@ jobs:
           port: ${{ env.SSH_PORT }}
           script: |
             if docker image inspect crm/api-publisher-consumer:latest &> /dev/null; then
-            echo "::set-output name=image_exists::true"
+              echo "::set-output name=image_exists::true"
             else
-            echo "::set-output name=image_exists::false"
+              echo "::set-output name=image_exists::false"
             fi
 
       - name: Backup previous state
-        if: steps.check_latest_image.outputs.result == 'exists'
+        if: steps.check_latest_image.outputs.image_exists == 'exists'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.SSH_HOST }}
@@ -61,6 +61,7 @@ jobs:
           port: ${{ env.SSH_PORT }}
           script: |
             cd ~/TestServer/crm/crm-api
+            docker compose down
             git checkout dev
             git pull
             docker compose up -d
