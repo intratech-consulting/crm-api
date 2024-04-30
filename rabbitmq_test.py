@@ -10,7 +10,7 @@ class TestRabbitMQ(unittest.TestCase):
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
                     host=container.get_container_host_ip(),
-                    port=container.get_amqp_port(),
+                    port=container.get_exposed_port(5672),
                     credentials=pika.PlainCredentials(username="guest", password="guest"),
                 )
             )
