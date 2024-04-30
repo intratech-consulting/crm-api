@@ -3,3 +3,4 @@ requests
 PyJWT
 cryptography
 lxml
+responses
