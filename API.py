@@ -60,7 +60,7 @@ def get_users():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
-        
+
         root = ET.Element("Users")
 
         # Makes json data into xml data
@@ -81,31 +81,41 @@ def get_users():
 
 # Add an user api call
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street, house_number, company_email = "", company_id = "", source = "", user_role = "", invoice = ""):
+    required_fields = {
+        'user_id': user_id,
+        'first_name': first_name,
+        'last_name': last_name,
+        'email': email,
+    }
+
+    check_required_fields(required_fields, user_id=user_id, first_name=first_name, last_name=last_name, email=email)
+
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
+
     payload = f'''
-        <user__c>
-            <user_id__c>{user_id}</user_id__c>
-            <first_name__c>{first_name}</first_name__c>
-            <last_name__c>{last_name}</last_name__c>
-            <email__c>{email}</email__c>
-            <telephone__c>{telephone}</telephone__c>
-            <birthday__c>{birthday}</birthday__c>
-            <country__c>{country}</country__c>
-            <state__c>{state}</state__c>
-            <city__c>{city}</city__c>
-            <zip__c>{zip}</zip__c>
-            <street__c>{street}</street__c>
-            <house_number__c>{house_number}</house_number__c>
-            <company_email__c>{company_email}</company_email__c>
-            <company_id__c>{company_id}</company_id__c>
-            <source__c>{source}</source__c>
-            <user_role__c>{user_role}</user_role__c>
-            <invoice__c>{invoice}</invoice__c>
-        </user__c>
+    <user__c>
+        <user_id__c>{user_id}</user_id__c>
+        <first_name__c>{first_name}</first_name__c>
+        <last_name__c>{last_name}</last_name__c>
+        <email__c>{email}</email__c>
+        <telephone__c>{telephone}</telephone__c>
+        <birthday__c>{birthday}</birthday__c>
+        <country__c>{country}</country__c>
+        <state__c>{state}</state__c>
+        <city__c>{city}</city__c>
+        <zip__c>{zip}</zip__c>
+        <street__c>{street}</street__c>
+        <house_number__c>{house_number}</house_number__c>
+        <company_email__c>{company_email}</company_email__c>
+        <company_id__c>{company_id}</company_id__c>
+        <source__c>{source}</source__c>
+        <user_role__c>{user_role}</user_role__c>
+        <invoice__c>{invoice}</invoice__c>
+    </user__c>
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -124,7 +134,7 @@ def get_companies():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
-        
+
         root = ET.Element("Companies")
 
         # Makes json data into xml data
@@ -144,6 +154,13 @@ def get_companies():
 
 # Add a company api call
 def add_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
+    required_fields = {
+        'id': id,
+        'name': name,
+        'email': email
+    }
+    check_required_fields(required_fields, id=id, name=name, email=email)
+
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -182,7 +199,7 @@ def get_talk():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
-        
+
         root = ET.Element("Talks")
 
         # Makes json data into xml data
@@ -234,7 +251,7 @@ def get_attendance():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
-        
+
         root = ET.Element("Attendance")
 
         # Makes json data into xml data
@@ -307,7 +324,7 @@ def product_exists(name):
     except Exception as e:
         print("Error fetching product from Salesforce:", e)
         return False
-    
+
 # Add an order
 def add_order(user_id, product, amount):
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/order__c'
@@ -362,3 +379,8 @@ def get_order(user_id, product):
     except Exception as e:
         print("Error fetching order from Salesforce:", e)
         return None, None
+
+def check_required_fields(required_fields, **kwargs):
+    for field_name in required_fields:
+        if field_name not in kwargs or not kwargs[field_name] or kwargs[field_name].isspace():
+            raise ValueError(f"{field_name} cannot be empty or just spaces")
