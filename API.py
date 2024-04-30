@@ -81,7 +81,7 @@ def get_users():
 
 # Add an user api call
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street, house_number, company_email = "", company_id = "", source = "", user_role = "", invoice = ""):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Portal_user__c'
+    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -110,6 +110,7 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
 
     response = requests.request("POST", url, headers=headers, data=payload)
     logger.info("add user" + response.text)
+    print(response.text)
 
 # Get companies api call
 def get_companies():

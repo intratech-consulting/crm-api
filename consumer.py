@@ -143,6 +143,7 @@ def main():
 if __name__ == '__main__':
     try:
         API.authenticate()
+        print(API.ACCESS_TOKEN)
         main()
     except KeyboardInterrupt:
         print('Interrupted')
