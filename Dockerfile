@@ -1,18 +1,7 @@
-# Use the official Python LTS image
-FROM python:3.12-slim
+# Use the custom made image zyth python and salesforce-cli
+FROM gillm/pythonv13.2-slim_salesforce-cli2.30.8
 
 WORKDIR /app
-
-# Install necessary packages for Salesforce CLI and supervisord
-RUN apt-get update && \
-    apt-get install -y wget xz-utils supervisor && \
-    rm -rf /var/lib/apt/lists/*
-
-# Download and install Salesforce CLI tarballs
-RUN wget -qO sf-linux-x64.tar.xz https://developer.salesforce.com/media/salesforce-cli/sf/channels/stable/sf-linux-x64.tar.xz && \
-    mkdir -p ~/cli/sf && \
-    tar xJf sf-linux-x64.tar.xz -C ~/cli/sf --strip-components 1 && \
-    rm sf-linux-x64.tar.xz
 
 # Update PATH environment variable
 ENV PATH="/root/cli/sf/bin:${PATH}"
@@ -23,6 +12,10 @@ COPY API.py .
 COPY requirements.txt .
 COPY salesforce.key .
 COPY heartbeat.py .
+COPY sender_users.py .
+COPY sender_companies.py .
+COPY sender_talks.py .
+COPY sender_attendances.py .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
@@ -32,3 +25,5 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Command to run supervisord
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+

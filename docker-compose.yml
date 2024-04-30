@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  container:
+    image: crm/api-publisher-consumer:latest
+    container_name: crm-api-publisher-consumer
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9966:9966"

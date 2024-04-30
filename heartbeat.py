@@ -4,7 +4,10 @@ import time
 from datetime import datetime
 import logging
 
+TEAM = 'crm'
+
 def main(timestamp):
+    global TEAM
     logger = logging.getLogger(__name__)
 
     # Create a file handler
@@ -23,7 +26,7 @@ def main(timestamp):
     <Heartbeat>
         <Timestamp>{timestamp.isoformat()}</Timestamp>
         <Status>Active</Status>
-        <SystemName>CRM</SystemName>
+        <SystemName>{TEAM}</SystemName>
     </Heartbeat>
     '''
 
@@ -58,14 +61,15 @@ def main(timestamp):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
-    channel.queue_declare(queue='heartbeat_queue')
+    channel.queue_declare(queue='heartbeat_queue', durable=True)
     channel.basic_publish(exchange='', routing_key='heartbeat_queue', body=heartbeat_xml)
+
 
 if __name__ == '__main__':
     try:
         while True:
             main(datetime.now())
-            time.sleep(2)
+            time.sleep(1)
     except KeyboardInterrupt:
         print('Interrupted')
         try:
