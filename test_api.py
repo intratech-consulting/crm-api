@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import responses
 import unittest
 import API
@@ -136,8 +138,126 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(responses.calls[0].request.body.strip(), expected_body)
 
+    @responses.activate
+    def test_add_company_should_return_error_when_missing_id(self):
+        with self.assertRaises(ValueError):
+            API.add_company("", "test_name", "test_email", "test_telephone", "test_country", "test_state", "test_city",
+                            "test_zip", "test_street", "test_house_number", "test_type", "test_invoice")
 
+    @responses.activate
+    def test_add_company_should_return_error_when_missing_name(self):
+        with self.assertRaises(ValueError):
+            API.add_company("test_id", "", "test_email", "test_telephone", "test_country", "test_state", "test_city",
+                            "test_zip", "test_street", "test_house_number", "test_type", "test_invoice")
 
+    @responses.activate
+    def test_company_should_return_error_when_missing_email(self):
+        with self.assertRaises(ValueError):
+            API.add_company("test_id", "test_name", "", "test_telephone", "test_country", "test_state", "test_city",
+                            "test_zip", "test_street", "test_house_number", "test_type", "test_invoice")
+
+    @responses.activate
+    def test_get_talk_should_make_request(self):
+        # Mock the API response
+        responses.add(responses.GET,
+                      'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/query?q=SELECT+Id,Name,Date__c+FROM+Talk__c',
+                      json={'key': 'value'}, status=200)
+
+        # Call the function
+        result = API.get_talk()
+
+        # Check that the request was made with the correct parameters
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/query?q=SELECT+Id,Name,Date__c+FROM+Talk__c')
+
+    @responses.activate
+    def test_add_talk_should_send_correct_request(self):
+        # Mock the API response
+        responses.add(responses.POST,
+                      'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/sobjects/event__c',
+                      json={'key': 'value'}, status=200)
+
+        # Call the function
+        result = API.add_talk("test_id", "test_date", "12:30", "13:30", "test_user_id", "test_available_seats", "test_description")
+
+        # Check that the request was made with the correct parameters
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/sobjects/event__c')
+
+        # Check the request body
+        expected_body = f'''<event__c>
+            <id__c>test_id</id__c>
+            <date__c>test_date</date__c>
+            <start_time__c>{datetime.strptime("12:30", '%H:%M').strftime('%H:%M:%S')}</start_time__c>
+            <end_time__c>{datetime.strptime("13:30", '%H:%M').strftime('%H:%M:%S')}</end_time__c>
+            <user_id__c>test_user_id</user_id__c>
+            <available_seats__c>test_available_seats</available_seats__c>
+            <description__c>test_description</description__c>
+        </event__c>'''
+
+        self.assertEqual(responses.calls[0].request.body.strip(), expected_body)
+
+    @responses.activate
+    def test_get_attendance_should_make_request(self):
+        # Mock the API response
+        responses.add(responses.GET,
+                      'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/query?q=SELECT+Id,Name,Talk__c,Portal_user__c+FROM+talkAttendance__c',
+                      json={'key': 'value'}, status=200)
+
+        # Call the function
+        result = API.get_attendance()
+
+        # Check that the request was made with the correct parameters
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/query?q=SELECT+Id,Name,Talk__c,Portal_user__c+FROM+talkAttendance__c')
+
+    @responses.activate
+    def test_add_attendance_should_send_correct_request(self):
+        # Mock the API response
+        responses.add(responses.POST,
+                      'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/sobjects/talkAttendance__c',
+                      json={'key': 'value'}, status=200)
+
+        # Call the function
+        result = API.add_attendance("test_user", "test_talk")
+
+        # Check that the request was made with the correct parameters
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/sobjects/talkAttendance__c')
+
+        # Check the request body
+        expected_body = f'''<TalkAttendance__c>
+            <Portal_user__c>test_user</Portal_user__c>
+            <Talk__c>test_talk</Talk__c>
+        </TalkAttendance__c>'''
+
+        self.assertEqual(responses.calls[0].request.body.strip(), expected_body)
+
+    @responses.activate
+    def test_add_product_should_send_correct_request(self):
+        # Mock the API response
+        responses.add(responses.POST,
+                      'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/sobjects/product__c',
+                      json={'key': 'value'}, status=200)
+
+        # Call the function
+        result = API.add_product("test_product")
+
+        # Check that the request was made with the correct parameters
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(responses.calls[0].request.url,
+                         'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/data/v60.0/sobjects/product__c')
+
+        # Check the request body
+        expected_body = f'''<product__c>
+            <Name>test_product</Name>
+        </product__c>'''
+
+        self.assertEqual(responses.calls[0].request.body.strip(), expected_body)
 
 
 if __name__ == '__main__':
