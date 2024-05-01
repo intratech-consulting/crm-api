@@ -40,7 +40,7 @@ jobs:
             fi
 
       - name: Backup previous state
-        if: steps.check_latest_image.outputs.image_exists == 'true'
+        if: steps.check_latest_image.outputs.image_exists == true
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.SSH_HOST }}
