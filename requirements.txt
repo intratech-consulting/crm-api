@@ -1,9 +1,9 @@
-pika~=1.2.0
-requests~=2.31.0
-PyJWT~=2.8.0
+pika
+requests
+PyJWT
 cryptography
 lxml
 responses
-lxml~=5.2.1
-logging~=0.4.9.6
-testcontainers~=4.4.0
+lxml
+logging
+testcontainers
