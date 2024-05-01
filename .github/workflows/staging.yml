@@ -1,16 +1,16 @@
-name: Deploy to Dev
+name: Deploy to Staging
 
 on:
   push:
     branches:
-      - dev
+      - staging
   workflow_dispatch:
 
 jobs:
   deploy:
-    name: Deploy to dev
+    name: Deploy to staging
     runs-on: [self-hosted]
-    environment: dev
+    environment: staging
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
@@ -54,11 +54,11 @@ jobs:
       - name: Backup previous state
         if: steps.check_latest_image.outputs.image_exists == 'true'
         run: |
-            ssh dev "
-              cd ~/TestServer/crm/crm-api
-              docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
-            "
-            
+          ssh dev "
+            cd ~/TestServer/crm/crm-api
+            docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
+          "
+
 
       - name: Deploy new version
         run: |
