@@ -22,35 +22,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check if latest image exists
-        id: check_latest_image
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          password: ${{ env.SSH_PASSWORD }}
-          key: ${{ env.SSH_PRIVATE_KEY }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            if docker image inspect crm/api-publisher-consumer:latest &> /dev/null;
-            then
-              echo "::set-output name=image_exists::'true'"
-            else  
-              echo "::set-output name=image_exists::'false'"
-            fi
+- name: Check if latest image exists
+  id: check_latest_image
+  uses: appleboy/ssh-action@master
+  with:
+    host: ${{ env.SSH_HOST }}
+    username: ${{ env.SSH_USER }}
+    password: ${{ env.SSH_PASSWORD }}
+    key: ${{ env.SSH_PRIVATE_KEY }}
+    port: ${{ env.SSH_PORT }}
+    run: |
+      if docker image inspect crm/api-publisher-consumer:latest &> /dev/null;
+      then
+        echo "::set-output name=image_exists::true"
+      else  
+        echo "::set-output name=image_exists::false"
+      fi
 
-      - name: Backup previous state
-        if: steps.check_latest_image.outputs.image_exists == 'true'
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          password: ${{ env.SSH_PASSWORD }}
-          key: ${{ env.SSH_PRIVATE_KEY }}
-          port: ${{ env.SSH_PORT }}
-          script: |
-            cd ~/TestServer/crm/crm-api
-            docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
+- name: Backup previous state
+  if: steps.check_latest_image.outputs.image_exists == 'true'
+  uses: appleboy/ssh-action@master
+  with:
+    host: ${{ env.SSH_HOST }}
+    username: ${{ env.SSH_USER }}
+    password: ${{ env.SSH_PASSWORD }}
+    key: ${{ env.SSH_PRIVATE_KEY }}
+    port: ${{ env.SSH_PORT }}
+    script: |
+      cd ~/TestServer/crm/crm-api
+      docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
 
       - name: Deploy new version
         uses: appleboy/ssh-action@master
