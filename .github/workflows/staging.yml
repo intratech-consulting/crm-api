@@ -1,0 +1,89 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to staging
+    runs-on: [self-hosted]
+    environment: staging
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deployment.key
+          chmod 600 ~/.ssh/deployment.key
+          echo "Host dev
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            IdentityFile ~/.ssh/deployment.key
+            StrictHostKeyChecking no" > ~/.ssh/config
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Print SSH config
+        run: cat ~/.ssh/config
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if latest image exists
+        id: check_latest_image
+
+        run: |
+          ssh dev "
+            if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
+            then
+              echo '::set-output name=image_exists::true'
+            else  
+              echo '::set-output name=image_exists::false'
+            fi
+            "
+
+      - name: Backup previous state
+        if: steps.check_latest_image.outputs.image_exists == 'true'
+        run: |
+          ssh dev "
+            cd ~/TestServer/crm/crm-api
+            docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
+          "
+
+
+      - name: Deploy new version
+        run: |
+          ssh dev "
+            cd ~/TestServer/crm/crm-api
+            docker compose down
+            git checkout dev
+            git pull
+            docker compose up -d
+            "
+
+      - name: Check deployment status
+        id: check_status
+        run: |
+          ssh dev "
+            cd ~/TestServer/crm/crm-api
+            docker compose ps | grep crm-api-publisher-consumer
+          "
+
+      - name: Rollback on failure
+        if: steps.check_status.outcome != 'success'
+        run: |
+          ssh dev "
+            cd ~/TestServer/crm/crm-api
+            docker-compose down
+            docker run -d --name restored_container crm/api-publisher-consumer:backup
+            docker compose up -d
+          "
