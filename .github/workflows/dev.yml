@@ -34,6 +34,9 @@ jobs:
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      - name: Print SSH config
+        run: cat ~/.ssh/config
+
       - name: Checkout code
         uses: actions/checkout@v4
 
