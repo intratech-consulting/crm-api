@@ -42,7 +42,7 @@ jobs:
         id: check_latest_image
 
         run: |
-          ssh dev "
+          ssh staging "
             if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
             then
               echo '::set-output name=image_exists::true'
