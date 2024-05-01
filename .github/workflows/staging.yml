@@ -24,7 +24,7 @@ jobs:
           mkdir -p ~/.ssh/
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deployment.key
           chmod 600 ~/.ssh/deployment.key
-          echo "Host dev
+          echo "Host staging
             HostName ${{ secrets.SSH_HOST }}
             User ${{ secrets.SSH_USER }}
             IdentityFile ~/.ssh/deployment.key
@@ -54,18 +54,18 @@ jobs:
       - name: Backup previous state
         if: steps.check_latest_image.outputs.image_exists == 'true'
         run: |
-          ssh dev "
-            cd ~/TestServer/crm/crm-api
+          ssh staging "
+            cd ~/staging/crm/crm-api
             docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
           "
 
 
       - name: Deploy new version
         run: |
-          ssh dev "
-            cd ~/TestServer/crm/crm-api
+          ssh staging "
+            cd ~/staging/crm/crm-api
             docker compose down
-            git checkout dev
+            git checkout staging
             git pull
             docker compose up -d
             "
@@ -73,16 +73,16 @@ jobs:
       - name: Check deployment status
         id: check_status
         run: |
-          ssh dev "
-            cd ~/TestServer/crm/crm-api
+          ssh staging "
+            cd ~/staging/crm/crm-api
             docker compose ps | grep crm-api-publisher-consumer
           "
 
       - name: Rollback on failure
         if: steps.check_status.outcome != 'success'
         run: |
-          ssh dev "
-            cd ~/TestServer/crm/crm-api
+          ssh staging "
+            cd ~/staging/crm/crm-api
             docker-compose down
             docker run -d --name restored_container crm/api-publisher-consumer:backup
             docker compose up -d
