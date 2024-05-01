@@ -19,25 +19,35 @@ jobs:
       SSH_PORT: ${{ secrets.SSH_PORT }}
 
     steps:
+      - run: |
+          mkdir -p ~/.ssh/
+          echo "${{ env.SSH_PRIVATE_KEY }}" > ~/.ssh/dev.key
+          chmod 600 ~/.ssh/dev.key
+          cat >>~/.ssh/config <<END
+          Host dev
+            HostName ${{ env.SSH_HOST }}
+            User ${{ env.SSH_USER }}
+            IdentityFile ~/.ssh/dev.key
+            StrictHostKeyChecking no
+          END
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Check if latest image exists
         id: check_latest_image
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          password: ${{ env.SSH_PASSWORD }}
-          key: ${{ env.SSH_PRIVATE_KEY }}
-          port: ${{ env.SSH_PORT }}
+
         run: |
-          if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
-          then
-            echo "::set-output name=image_exists::true"
-          else  
-            echo "::set-output name=image_exists::false"
-          fi
+          ssh staging "
+            if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
+            then
+              echo '::set-output name=image_exists::true'
+            else  
+              echo '::set-output name=image_exists::false'
+            fi
+            "
 
       - name: Backup previous state
         if: steps.check_latest_image.outputs.image_exists == 'true'
