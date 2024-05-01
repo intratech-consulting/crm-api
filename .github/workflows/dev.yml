@@ -24,14 +24,12 @@ jobs:
           mkdir -p ~/.ssh/
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/dev.key
           chmod 600 ~/.ssh/dev.key
-          cat >>~/.ssh/config <<END
-          Host dev
+          echo "Host dev
             HostName ${{ secrets.SSH_HOST }}
             User ${{ secrets.SSH_USER }}
             IdentityFile ~/.ssh/dev.key
-            StrictHostKeyChecking no
-          END
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+            StrictHostKeyChecking no" > ~/.ssh/config
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: Print SSH config
