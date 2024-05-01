@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy to dev
     runs-on: [self-hosted]
     environment: dev
     env:
@@ -31,13 +31,13 @@ jobs:
           password: ${{ env.SSH_PASSWORD }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: ${{ env.SSH_PORT }}
-          run: |
-            if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
-            then
-              echo "::set-output name=image_exists::true"
-            else  
-              echo "::set-output name=image_exists::false"
-            fi
+        run: |
+          if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
+          then
+            echo "::set-output name=image_exists::true"
+          else  
+            echo "::set-output name=image_exists::false"
+          fi
 
       - name: Backup previous state
         if: steps.check_latest_image.outputs.image_exists == 'true'
