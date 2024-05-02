@@ -5,5 +5,4 @@ cryptography
 lxml
 responses
 lxml
-logging
 testcontainers
