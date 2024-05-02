@@ -219,6 +219,15 @@ def get_talk():
 
 # Add a talk api call
 def add_talk(id, date, start_time, end_time, user_id, available_seats, description):
+    required_fields = {
+        'date': date,
+        'start_time': start_time,
+        'end_time': end_time,
+        'available_seats': available_seats
+    }
+
+    check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time, available_seats=available_seats)
+
     url = DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
