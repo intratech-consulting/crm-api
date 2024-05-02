@@ -2,7 +2,6 @@
 import pika, sys, os
 import API
 import xml.etree.ElementTree as ET
-import logging
 
 #Test CI/CD
 
@@ -14,19 +13,6 @@ def main():
     queues = ['user', 'company', 'event', 'order']
     for queue_name in queues:
         channel.queue_declare(queue=queue_name, durable=True)
-
-    logger = logging.getLogger(__name__)
-
-    # Create a file handler
-    handler = logging.FileHandler('consumer.log')
-    handler.setLevel(logging.INFO)
-
-    # Create a logging format
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(handler)
 
     def callback(ch, method, properties, body):
 
@@ -49,7 +35,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Request Failed", e)
+                    # logger.error("[ERROR] Request Failed", e)
 
             case 'company':
                 try:
@@ -66,7 +52,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Request Failed", e)
+                    # logger.error("[ERROR] Request Failed", e)
 
             case 'event':
                 try:
@@ -85,7 +71,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Request Failed", e)
+                    # logger.error("[ERROR] Request Failed", e)
 
             case 'Talk_attendances':
                 try:
@@ -97,7 +83,7 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Request Failed", e)
+                    # logger.error("[ERROR] Request Failed", e)
 
             case 'order':
                 try:
@@ -128,11 +114,11 @@ def main():
                     ch.basic_ack(delivery_tag = method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                    logger.error("[ERROR] Request Failed", e)
+                    # logger.error("[ERROR] Request Failed", e)
 
             case _:
                 ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
-                logger.error("[ERROR] This message is not valid")
+                # logger.error("[ERROR] This message is not valid")
 
     for queue_name in queues:
         channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=False)
