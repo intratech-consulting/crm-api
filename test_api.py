@@ -200,6 +200,23 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(responses.calls[0].request.body.strip(), expected_body)
 
     @responses.activate
+    def test_add_talk_should_return_error_when_missing_date(self):
+        with self.assertRaises(ValueError):
+            API.add_talk("test_id", "", "12:30", "13:30", "test_user_id", "test_available_seats", "test_description")
+
+    @responses.activate
+    def test_add_talk_should_return_error_when_missing_start_time(self):
+        with self.assertRaises(ValueError):
+            API.add_talk("test_id", "test_date", "", "13:30", "test_user_id", "test_available_seats", "test_description")
+
+    @responses.activate
+    def test_add_talk_should_return_error_when_missing_end_time(self):
+        with self.assertRaises(ValueError):
+            API.add_talk("test_id", "test_date", "12:30", "", "test_user_id", "test_available_seats", "test_description")
+
+
+
+    @responses.activate
     def test_get_attendance_should_make_request(self):
         # Mock the API response
         responses.add(responses.GET,
