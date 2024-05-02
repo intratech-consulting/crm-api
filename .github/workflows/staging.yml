@@ -36,6 +36,9 @@ jobs:
       - name: Print SSH config
         run: cat ~/.ssh/config
 
+      - name: Print requirements.txt
+        run: cat ~/staging/crm/crm-api/requirements.txt
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -59,7 +62,7 @@ jobs:
             cd ~/staging/crm/crm-api
             docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
           "
-          
+
       - name: Deploy new version
         run: |
           ssh staging "
