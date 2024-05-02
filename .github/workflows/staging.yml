@@ -65,6 +65,8 @@ jobs:
           ssh staging "
             eval $(ssh-agent)
             ssh-add ~/.ssh/github_intratechconsulting
+            ls -l ~/.ssh
+            hostname
             cd ~/staging/crm/crm-api
             docker compose down
             git checkout staging
