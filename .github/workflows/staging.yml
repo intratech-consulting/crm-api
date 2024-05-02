@@ -29,6 +29,7 @@ jobs:
             User ${{ secrets.SSH_USER }}
             IdentityFile ~/.ssh/deployment.key
             StrictHostKeyChecking no" > ~/.ssh/config
+            ForwardAgent yes
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
