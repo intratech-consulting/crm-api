@@ -63,6 +63,8 @@ jobs:
       - name: Deploy new version
         run: |
           ssh staging "
+            eval $(ssh-agent)
+            ssh-add ~/.ssh/github_intratechconsulting
             cd ~/staging/crm/crm-api
             docker compose down
             git checkout staging
