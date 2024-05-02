@@ -59,24 +59,7 @@ jobs:
             cd ~/staging/crm/crm-api
             docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
           "
-
-
-      - name: Print SSH Agent Environment Variables
-        run: |
-          echo "SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
-          echo "SSH_AGENT_PID: $SSH_AGENT_PID"
-
-      - name: Start SSH Agent and Add SSH Key
-        run: |
-          eval $(ssh-agent)
-          ssh-add ~/.ssh/github_intratechconsulting
           
-
-      - name: Print SSH Agent Environment Variables after explicit starting
-        run: |
-          echo "SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
-          echo "SSH_AGENT_PID: $SSH_AGENT_PID"
-
       - name: Deploy new version
         run: |
           ssh staging "
