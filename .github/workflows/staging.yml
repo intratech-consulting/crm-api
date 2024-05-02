@@ -37,7 +37,11 @@ jobs:
         run: cat ~/.ssh/config
 
       - name: Print requirements.txt
-        run: cat ~/staging/crm/crm-api/requirements.txt
+
+        run: |
+          ssh staging "
+            whoami && cat ~/staging/crm/crm-api/requirements.txt
+          "
 
       - name: Checkout code
         uses: actions/checkout@v4
