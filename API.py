@@ -3,26 +3,12 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 import jwt
 import time
-import logging
 
 KEY_FILE = 'salesforce.key' #Key file
 ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
 SUBJECT = 'admin@ehb.be' #Subject
 DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com'
 ACCESS_TOKEN = ''
-
-logger = logging.getLogger(__name__)
-
-# Create a file handler
-handler = logging.FileHandler('api.log')
-handler.setLevel(logging.INFO)
-
-# Create a logging format
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-# Add the handler to the logger
-logger.addHandler(handler)
 
 # Get the access token and domain name
 def authenticate():
@@ -73,7 +59,7 @@ def get_users():
                 field_element.text = str(value)
 
         xml_string = ET.tostring(root, encoding="unicode", method="xml")
-        logger.info("get users: " + xml_string)
+        # logger.info("get users: " + xml_string)
         return xml_string
     except Exception as e:
         print("Error fetching users from Salesforce:", e)
@@ -119,7 +105,7 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    logger.info("add user" + response.text)
+    # logger.info("add user" + response.text)
     print(response.text)
 
 # Get companies api call
@@ -184,7 +170,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    logger.info("add company" + response.text)
+    # logger.info("add company" + response.text)
     print(response.text)
 
 # Get talks api call
@@ -246,7 +232,7 @@ def add_talk(id, date, start_time, end_time, user_id, available_seats, descripti
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    logger.info("add talk" + response.text)
+    # logger.info("add talk" + response.text)
 
 # Get the attendances
 def get_attendance():
@@ -293,7 +279,7 @@ def add_attendance(User = None, Talk = None):
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    logger.info("add attendance" + response.text)
+    # logger.info("add attendance" + response.text)
 
 # Add a product
 def add_product(name):
@@ -309,7 +295,7 @@ def add_product(name):
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    logger.info("add product" + response.text)
+    # logger.info("add product" + response.text)
     print(response.text)
 
 # Returns product id if exists
@@ -350,7 +336,7 @@ def add_order(user_id, product, amount):
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    logger.info("add order" + response.text)
+    # logger.info("add order" + response.text)
 
 def update_order(order_id, amount):
     url = DOMAIN_NAME + f'/services/data/v60.0/sobjects/order__c/{order_id}'
@@ -364,7 +350,7 @@ def update_order(order_id, amount):
         </order__c>
     '''
     response = requests.request("PATCH", url, headers=headers, data=payload)
-    logger.info("add order" + response.text)
+    # logger.info("add order" + response.text)
 
 # Get order to change amount
 def get_order(user_id, product):
