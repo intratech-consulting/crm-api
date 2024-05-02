@@ -33,16 +33,6 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Print SSH config
-        run: cat ~/.ssh/config
-
-      - name: Print requirements.txt
-
-        run: |
-          ssh staging "
-            whoami && cat ~/staging/crm/crm-api/requirements.txt
-          "
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -70,8 +60,6 @@ jobs:
       - name: Deploy new version
         run: |
           ssh staging "
-            ls -l ~/.ssh
-            hostname
             cd ~/staging/crm/crm-api
             docker compose down
             git checkout staging
