@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pika, sys, os
-import API
+from src import API
 import xml.etree.ElementTree as ET
 
 #Test CI/CD

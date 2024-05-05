@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pika
-from API import get_companies, authenticate
+from src.API import get_talk, authenticate
 import time
 
 def send_message_to_rabbitmq(message):
@@ -23,20 +23,20 @@ def send_message_to_rabbitmq(message):
 # Authenticate to Salesforce
 authenticate()
 
-# Initialize variable to keep track of the last retrieved companies
-last_company_xml = ""
+# Initialize variable to keep track of the last retrieved talks
+last_talk_xml = ""
 
-# Infinite loop to continuously check for new companies
+# Infinite loop to continuously check for new talks
 while True:
-    # Get the current companies from Salesforce
-    company_xml = get_companies()
+    # Get the current talks from Salesforce
+    talk_xml = get_talk()
     
-    # Check if there are new companies
-    if company_xml != last_company_xml:
-        # Send the new companies to RabbitMQ
-        send_message_to_rabbitmq(company_xml)
-        # Update the last retrieved companies
-        last_company_xml = company_xml
+    # Check if there are new talks
+    if talk_xml != last_talk_xml:
+        # Send the new talks to RabbitMQ
+        send_message_to_rabbitmq(talk_xml)
+        # Update the last retrieved talks
+        last_talk_xml = talk_xml
 
     # Wait for 10 minutes before checking again
     time.sleep(600)

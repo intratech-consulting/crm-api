@@ -2,7 +2,7 @@ from datetime import datetime
 
 import responses
 import unittest
-import API
+from src import API
 
 
 class TestAPI(unittest.TestCase):
