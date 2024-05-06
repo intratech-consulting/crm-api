@@ -2,8 +2,8 @@ from lxml import etree
 import pika, sys, os
 import time
 from datetime import datetime
-
-from config.secrets import HOST
+sys.path.append('..')
+import config.secrets as secrets
 
 TEAM = 'crm'
 
@@ -19,7 +19,7 @@ def main(timestamp):
     </Heartbeat>
     '''
 
-    xsd_tree = etree.parse('./resource/heartbeat_xsd.xml')
+    xsd_tree = etree.parse('../resources/heartbeat_xsd.xml')
     schema = etree.XMLSchema(xsd_tree)
 
     # Parse the documents
@@ -30,7 +30,7 @@ def main(timestamp):
         return
 
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
 
     channel.queue_declare(queue='heartbeat_queue', durable=True)

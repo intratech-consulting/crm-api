@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import pika, sys, os
 from lxml import etree
-import API
 import xml.etree.ElementTree as ET
 import time
-
-from config.secrets import HOST
+sys.path.append('..')
+import config.secrets as secrets
+import src.API as API
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
     channel.exchange_declare(exchange="amq.topic", exchange_type="topic", durable=True)
 
@@ -32,7 +32,7 @@ def main():
                 match object_type_value:
                     case 'user':
                         message = API.get_user(name_value)
-                        xsd_tree = etree.parse('./resource/user_xsd.xml')
+                        xsd_tree = etree.parse('../resources/user_xsd.xml')
                         schema = etree.XMLSchema(xsd_tree)
 
                         # Parse the documents
@@ -41,8 +41,7 @@ def main():
                         if not schema.validate(xml_doc):
                             print('Invalid XML')
                             return
-                        
-                        print('Valid XML')
+
 
                     case 'company':
                         message = API.get_companies(name_value)
@@ -62,7 +61,6 @@ if __name__ == '__main__':
         while True:
             main()
             time.sleep(5)
-            print(' [*] Waiting for next update...')
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)

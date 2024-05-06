@@ -2,28 +2,31 @@ import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import jwt
+import sys
 
-from config.secrets import *
+sys.path.append('..')
+import config.secrets as secrets
 
 
 # Get the access token and domain name
 def authenticate():
-    with open(KEY_FILE) as file:
+    with open(secrets.KEY_FILE) as file:
         private_key = file.read()
 
     claimSet = {
-        'iss': ISSUER,
+        'iss': secrets.ISSUER,
         'exp': int(datetime.now().timestamp()) + 300,
         'aud': 'https://login.salesforce.com',
-        'sub': SUBJECT
+        'sub': secrets.SUBJECT
     }
 
     assertion = jwt.encode(claimSet, private_key, algorithm='RS256', headers={'alg': 'RS256'})
 
-    req = requests.post('https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/oauth2/token', data={
-        'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        'assertion': assertion
-    })
+    req = requests.post('https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com/services/oauth2/token',
+                        data={
+                            'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                            'assertion': assertion
+                        })
 
     response = req.json()
     global ACCESS_TOKEN
@@ -31,8 +34,8 @@ def authenticate():
 
 
 # Get user api call
-def get_user(user_id = None):
-    url = DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c+WHERE+Id+=+'"+user_id+"'"
+def get_user(user_id=None):
+    url = secrets.DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c+WHERE+Id+=+'" + user_id + "'"
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -80,8 +83,12 @@ def get_user(user_id = None):
         print("Error fetching users from Salesforce:", e)
         return None
 
+
 # Add an user api call
-def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street, house_number, company_email = "", company_id = "", source = "", user_role = "", invoice = ""):
+def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
+             house_number, company_email="", company_id="", source="", user_role="", invoice=""):
+
+    print("inside add user")
     required_fields = {
         'user_id': user_id,
         'first_name': first_name,
@@ -89,13 +96,15 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
         'email': email,
     }
 
-    check_required_fields(required_fields, user_id=user_id, first_name=first_name, last_name=last_name, email=email)
+    #check_required_fields(required_fields, user_id=user_id, first_name=first_name, last_name=last_name, email=email)
 
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/user__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/user__c'
+    print("url: ", url)
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
+    print("headers: ", headers)
 
     payload = f'''
     <user__c>
@@ -118,14 +127,16 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
         <invoice__c>{invoice}</invoice__c>
     </user__c>
     '''
+    print("payload: ", payload)
 
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add user" + response.text)
     print(response.text)
 
+
 # Get companies api call
 def get_companies():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+id__c,name__c,email__c,telephone__c,country__c,state__c,city__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+id__c,name__c,email__c,telephone__c,country__c,state__c,city__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -153,6 +164,7 @@ def get_companies():
         print("Error fetching companies from Salesforce:", e)
         return None
 
+
 # Add a company api call
 def add_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
     required_fields = {
@@ -162,7 +174,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     }
     check_required_fields(required_fields, id=id, name=name, email=email)
 
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -188,9 +200,10 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     # logger.info("add company" + response.text)
     print(response.text)
 
+
 # Get talks api call
 def get_talk():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Date__c+FROM+Talk__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Date__c+FROM+Talk__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -218,6 +231,7 @@ def get_talk():
         print("Error fetching talks from Salesforce:", e)
         return None
 
+
 # Add a talk api call
 def add_talk(id, date, start_time, end_time, user_id, available_seats, description):
     required_fields = {
@@ -227,9 +241,10 @@ def add_talk(id, date, start_time, end_time, user_id, available_seats, descripti
         'available_seats': available_seats
     }
 
-    check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time, available_seats=available_seats)
+    check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time,
+                          available_seats=available_seats)
 
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -249,9 +264,10 @@ def add_talk(id, date, start_time, end_time, user_id, available_seats, descripti
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add talk" + response.text)
 
+
 # Get the attendances
 def get_attendance():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Talk__c,Portal_user__c+FROM+talkAttendance__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Talk__c,Portal_user__c+FROM+talkAttendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -279,9 +295,10 @@ def get_attendance():
         print("Error fetching attendance from Salesforce:", e)
         return None
 
+
 # Add an attendance
-def add_attendance(User = None, Talk = None):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/talkAttendance__c'
+def add_attendance(User=None, Talk=None):
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/talkAttendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -296,9 +313,10 @@ def add_attendance(User = None, Talk = None):
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add attendance" + response.text)
 
+
 # Add a product
 def add_product(name):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/product__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/product__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -313,9 +331,10 @@ def add_product(name):
     # logger.info("add product" + response.text)
     print(response.text)
 
+
 # Returns product id if exists
 def product_exists(name):
-    url = DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Name=\'{name}\''
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Name=\'{name}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -335,9 +354,10 @@ def product_exists(name):
         print("Error fetching product from Salesforce:", e)
         return False
 
+
 # Add an order
 def add_order(user_id, product, amount):
-    url = DOMAIN_NAME + '/services/data/v60.0/sobjects/order__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/order__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -353,8 +373,9 @@ def add_order(user_id, product, amount):
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add order" + response.text)
 
+
 def update_order(order_id, amount):
-    url = DOMAIN_NAME + f'/services/data/v60.0/sobjects/order__c/{order_id}'
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/sobjects/order__c/{order_id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -367,9 +388,10 @@ def update_order(order_id, amount):
     response = requests.request("PATCH", url, headers=headers, data=payload)
     # logger.info("add order" + response.text)
 
+
 # Get order to change amount
 def get_order(user_id, product):
-    url = DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -389,11 +411,11 @@ def get_order(user_id, product):
     except Exception as e:
         print("Error fetching order from Salesforce:", e)
         return None, None
-    
+
 
 # Get changedSalesforce data
 def get_changed_data():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c+FROM+changed_object__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c+FROM+changed_object__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -422,14 +444,16 @@ def get_changed_data():
         print("Error fetching changed data from Salesforce:", e)
         return None
 
+
 def check_required_fields(required_fields, **kwargs):
     for field_name in required_fields:
         if field_name not in kwargs or not kwargs[field_name] or kwargs[field_name].isspace():
             raise ValueError(f"{field_name} cannot be empty or just spaces")
-        
+
+
 # Delete Change Object api call
-def delete_change_object(id = None):
-    url = DOMAIN_NAME + f'/services/data/v60.0/sobjects/changed_object__c/{id}'
+def delete_change_object(id=None):
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/sobjects/changed_object__c/{id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }

@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 import pika, sys, os
-import API
 import xml.etree.ElementTree as ET
-from config.secrets import HOST
+sys.path.append('..')
+import config.secrets as secrets
+import src.API as API
 
 
 #Test CI/CD
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
 
     queue_name = 'crm'
@@ -26,6 +27,7 @@ def main():
         match root.tag:
             case 'user':
                 try:
+                    print("User")
                     variables = {}
                     for child in root:
                         if child.tag == "address":
@@ -33,10 +35,13 @@ def main():
                                 variables[address_field.tag] = address_field.text
                         else:
                             variables[child.tag] = child.text
+                    print(variables)
                     API.add_user(**variables)
+                    print("call done")
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print(e)
                     # logger.error("[ERROR] Request Failed", e)
 
             case 'company':
