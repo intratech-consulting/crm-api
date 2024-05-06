@@ -32,7 +32,7 @@ def main():
                 match object_type_value:
                     case 'user':
                         message = API.get_user(name_value)
-                        xsd_tree = etree.parse('../resources/user_xsd.xml')
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
                         schema = etree.XMLSchema(xsd_tree)
 
                         # Parse the documents

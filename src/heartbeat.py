@@ -19,7 +19,7 @@ def main(timestamp):
     </Heartbeat>
     '''
 
-    xsd_tree = etree.parse('../resources/heartbeat_xsd.xml')
+    xsd_tree = etree.parse('./resources/heartbeat_xsd.xml')
     schema = etree.XMLSchema(xsd_tree)
 
     # Parse the documents
