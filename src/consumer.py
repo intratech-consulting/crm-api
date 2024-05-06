@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
     queue_name = 'crm'
@@ -132,9 +132,6 @@ if __name__ == '__main__':
         API.authenticate()
         print(API.ACCESS_TOKEN)
         main()
-    except KeyboardInterrupt:
-        print('Interrupted')
-        try:
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        sys.exit(1)

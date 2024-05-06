@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import jwt
 import time
 
-KEY_FILE = '../config/salesforce.key'  #Key file
+KEY_FILE = 'salesforce.key'  #Key file
 ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
 SUBJECT = 'admin@ehb.be' #Subject
 DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com'
