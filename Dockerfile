@@ -19,7 +19,7 @@ COPY src/sender_talks.py .
 COPY src/sender_attendances.py .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r ./config/requirements.txt
+RUN pip install --no-cache-dir -r config/requirements.txt
 
 # Copy supervisord configuration file
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
