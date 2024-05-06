@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import jwt
 import time
 
-KEY_FILE = 'salesforce.key'  #Key file
+KEY_FILE = './config/salesforce.key'  #Key file
 ISSUER = '3MVG9k02hQhyUgQBC9hiaTcCgbbdMVPx9heQhKpTslb68bY7kICgeRxzAKW7qwDxbo6uYZgMzU1GG9MVVefyU' #Consumer Key
 SUBJECT = 'admin@ehb.be' #Subject
 DOMAIN_NAME = 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com'
@@ -34,9 +34,9 @@ def authenticate():
     ACCESS_TOKEN = response['access_token']
 
 
-# Get users api call
-def get_users():
-    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+user_id__c,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c'
+# Get user api call
+def get_user(user_id = None):
+    url = DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c+WHERE+Id+=+'"+user_id+"'"
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -46,21 +46,40 @@ def get_users():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        if data:
+            user_data = data[0]
+            root = ET.Element("user")
 
-        root = ET.Element("Users")
+            address_element = None  # Initialize address_element to None
 
-        # Makes json data into xml data
-        for record in data:
-            user_element = ET.SubElement(root, "user__c")
-            for field, value in record.items():
+            address_fields = ["country__c", "state__c", "city__c", "zip__c", "street__c", "house_number__c"]
+
+            for field, value in user_data.items():
                 if field == "attributes":
-                    continue
-                field_element = ET.SubElement(user_element, field)
-                field_element.text = str(value)
+                    field_element = ET.SubElement(root, "routing_key")
+                    field_element.text = "user"
+                elif field == "Id":
+                    field_element = ET.SubElement(root, "user_id")
+                    field_element.text = str(value)
+                elif field == "birthday__c":
+                    field_element = ET.SubElement(root, "birthday")
+                    field_element.text = str(value)
+                    address_element = ET.SubElement(root, "address")
+                elif field in address_fields and address_element is not None:
+                    sub_field = field.split("__")[0]
+                    sub_field_element = ET.SubElement(address_element, sub_field)
+                    sub_field_element.text = str(value)
+                else:
+                    field_name = field.split("__")[0]
+                    field_element = ET.SubElement(root, field_name)
+                    field_element.text = str(value)
 
-        xml_string = ET.tostring(root, encoding="unicode", method="xml")
-        # logger.info("get users: " + xml_string)
-        return xml_string
+            xml_string = ET.tostring(root, encoding="unicode", method="xml")
+            # logger.info("get users: " + xml_string)
+            return xml_string
+        else:
+            print("No user found with this id: " + user_id)
+            return None
     except Exception as e:
         print("Error fetching users from Salesforce:", e)
         return None
@@ -374,8 +393,55 @@ def get_order(user_id, product):
     except Exception as e:
         print("Error fetching order from Salesforce:", e)
         return None, None
+    
+
+# Get changedSalesforce data
+def get_changed_data():
+    url = DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c+FROM+changed_object__c'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+
+        root = ET.Element("ChangedData")
+
+        # Makes json data into xml data
+        for record in data:
+            changed_element = ET.SubElement(root, "ChangedObject__c")
+            for field, value in record.items():
+                if field == "attributes":
+                    continue
+                field_element = ET.SubElement(changed_element, field)
+                field_element.text = str(value)
+
+        xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        return xml_string
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
 
 def check_required_fields(required_fields, **kwargs):
     for field_name in required_fields:
         if field_name not in kwargs or not kwargs[field_name] or kwargs[field_name].isspace():
             raise ValueError(f"{field_name} cannot be empty or just spaces")
+        
+# Delete Change Object api call
+def delete_change_object(id = None):
+    url = DOMAIN_NAME + f'/services/data/v60.0/sobjects/changed_object__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN
+    }
+    payload = {}
+
+    try:
+        response = requests.delete(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+    except Exception as e:
+        print("Error deleting user from Salesforce:", e)
+        return None
