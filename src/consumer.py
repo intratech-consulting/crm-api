@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import pika, sys, os
-import API
+from src import API
 import xml.etree.ElementTree as ET
+
 
 #Test CI/CD
 
@@ -10,9 +11,9 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
     channel = connection.channel()
 
-    queues = ['user', 'company', 'event', 'order']
-    for queue_name in queues:
-        channel.queue_declare(queue=queue_name, durable=True)
+    queue_name = 'crm'
+
+    channel.queue_declare(queue=queue_name, durable=True)
 
     def callback(ch, method, properties, body):
 
@@ -32,9 +33,9 @@ def main():
                         else:
                             variables[child.tag] = child.text
                     API.add_user(**variables)
-                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     # logger.error("[ERROR] Request Failed", e)
 
             case 'company':
@@ -49,9 +50,9 @@ def main():
                         else:
                             variables[child.tag] = child.text
                     API.add_company(**variables)
-                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     # logger.error("[ERROR] Request Failed", e)
 
             case 'event':
@@ -63,14 +64,14 @@ def main():
                                 if speaker_field.tag == "user_id":
                                     variables[speaker_field.tag] = speaker_field.text
                         elif child.tag == "location" or child.tag == "max_registrations":
-                            pass    
+                            pass
                         else:
                             variables[child.tag] = child.text.strip()
                     print(variables)
                     API.add_talk(**variables)
-                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     # logger.error("[ERROR] Request Failed", e)
 
             case 'Talk_attendances':
@@ -80,9 +81,9 @@ def main():
                         for field in child:
                             variables[field.tag] = field.text.strip()
                         API.add_attendance(**variables)
-                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     # logger.error("[ERROR] Request Failed", e)
 
             case 'order':
@@ -111,20 +112,20 @@ def main():
                                     API.add_order(**variables)
                         else:
                             pass
-                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
-                    ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     # logger.error("[ERROR] Request Failed", e)
 
             case _:
-                ch.basic_nack(delivery_tag = method.delivery_tag, requeue=False)
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                 # logger.error("[ERROR] This message is not valid")
 
-    for queue_name in queues:
-        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=False)
+    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=False)
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
+
 
 if __name__ == '__main__':
     try:

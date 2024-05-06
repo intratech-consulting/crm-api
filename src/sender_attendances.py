@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 import pika
-from API import get_users, authenticate
+from src.API import get_attendance, authenticate
 import time
 
 def send_message_to_rabbitmq(message):
@@ -22,20 +23,20 @@ def send_message_to_rabbitmq(message):
 # Authenticate to Salesforce
 authenticate()
 
-# Initialize variable to keep track of the last retrieved users
-last_users_xml = ""
+# Initialize variable to keep track of the last retrieved attendances
+last_attendance_xml = ""
 
-# Infinite loop to continuously check for new users
+# Infinite loop to continuously check for new attendances
 while True:
-    # Get the current users from Salesforce
-    users_xml = get_users()
+    # Get the current attendances from Salesforce
+    attendance_xml = get_attendance()
     
-    # Check if there are new users
-    if users_xml != last_users_xml:
-        # Send the new users to RabbitMQ
-        send_message_to_rabbitmq(users_xml)
-        # Update the last retrieved users
-        last_users_xml = users_xml
+    # Check if there are new attendances
+    if attendance_xml != last_attendance_xml:
+        # Send the new attendances to RabbitMQ
+        send_message_to_rabbitmq(attendance_xml)
+        # Update the last retrieved attendances
+        last_attendance_xml = attendance_xml
 
     # Wait for 10 minutes before checking again
     time.sleep(600)
