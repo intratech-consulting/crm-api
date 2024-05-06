@@ -2,13 +2,14 @@
 import pika, sys, os
 import API
 import xml.etree.ElementTree as ET
+from config.secrets import HOST
 
 
 #Test CI/CD
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, credentials=credentials))
     channel = connection.channel()
 
     queue_name = 'crm'
