@@ -18,6 +18,8 @@ COPY src/sender_companies.py .
 COPY src/sender_talks.py .
 COPY src/sender_attendances.py .
 
+RUN ls -la
+
 # Install Python dependencies
 RUN pip install --no-cache-dir -r config/requirements.txt
 
