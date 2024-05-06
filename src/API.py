@@ -88,7 +88,6 @@ def get_user(user_id=None):
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
              house_number, company_email="", company_id="", source="", user_role="", invoice=""):
 
-    print("inside add user")
     required_fields = {
         'user_id': user_id,
         'first_name': first_name,
@@ -99,12 +98,10 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
     #check_required_fields(required_fields, user_id=user_id, first_name=first_name, last_name=last_name, email=email)
 
     url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/user__c'
-    print("url: ", url)
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    print("headers: ", headers)
 
     payload = f'''
     <user__c>
@@ -127,11 +124,9 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
         <invoice__c>{invoice}</invoice__c>
     </user__c>
     '''
-    print("payload: ", payload)
 
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add user" + response.text)
-    print(response.text)
 
 
 # Get companies api call
