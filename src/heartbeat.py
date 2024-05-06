@@ -3,6 +3,8 @@ import pika, sys, os
 import time
 from datetime import datetime
 
+from config.secrets import HOST
+
 TEAM = 'crm'
 
 def main(timestamp):
@@ -28,7 +30,7 @@ def main(timestamp):
         return
 
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, credentials=credentials))
     channel = connection.channel()
 
     channel.queue_declare(queue='heartbeat_queue', durable=True)
