@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.54', credentials=credentials))
     channel = connection.channel()
 
     queue_name = 'crm'
