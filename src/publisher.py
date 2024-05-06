@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import pika, sys, os
 from lxml import etree
-import requests
 import API
 import xml.etree.ElementTree as ET
 import time

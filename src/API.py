@@ -2,8 +2,6 @@ import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import jwt
-import time
-import secrets
 
 from config.secrets import *
 
