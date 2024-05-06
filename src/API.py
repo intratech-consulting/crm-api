@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import jwt
 import sys
 
-sys.path.append('..')
+sys.path.append('/app')
 import config.secrets as secrets
 
 

@@ -3,7 +3,7 @@ import pika, sys, os
 from lxml import etree
 import xml.etree.ElementTree as ET
 import time
-sys.path.append('..')
+sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
 

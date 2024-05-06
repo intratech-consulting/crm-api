@@ -2,7 +2,7 @@ from lxml import etree
 import pika, sys, os
 import time
 from datetime import datetime
-sys.path.append('..')
+sys.path.append('/app')
 import config.secrets as secrets
 
 TEAM = 'crm'

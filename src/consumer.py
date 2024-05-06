@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pika, sys, os
 import xml.etree.ElementTree as ET
-sys.path.append('..')
+sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
 
