@@ -68,14 +68,12 @@ jobs:
             docker rmi crm/api-publisher-consumer:latest
             git checkout dev
             git pull
-            echo "
-                HOST = '${{ secrets.SSH_HOST }}'
-                KEY_FILE = '${{ secrets.SALESFORCE_KEY_FILE }}'
-                ISSUER = '${{ secrets.SALESFORCE_CONSUMER_KEY }}'
-                SUBJECT = '${{ secrets.SALESFORCE_SUBJECT }}'
-                DOMAIN_NAME = '${{ secrets.SALESFORCE_DOMAIN_NAME }}'
-                ACCESS_TOKEN = ''
-            " > ./config/secrets.py
+            echo "HOST = '${{ secrets.SSH_HOST }}'
+              KEY_FILE = '${{ secrets.SALESFORCE_KEY_FILE }}'
+              ISSUER = '${{ secrets.SALESFORCE_CONSUMER_KEY }}'
+              SUBJECT = '${{ secrets.SALESFORCE_SUBJECT }}'
+              DOMAIN_NAME = '${{ secrets.SALESFORCE_DOMAIN_NAME }}'
+              ACCESS_TOKEN = ''" > ./config/secrets.py
             echo "${{ secrets.SALESFORCE_PRIVATE_KEY }}" > ./config/salesforce.key
             docker compose up -d
             "
