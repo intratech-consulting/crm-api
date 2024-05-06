@@ -11,6 +11,7 @@ COPY src/consumer.py .
 COPY src/API.py .
 COPY config/requirements.txt .
 COPY config/salesforce.key .
+COPY config/secrets.py .
 COPY src/heartbeat.py .
 COPY src/sender_users.py .
 COPY src/sender_companies.py .
