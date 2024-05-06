@@ -74,6 +74,7 @@ jobs:
                 ISSUER = '${{ secrets.SALESFORCE_CONSUMER_KEY }}'
                 SUBJECT = '${{ secrets.SALESFORCE_SUBJECT }}'
                 DOMAIN_NAME = '${{ secrets.SALESFORCE_DOMAIN_NAME }}'
+                ACCESS_TOKEN = ''
             " > ./config/secrets.py
             echo "${{ secrets.SALESFORCE_PRIVATE_KEY }}" > ./config/salesforce.key
             docker compose up -d
