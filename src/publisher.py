@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 import pika, sys, os
 from lxml import etree
-import requests
 import API
 import xml.etree.ElementTree as ET
 import time
 
+from config.secrets import HOST
+
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=HOST, credentials=credentials))
     channel = connection.channel()
     channel.exchange_declare(exchange="amq.topic", exchange_type="topic", durable=True)
 
