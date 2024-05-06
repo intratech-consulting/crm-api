@@ -17,26 +17,15 @@ def main(timestamp):
     </Heartbeat>
     '''
 
-    heartbeat_xsd = f'''
-    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-        <xs:element name="Heartbeat">
-            <xs:complexType>
-                <xs:sequence>
-                    <xs:element name="Timestamp" type="xs:dateTime" />
-                    <xs:element name="Status" type="xs:string" />
-                    <xs:element name="SystemName" type="xs:string" />
-                </xs:sequence>
-            </xs:complexType>
-        </xs:element>
-    </xs:schema>
-    '''
+    xsd_tree = etree.parse('./resource/heartbeat_xsd.xml')
+    schema = etree.XMLSchema(xsd_tree)
 
     # Parse the documents
     xml_doc = etree.fromstring(heartbeat_xml.encode())
-    xsd_doc = etree.fromstring(heartbeat_xsd.encode())
 
-    # Create a schema object
-    schema = etree.XMLSchema(xsd_doc)
+    if not schema.validate(xml_doc):
+        print('Invalid XML')
+        return
 
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.51', credentials=credentials))
