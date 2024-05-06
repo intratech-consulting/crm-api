@@ -68,7 +68,7 @@ jobs:
             docker rmi crm/api-publisher-consumer:latest
             git checkout dev
             git pull
-            sed "s/'{SSH_HOST}'/'${{ secrets.SSH_HOST }}'/g; s/'{SALESFORCE_KEY_FILE}'/'${{ secrets.SALESFORCE_KEY_FILE }}'/g; s/'{SALESFORCE_CONSUMER_KEY}'/'${{ secrets.SALESFORCE_CONSUMER_KEY }}'/g; s/'{SALESFORCE_SUBJECT}'/'${{ secrets.SALESFORCE_SUBJECT }}'/g; s/'{SALESFORCE_DOMAIN_NAME}'/'${{ secrets.SALESFORCE_DOMAIN_NAME }}'/g" ./config/secrets_template.py > ./config/secrets.py
+            sed 's/'\''{SSH_HOST}'\''/'\''${{ secrets.SSH_HOST }}'\''/g; s/'\''{SALESFORCE_KEY_FILE}'\''/'\''${{ secrets.SALESFORCE_KEY_FILE }}'\''/g; s/'\''{SALESFORCE_CONSUMER_KEY}'\''/'\''${{ secrets.SALESFORCE_CONSUMER_KEY }}'\''/g; s/'\''{SALESFORCE_SUBJECT}'\''/'\''${{ secrets.SALESFORCE_SUBJECT }}'\''/g; s/'\''{SALESFORCE_DOMAIN_NAME}'\''/'\''${{ secrets.SALESFORCE_DOMAIN_NAME }}'\''/g' ./config/secrets_template.py > ./config/secrets.py
             echo \"${{ secrets.SALESFORCE_PRIVATE_KEY }}\" > ./config/salesforce.key
             docker compose up -d
             "
