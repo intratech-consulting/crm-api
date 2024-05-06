@@ -1,2 +1,2 @@
-./config/salesforce.key
-./config/secrets.py
+/config/salesforce.key
+/config/secrets.py
