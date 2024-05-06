@@ -7,16 +7,13 @@ WORKDIR /app
 ENV PATH="/root/cli/sf/bin:${PATH}"
 
 # Copy the Python scripts and requirements
-COPY src/consumer.py .
-COPY src/API.py .
+COPY src/consumer.py ./src/consumer.py
+COPY src/API.py ./src/API.py
 COPY config/requirements.txt ./config/requirements.txt
-COPY config/salesforce.key .
+COPY config/salesforce.key ./config/salesforce.key
 COPY config/secrets.py ./config/secrets.py
-COPY src/heartbeat.py .
-COPY src/sender_users.py .
-COPY src/sender_companies.py .
-COPY src/sender_talks.py .
-COPY src/sender_attendances.py .
+COPY src/heartbeat.py ./src/heartbeat.py
+COPY src/publisher.py ./src/publisher.py
 
 RUN ls -la
 
