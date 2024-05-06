@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pika, sys, os
-from src import API
+import API
 import xml.etree.ElementTree as ET
 
 
