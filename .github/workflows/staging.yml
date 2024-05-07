@@ -69,13 +69,6 @@ jobs:
             docker compose up -d
             "
 
-      - name: Print secrets.py
-        run: |
-          ssh dev "
-            cd ~/TestServer/crm/crm-api
-            cat ./config/secrets.py
-          "
-
       - name: Check deployment status
         id: check_status
         run: |
