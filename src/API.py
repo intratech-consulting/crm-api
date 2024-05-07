@@ -33,7 +33,7 @@ def authenticate():
     ACCESS_TOKEN = response['access_token']
 
 
-# Get user api call
+# Get an user by id api call
 def get_user(user_id=None):
     url = secrets.DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c+WHERE+Id+=+'" + user_id + "'"
     headers = {
@@ -129,9 +129,9 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
     # logger.info("add user" + response.text)
 
 
-# Get companies api call
-def get_companies():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+id__c,name__c,email__c,telephone__c,country__c,state__c,city__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c'
+# Get a company by id api call
+def get_company(company_id=None):
+    url = secrets.DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+'" + company_id + "'"
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -141,23 +141,42 @@ def get_companies():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        if data:
+            company_data = data[0]
+            root = ET.Element("company")
 
-        root = ET.Element("Companies")
+            address_element = None  # Initialize address_element to None
 
-        # Makes json data into xml data
-        for record in data:
-            company_element = ET.SubElement(root, "Company__c")
-            for field, value in record.items():
+            address_fields = ["country__c", "state__c", "city__c", "zip__c", "street__c", "house_number__c"]
+
+            for field, value in company_data.items():
                 if field == "attributes":
-                    continue
-                field_element = ET.SubElement(company_element, field)
-                field_element.text = str(value)
+                    field_element = ET.SubElement(root, "routing_key")
+                    field_element.text = "company.crm"
+                elif field == "telephone__c":
+                    field_element = ET.SubElement(root, "telephone")
+                    field_element.text = str(value)
+                    field_element = ET.SubElement(root, "logo")
+                    field_element.text = ""
+                    address_element = ET.SubElement(root, "address")
+                elif field in address_fields and address_element is not None:
+                    sub_field = field.split("__")[0]
+                    sub_field_element = ET.SubElement(address_element, sub_field)
+                    sub_field_element.text = str(value)
+                else:
+                    field_name = field.split("__")[0]
+                    field_element = ET.SubElement(root, str(field_name).lower())
+                    field_element.text = str(value)
 
-        xml_string = ET.tostring(root, encoding="unicode", method="xml")
-        return xml_string
+            xml_string = ET.tostring(root, encoding="unicode", method="xml")
+            # logger.info("get company: " + xml_string)
+            return xml_string
+        else:
+            print("No company found with this id: " + company_id)
+            return None
     except Exception as e:
-        print("Error fetching companies from Salesforce:", e)
-        return None
+            print("Error fetching companies from Salesforce:", e)
+            return None
 
 
 # Add a company api call
@@ -460,3 +479,6 @@ def delete_change_object(id=None):
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
+
+authenticate()
+get_company('a03Qy000004cOQUIA2')
