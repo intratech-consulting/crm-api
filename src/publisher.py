@@ -52,7 +52,7 @@ def main():
                 API.delete_change_object(id_value)
 
             if message:
-                channel.basic_publish(exchange='amq.topic', routing_key='user', body=message)
+                channel.basic_publish(exchange='amq.topic', routing_key='user.crm', body=message)
 
 if __name__ == '__main__':
     try:

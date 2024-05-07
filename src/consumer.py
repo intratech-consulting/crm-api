@@ -29,21 +29,20 @@ def main():
         match root.tag:
             case 'user':
                 try:
-                    print("User")
                     variables = {}
                     for child in root:
+                        if child.tag == "routing_key":
+                            continue
                         if child.tag == "address":
                             for address_field in child:
                                 variables[address_field.tag] = address_field.text
                         else:
                             variables[child.tag] = child.text
-                    print(variables)
                     API.add_user(**variables)
-                    print("call done")
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    print(e)
+                    print("[ERROR] Request Failed", e)
                     # logger.error("[ERROR] Request Failed", e)
 
             case 'company':
