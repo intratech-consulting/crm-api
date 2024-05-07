@@ -25,8 +25,8 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deployment.key
           chmod 600 ~/.ssh/deployment.key
           echo "Host staging
-            HostName ${{ secrets.SSH_HOST }}
-            User ${{ secrets.SSH_USER }}
+            HostName 10.2.160.54
+            User group2
             IdentityFile ~/.ssh/deployment.key
             StrictHostKeyChecking no" > ~/.ssh/config
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
@@ -59,10 +59,6 @@ jobs:
       - name: Deploy new version
         run: |
           ssh staging "
-            eval $(ssh-agent)
-            ssh-add ~/.ssh/github_intratechconsulting
-            ls -al ~/.ssh
-            ssh-add -l  # Log the fingerprints of all keys currently managed by the SSH agent after shh-keyadd
             cd ~/staging/crm/crm-api
             docker compose down
             docker rmi crm/api-publisher-consumer:latest
