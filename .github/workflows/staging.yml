@@ -28,7 +28,6 @@ jobs:
             HostName ${{ secrets.SSH_HOST }}
             User ${{ secrets.SSH_USER }}
             IdentityFile ~/.ssh/deployment.key
-            ForwardAgent yes
             StrictHostKeyChecking no" > ~/.ssh/config
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
@@ -64,8 +63,17 @@ jobs:
             docker compose down
             git checkout staging
             git pull
+            sed 's#'\''{SSH_HOST}'\''#'\''$(printf '%q' "${{ secrets.SSH_HOST }}")'\''#g; s#'\''{SALESFORCE_KEY_FILE}'\''#'\''$(printf '%q' "${{ secrets.SALESFORCE_KEY_FILE }}")'\''#g; s#'\''{SALESFORCE_CONSUMER_KEY}'\''#'\''$(printf '%q' "${{ secrets.SALESFORCE_CONSUMER_KEY }}")'\''#g; s#'\''{SALESFORCE_SUBJECT}'\''#'\''$(printf '%q' "${{ secrets.SALESFORCE_SUBJECT }}")'\''#g; s#'\''{SALESFORCE_DOMAIN_NAME}'\''#'\''$(printf '%q' "${{ secrets.SALESFORCE_DOMAIN_NAME }}")'\''#g' ./config/secrets_template.py > ./config/secrets.py
+            echo \"${{ secrets.SALESFORCE_PRIVATE_KEY }}\" > ./config/salesforce.key
             docker compose up -d
             "
+
+      - name: Print secrets.py
+        run: |
+          ssh dev "
+            cd ~/TestServer/crm/crm-api
+            cat ./config/secrets.py
+          "
 
       - name: Check deployment status
         id: check_status

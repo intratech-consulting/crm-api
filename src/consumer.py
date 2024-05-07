@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 import pika, sys, os
-from src import API
 import xml.etree.ElementTree as ET
+sys.path.append('/app')
+import config.secrets as secrets
+import src.API as API
 
-
-#Test CI/CD
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='10.2.160.54', credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
 
     queue_name = 'crm'
@@ -27,6 +27,8 @@ def main():
                 try:
                     variables = {}
                     for child in root:
+                        if child.tag == "routing_key":
+                            continue
                         if child.tag == "address":
                             for address_field in child:
                                 variables[address_field.tag] = address_field.text
@@ -36,6 +38,7 @@ def main():
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
                     # logger.error("[ERROR] Request Failed", e)
 
             case 'company':
@@ -132,9 +135,6 @@ if __name__ == '__main__':
         API.authenticate()
         print(API.ACCESS_TOKEN)
         main()
-    except KeyboardInterrupt:
-        print('Interrupted')
-        try:
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        sys.exit(1)
