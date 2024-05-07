@@ -61,8 +61,11 @@ jobs:
           ssh staging "
             eval $(ssh-agent)
             ls -l ~/.ssh
+            echo \"SSH Agent PID: $SSH_AGENT_PID\"  # Log the SSH agent's PID
+            echo \"SSH Agent PID: $SSH_AGENT_PID\"  # Log the SSH agent's PIDs
             whoami
             ssh-add ~/.ssh/github_intratechconsulting
+            echo \"SSH Agent PID: $SSH_AGENT_PID\"  # Log the SSH agent's PIDs after ssh-add
             cd ~/staging/crm/crm-api
             docker compose down
             docker rmi crm/api-publisher-consumer:latest
