@@ -7,8 +7,6 @@ import src.API as API
 
 
 #Test CI/CD
-user = 'user'
-password = 'password'
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
