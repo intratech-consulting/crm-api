@@ -84,6 +84,9 @@ jobs:
             docker compose ps | grep crm-api-publisher-consumer
           "
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - name: Rollback on failure
         if: steps.check_status.outcome != 'success'
         run: |
