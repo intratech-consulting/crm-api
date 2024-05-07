@@ -59,12 +59,7 @@ jobs:
       - name: Deploy new version
         run: |
           ssh staging "
-            eval $(ssh-agent)
-            ls -l ~/.ssh
-            echo \"SSH Agent PID: $SSH_AGENT_PID\"  # Log the SSH agent's PID
-            echo whoami
-            ssh-add ~/.ssh/github_intratechconsulting
-            ssh-add -l  # Log the fingerprints of all keys currently managed by the SSH agent after shh-keyadd
+            ssh -vT git@github.com
             cd ~/staging/crm/crm-api
             docker compose down
             docker rmi crm/api-publisher-consumer:latest
