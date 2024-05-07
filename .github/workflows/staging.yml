@@ -30,7 +30,6 @@ jobs:
             IdentityFile ~/.ssh/deployment.key
             StrictHostKeyChecking no" > ~/.ssh/config
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
 
       - name: Checkout code
         uses: actions/checkout@v4
