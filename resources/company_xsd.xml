@@ -1,0 +1,44 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="company">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="routing_key" type="xs:string"/>
+                <xs:element name="id" type="xs:string"/>
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="email" type="xs:string" minOccurs="0"/>
+                <xs:element name="telephone" type="xs:string" minOccurs="0"/>
+                <xs:element name="logo" type="xs:string" minOccurs="0"/>
+                <xs:element name="address">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="country" type="xs:string"/>
+                            <xs:element name="state" type="xs:string"/>
+                            <xs:element name="city" type="xs:string"/>
+                            <xs:element name="zip" type="xs:string"/>
+                            <xs:element name="street" type="xs:string"/>
+                            <xs:element name="house_number" type="xs:string"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="type">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="Customer"/>
+                            <xs:enumeration value="Sponsor"/>
+                            <xs:enumeration value="Speaker"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element name="invoice">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="Yes"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

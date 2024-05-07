@@ -16,6 +16,7 @@ COPY src/heartbeat.py ./src/heartbeat.py
 COPY src/publisher.py ./src/publisher.py
 COPY resources/heartbeat_xsd.xml ./resources/heartbeat_xsd.xml
 COPY resources/user_xsd.xml ./resources/user_xsd.xml
+COPY resources/company_xsd.xml ./resources/company_xsd.xml
 
 RUN ls -la
 

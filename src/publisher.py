@@ -33,26 +33,27 @@ def main():
                     case 'user':
                         message = API.get_user(name_value)
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
-                        schema = etree.XMLSchema(xsd_tree)
-
-                        # Parse the documents
-                        xml_doc = etree.fromstring(message.encode())
-
-                        if not schema.validate(xml_doc):
-                            print('Invalid XML')
-                            return
-
+                        rc = "user.crm"
 
                     case 'company':
-                        message = API.get_companies(name_value)
+                        message = API.get_company(name_value)
+                        xsd_tree = etree.parse('./resources/company_xsd.xml')
+                        rc = "company.crm"
+                        
                     case 'event':
                         message = API.get_talk(name_value)
                     case _:
                         print(f" [x] Object type {object_type_value} not supported")
+
+                schema = etree.XMLSchema(xsd_tree)
+                xml_doc = etree.fromstring(message.encode())
+                if not schema.validate(xml_doc):
+                    print('Invalid XML')
+                    return
                 API.delete_change_object(id_value)
 
             if message:
-                channel.basic_publish(exchange='amq.topic', routing_key='user.crm', body=message)
+                channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
 
 if __name__ == '__main__':
     try:
