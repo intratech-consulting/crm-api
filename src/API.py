@@ -56,7 +56,7 @@ def get_user(user_id=None):
             for field, value in user_data.items():
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
-                    field_element.text = "user"
+                    field_element.text = "user.crm"
                 elif field == "Id":
                     field_element = ET.SubElement(root, "user_id")
                     field_element.text = str(value)
