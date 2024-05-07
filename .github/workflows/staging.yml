@@ -62,8 +62,7 @@ jobs:
             eval $(ssh-agent)
             ls -l ~/.ssh
             echo \"SSH Agent PID: $SSH_AGENT_PID\"  # Log the SSH agent's PID
-            ssh-add -l  # Log the fingerprints of all keys currently managed by the SSH agent
-            whoami
+            echo whoami
             ssh-add ~/.ssh/github_intratechconsulting
             ssh-add -l  # Log the fingerprints of all keys currently managed by the SSH agent after shh-keyadd
             cd ~/staging/crm/crm-api
