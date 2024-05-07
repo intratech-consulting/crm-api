@@ -60,7 +60,7 @@ jobs:
         run: |
           ssh staging "
             eval $(ssh-agent)
-            ls -la ~/.ssh
+            ls -l ~/.ssh
             ssh-add ~/.ssh/github_intratechconsulting
             cd ~/staging/crm/crm-api
             docker compose down
