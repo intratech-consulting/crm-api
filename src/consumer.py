@@ -47,6 +47,8 @@ def main():
                 try:
                     variables = {}
                     for child in root:
+                        if child.tag == "routing_key":
+                            continue
                         if child.tag == "address":
                             for address_field in child:
                                 variables[address_field.tag] = address_field.text
