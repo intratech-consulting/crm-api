@@ -6,8 +6,6 @@ import config.secrets as secrets
 import src.API as API
 
 
-#Test CI/CD
-
 def main():
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
