@@ -70,14 +70,11 @@ def main():
                             continue
                         if child.tag == "speaker":
                             for speaker_field in child:
-                                if speaker_field.tag == "user_id":
-                                    variables[speaker_field.tag] = speaker_field.text
-                        elif child.tag == "location" or child.tag == "max_registrations":
-                            pass
+                                variables[speaker_field.tag] = speaker_field.text
                         else:
                             variables[child.tag] = child.text.strip()
                     print(variables)
-                    API.add_talk(**variables)
+                    API.add_event(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

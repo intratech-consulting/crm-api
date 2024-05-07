@@ -41,7 +41,10 @@ def main():
                         rc = "company.crm"
                         
                     case 'event':
-                        message = API.get_talk(name_value)
+                        message = API.get_event(name_value)
+                        xsd_tree = etree.parse('./resources/event_xsd.xml')
+                        rc = "event.crm"
+
                     case _:
                         print(f" [x] Object type {object_type_value} not supported")
 
@@ -49,7 +52,7 @@ def main():
                 xml_doc = etree.fromstring(message.encode())
                 if not schema.validate(xml_doc):
                     print('Invalid XML')
-                    return
+                    continue
                 API.delete_change_object(id_value)
 
             if message:

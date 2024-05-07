@@ -186,7 +186,8 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
         'name': name,
         'email': email
     }
-    check_required_fields(required_fields, id=id, name=name, email=email)
+
+    #check_required_fields(required_fields, id=id, name=first, email=email)
 
     url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
     headers = {
@@ -215,48 +216,69 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     print(response.text)
 
 
-# Get talks api call
-def get_talk():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Date__c+FROM+Talk__c'
+# Get a event by id api call
+def get_event(event_id=None):
+    url = secrets.DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+'" + event_id + "'"
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
     payload = {}
-
+    print(url)
+    print(ACCESS_TOKEN)
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        if data:
+            event_data = data[0]
+            root = ET.Element("event")
 
-        root = ET.Element("Talks")
+            speaker_element = None  # Initialize speaker_element to None
+            speaker_fields = ["user_id__c", "company_id__c"]
 
-        # Makes json data into xml data
-        for record in data:
-            talk_element = ET.SubElement(root, "Talk__c")
-            for field, value in record.items():
+            for field, value in event_data.items():
+                print(value, field)
                 if field == "attributes":
-                    continue
-                field_element = ET.SubElement(talk_element, field)
-                field_element.text = str(value)
+                    field_element = ET.SubElement(root, "routing_key")
+                    field_element.text = "event.crm"
+                elif field == "location__c":
+                    field_element = ET.SubElement(root, "location")
+                    field_element.text = str(value)
+                    speaker_element = ET.SubElement(root, "speaker")
+                elif field in speaker_fields and speaker_element is not None:
+                    sub_field = field.split("__")[0]
+                    sub_field_element = ET.SubElement(speaker_element, sub_field)
+                    sub_field_element.text = str(value)
+                elif field == "max_registrations__c" or field == "available_seats__c":
+                    field_element = ET.SubElement(root, field.split("__")[0])
+                    field_element.text = str(int(value))
+                else:
+                    field_name = field.split("__")[0]
+                    field_element = ET.SubElement(root, str(field_name).lower())
+                    field_element.text = str(value)
 
-        xml_string = ET.tostring(root, encoding="unicode", method="xml")
-        return xml_string
+            xml_string = ET.tostring(root, encoding="unicode", method="xml")
+            print(xml_string)
+            # logger.info("get company: " + xml_string)
+            return xml_string
+        else:
+            print("No event found with this id: " + event_id)
+            return None
     except Exception as e:
-        print("Error fetching talks from Salesforce:", e)
+        print("Error fetching event from Salesforce:", e)
         return None
 
 
-# Add a talk api call
-def add_talk(id, date, start_time, end_time, user_id, available_seats, description):
+# Add an event api call
+def add_event(id, date, start_time, end_time, location, user_id, company_id, max_reservations, available_seats, description):
     required_fields = {
         'date': date,
         'start_time': start_time,
         'end_time': end_time,
         'available_seats': available_seats
     }
-
-    check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time,
-                          available_seats=available_seats)
+    print("inside api")
+    #check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time, available_seats=available_seats)
 
     url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
     headers = {
@@ -269,14 +291,18 @@ def add_talk(id, date, start_time, end_time, user_id, available_seats, descripti
             <date__c>{date}</date__c>
             <start_time__c>{datetime.strptime(start_time, '%H:%M').strftime('%H:%M:%S')}</start_time__c>
             <end_time__c>{datetime.strptime(end_time, '%H:%M').strftime('%H:%M:%S')}</end_time__c>
+            <location__c>{location}</location__c>
             <user_id__c>{user_id}</user_id__c>
+            <company_id__c>{company_id}</company_id__c>
+            <max_registrations__c>{max_reservations}</max_registrations__c>
             <available_seats__c>{available_seats}</available_seats__c>
             <description__c>{description}</description__c>
         </event__c>
     '''
-
+    print(payload)
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add talk" + response.text)
+    print(response)
 
 
 # Get the attendances
