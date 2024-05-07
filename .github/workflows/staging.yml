@@ -28,7 +28,6 @@ jobs:
             HostName 10.2.160.54
             User group2
             IdentityFile ~/.ssh/deployment.key
-            StrictHostKeyChecking no" > ~/.ssh/config
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -58,7 +57,7 @@ jobs:
 
       - name: Deploy new version
         run: |
-          ssh group2@10.2.160.54 "
+          ssh staging "
             cd ~/staging/crm/crm-api
             docker compose down
             docker rmi crm/api-publisher-consumer:latest
