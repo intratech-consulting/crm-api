@@ -66,6 +66,8 @@ def main():
                 try:
                     variables = {}
                     for child in root:
+                        if child.tag == "routing_key":
+                            continue
                         if child.tag == "speaker":
                             for speaker_field in child:
                                 if speaker_field.tag == "user_id":
@@ -86,6 +88,8 @@ def main():
                     for child in root:
                         variables = {}
                         for field in child:
+                            if field.tag == "routing_key":
+                                continue
                             variables[field.tag] = field.text.strip()
                         API.add_attendance(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -97,6 +101,8 @@ def main():
                 try:
                     variables = {}
                     for child in root:
+                        if child.tag == "routing_key":
+                            continue
                         if child.tag == "user_id":
                             variables[child.tag] = child.text.strip()
                         elif child.tag == "products":
