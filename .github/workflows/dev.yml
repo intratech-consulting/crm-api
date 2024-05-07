@@ -23,14 +23,14 @@ jobs:
         run: |
           mkdir -p ~/.ssh/
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deployment.key
-          chmod 600 ~/.ssh/deployment.key
           echo "Host dev
             HostName ${{ secrets.SSH_HOST }}
             User ${{ secrets.SSH_USER }}
             IdentityFile ~/.ssh/deployment.key
             StrictHostKeyChecking no" > ~/.ssh/config
+          chmod 600 ~/.ssh/deployment.key
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+          sudo apt-get install sshpass
 
       - name: Print SSH config
         run: cat ~/.ssh/config
@@ -42,14 +42,15 @@ jobs:
         id: check_latest_image
 
         run: |
-          ssh dev "
-            if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
-            then
-              echo '::set-output name=image_exists::true'
-            else  
-              echo '::set-output name=image_exists::false'
-            fi
-            "
+          sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+          if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
+          then
+            echo '::set-output name=image_exists::true'
+          else  
+            echo '::set-output name=image_exists::false'
+          fi
+          ENDSSH
+            
 
       - name: Backup previous state
         if: steps.check_latest_image.outputs.image_exists == 'true'
