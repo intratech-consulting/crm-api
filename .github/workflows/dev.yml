@@ -64,7 +64,7 @@ jobs:
           echo "------------------------DEBUG LS-----------------------------------"
           
           ls -la
-          cd staging
+          cd TestServer
           ls -la
           cd crm
           ls -la
@@ -72,7 +72,7 @@ jobs:
           ls -la
           
           echo "------------------------DEBUG LS-----------------------------------"
-          cd ~/staging/crm/crm-api
+          cd ~/TestServer/crm/crm-api
           docker compose down
           docker rmi crm/api-publisher-consumer:latest
           git checkout dev
