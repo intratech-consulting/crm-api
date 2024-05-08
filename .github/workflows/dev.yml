@@ -79,10 +79,10 @@ jobs:
           git pull
           ls -la
           echo "SSH_HOST='${{ secrets.SSH_HOST }}'
-          SALESFORCE_KEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'
-          SALESFORCE_CONSUMER_KEY='${{ secrets.SALESFORCE_CONSUMER_KEY }}'
-          SALESFORCE_SUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'
-          SALESFORCE_DOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'" > ./config/secrets.py
+            SALESFORCE_KEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'
+            SALESFORCE_CONSUMER_KEY='${{ secrets.SALESFORCE_CONSUMER_KEY }}'
+            SALESFORCE_SUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'
+            SALESFORCE_DOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'" > ./config/secrets.py
           echo \"${{ secrets.SALESFORCE_PRIVATE_KEY }}\" > ./config/salesforce.key
           docker compose up -d
           ENDSSH
