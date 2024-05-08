@@ -60,27 +60,12 @@ jobs:
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
           eval $(ssh-agent)
           ssh-add ~/.ssh/github_intratechconsulting
-          ssh-add -l
-          echo "------------------------DEBUG LS-----------------------------------"
-          
-          ls -la
-          cd TestServer
-          ls -la
-          cd crm
-          ls -la
-          cd crm-api
-          ls -la
-          cat config/secrets.py
-          
-          echo "------------------------DEBUG LS-----------------------------------"
           cd ~/TestServer/crm/crm-api
           docker compose down
           docker rmi crm/api-publisher-consumer:latest
           git checkout dev
           git pull
-          ls -la
           echo -e "HOST='${{ secrets.SSH_HOST }}'\nKEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'\nISSUER='${{ secrets.SALESFORCE_CONSUMER_KEY }}'\nSUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'\nDOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'\nACCESS_TOKEN=''" > ./config/secrets.py
-          cat config/secrets.py
           echo "${{ secrets.SALESFORCE_PRIVATE_KEY }}" > ./config/salesforce.key
           docker compose up -d
           ENDSSH
