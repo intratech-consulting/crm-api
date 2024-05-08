@@ -58,6 +58,9 @@ jobs:
       - name: Deploy new version
         run: |
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+          eval $(ssh-agent)
+          ssh-add -l  # Log the fingerprints of all keys currently managed by the SSH agent
+          ls ~/.ssh
           cd ~/staging/crm/crm-api
           docker compose down
           docker rmi crm/api-publisher-consumer:latest
