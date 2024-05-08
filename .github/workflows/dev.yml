@@ -79,7 +79,7 @@ jobs:
           git checkout dev
           git pull
           ls -la
-          echo -e "SSH_HOST='${{ secrets.SSH_HOST }}'\nSALESFORCE_KEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'\nSALESFORCE_CONSUMER_KEY='${{ secrets.SALESFORCE_CONSUMER_KEY }}'\nSALESFORCE_SUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'\nSALESFORCE_DOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'" > ./config/secrets.py
+          echo -e "SSH_HOST='${{ secrets.SSH_HOST }}'\nKEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'\nISSUER='${{ secrets.SALESFORCE_CONSUMER_KEY }}'\nSUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'\nDOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'\nACCESS_TOKEN=''" > ./config/secrets.py
           cat config/secrets.py
           echo \"${{ secrets.SALESFORCE_PRIVATE_KEY }}\" > ./config/salesforce.key
           docker compose up -d
