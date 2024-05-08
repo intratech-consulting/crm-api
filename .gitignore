@@ -1,2 +1,4 @@
 /config/salesforce.key
 /config/secrets.py
+/src/__pycache__/*
+/__pycache__/*

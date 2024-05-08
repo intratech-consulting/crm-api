@@ -272,7 +272,7 @@ def get_event(event_id=None):
 
 
 # Add an event api call
-def add_event(id, date, start_time, end_time, location, user_id, company_id, max_reservations, available_seats, description):
+def add_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
     required_fields = {
         'date': date,
         'start_time': start_time,
@@ -296,7 +296,7 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
             <location__c>{location}</location__c>
             <user_id__c>{user_id}</user_id__c>
             <company_id__c>{company_id}</company_id__c>
-            <max_registrations__c>{str(int(max_reservations))}</max_registrations__c>
+            <max_registrations__c>{str(int(max_registrations))}</max_registrations__c>
             <available_seats__c>{str(int(available_seats))}</available_seats__c>
             <description__c>{description}</description__c>
         </event__c>
