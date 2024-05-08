@@ -1,0 +1,89 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: [self-hosted]
+    environment: production
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deployment.key
+          chmod 600 ~/.ssh/deployment.key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          sudo apt-get install sshpass
+
+      - name: Print SSH config
+        run: cat ~/.ssh/config
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if latest image exists
+        id: check_latest_image
+        run: |
+          sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+          if docker image inspect crm/api-publisher-consumer:latest &> /dev/null
+          then
+            echo '::set-output name=image_exists::true'
+          else  
+            echo '::set-output name=image_exists::false'
+          fi
+          ENDSSH
+
+
+      - name: Backup previous state
+        if: steps.check_latest_image.outputs.image_exists == 'true'
+        run: |
+          sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+          cd ~/production/crm/crm-api
+          docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
+          ENDSSH
+
+
+      - name: Deploy new version
+        run: |
+          sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+          eval $(ssh-agent)
+          ssh-add ~/.ssh/github_intratechconsulting
+          cd ~/production/crm/crm-api
+          docker compose down
+          docker rmi crm/api-publisher-consumer:latest
+          git checkout dev
+          git pull
+          echo -e "HOST='${{ secrets.SSH_HOST }}'\nKEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'\nISSUER='${{ secrets.SALESFORCE_CONSUMER_KEY }}'\nSUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'\nDOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'\nACCESS_TOKEN=''" > ./config/secrets.py
+          echo "${{ secrets.SALESFORCE_PRIVATE_KEY }}" > ./config/salesforce.key
+          docker compose up -d
+          ENDSSH
+
+      - name: Check deployment status
+        id: check_status
+        run: |
+          sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+          cd ~/production/crm/crm-api
+          docker compose ps | grep crm-api-publisher-consumer
+          ENDSSH
+
+      - name: Rollback on failure
+        if: steps.check_status.outcome != 'success'
+        run: |
+          sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+          cd ~/production/crm/crm-api
+          docker-compose down
+          docker run -d --name restored_container crm/api-publisher-consumer:backup
+          docker compose up -d
+          ENDSSH
