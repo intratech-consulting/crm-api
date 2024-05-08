@@ -62,6 +62,7 @@ if __name__ == '__main__':
     try:
         print(' [*] Sending messages. To exit press CTRL+C')
         API.authenticate()
+        print(API.ACCESS_TOKEN)
         while True:
             main()
             time.sleep(5)

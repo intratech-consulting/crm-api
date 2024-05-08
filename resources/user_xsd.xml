@@ -41,6 +41,7 @@
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
+                <xs:element name="calendar_link" />
             </xs:sequence>
         </xs:complexType>
     </xs:element>

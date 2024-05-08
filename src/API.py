@@ -35,7 +35,7 @@ def authenticate():
 
 # Get an user by id api call
 def get_user(user_id=None):
-    url = secrets.DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c+WHERE+Id+=+'" + user_id + "'"
+    url = secrets.DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+'" + user_id + "'"
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -86,7 +86,7 @@ def get_user(user_id=None):
 
 # Add an user api call
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
-             house_number, company_email="", company_id="", source="", user_role="", invoice=""):
+             house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes", calendar_link=""):
 
     required_fields = {
         'user_id': user_id,
@@ -122,10 +122,12 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
         <source__c>{source}</source__c>
         <user_role__c>{user_role}</user_role__c>
         <invoice__c>{invoice}</invoice__c>
+        <calendar_link__c>{calendar_link}</calendar_link__c>
     </user__c>
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
+    print(response)
     # logger.info("add user" + response.text)
 
 
@@ -294,8 +296,8 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
             <location__c>{location}</location__c>
             <user_id__c>{user_id}</user_id__c>
             <company_id__c>{company_id}</company_id__c>
-            <max_registrations__c>{max_reservations}</max_registrations__c>
-            <available_seats__c>{available_seats}</available_seats__c>
+            <max_registrations__c>{str(int(max_reservations))}</max_registrations__c>
+            <available_seats__c>{str(int(available_seats))}</available_seats__c>
             <description__c>{description}</description__c>
         </event__c>
     '''
