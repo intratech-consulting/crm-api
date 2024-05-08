@@ -59,6 +59,7 @@ jobs:
         run: |
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
           eval $(ssh-agent)
+          ssh-add ~/.ssh/github_intratechconsulting
           ssh-add -l  # Log the fingerprints of all keys currently managed by the SSH agent
           ls ~/.ssh
           cd ~/staging/crm/crm-api
