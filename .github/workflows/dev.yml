@@ -70,6 +70,7 @@ jobs:
           ls -la
           cd crm-api
           ls -la
+          cat config/secrets.py
           
           echo "------------------------DEBUG LS-----------------------------------"
           cd ~/TestServer/crm/crm-api
@@ -79,6 +80,7 @@ jobs:
           git pull
           ls -la
           echo -e "SSH_HOST='${{ secrets.SSH_HOST }}'\nSALESFORCE_KEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'\nSALESFORCE_CONSUMER_KEY='${{ secrets.SALESFORCE_CONSUMER_KEY }}'\nSALESFORCE_SUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'\nSALESFORCE_DOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'" > ./config/secrets.py
+          cat config/secrets.py
           echo \"${{ secrets.SALESFORCE_PRIVATE_KEY }}\" > ./config/salesforce.key
           docker compose up -d
           ENDSSH
