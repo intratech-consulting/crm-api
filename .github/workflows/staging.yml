@@ -1,16 +1,16 @@
-name: Deploy to Dev
+name: Deploy to Staging
 
 on:
   push:
     branches:
-      - dev
+      - staging
   workflow_dispatch:
 
 jobs:
   deploy:
-    name: Deploy to dev
+    name: Deploy to Staging
     runs-on: [self-hosted]
-    environment: dev
+    environment: staging
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
@@ -44,23 +44,23 @@ jobs:
             echo '::set-output name=image_exists::false'
           fi
           ENDSSH
-            
+
 
       - name: Backup previous state
         if: steps.check_latest_image.outputs.image_exists == 'true'
         run: |
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
-          cd ~/TestServer/crm/crm-api
+          cd ~/staging/crm/crm-api
           docker tag crm/api-publisher-consumer:latest crm/api-publisher-consumer:backup
           ENDSSH
-            
+
 
       - name: Deploy new version
         run: |
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
           eval $(ssh-agent)
           ssh-add ~/.ssh/github_intratechconsulting
-          cd ~/TestServer/crm/crm-api
+          cd ~/staging/crm/crm-api
           docker compose down
           docker rmi crm/api-publisher-consumer:latest
           git checkout dev
@@ -74,7 +74,7 @@ jobs:
         id: check_status
         run: |
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
-          cd ~/TestServer/crm/crm-api
+          cd ~/staging/crm/crm-api
           docker compose ps | grep crm-api-publisher-consumer
           ENDSSH
 
@@ -82,7 +82,7 @@ jobs:
         if: steps.check_status.outcome != 'success'
         run: |
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -v -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
-          cd ~/TestServer/crm/crm-api
+          cd ~/staging/crm/crm-api
           docker-compose down
           docker run -d --name restored_container crm/api-publisher-consumer:backup
           docker compose up -d

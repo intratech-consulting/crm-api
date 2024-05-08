@@ -1,34 +1,31 @@
-# Use the official Python LTS image
-FROM python:3.12-slim
+# Use the custom made image zyth python and salesforce-cli
+FROM gillm/pythonv13.2-slim_salesforce-cli2.30.8
 
 WORKDIR /app
-
-# Install necessary packages for Salesforce CLI and supervisord
-RUN apt-get update && \
-    apt-get install -y wget xz-utils supervisor && \
-    rm -rf /var/lib/apt/lists/*
-
-# Download and install Salesforce CLI tarballs
-RUN wget -qO sf-linux-x64.tar.xz https://developer.salesforce.com/media/salesforce-cli/sf/channels/stable/sf-linux-x64.tar.xz && \
-    mkdir -p ~/cli/sf && \
-    tar xJf sf-linux-x64.tar.xz -C ~/cli/sf --strip-components 1 && \
-    rm sf-linux-x64.tar.xz
 
 # Update PATH environment variable
 ENV PATH="/root/cli/sf/bin:${PATH}"
 
 # Copy the Python scripts and requirements
-COPY consumer.py .
-COPY API.py .
-COPY requirements.txt .
-COPY salesforce.key .
-COPY heartbeat.py .
+COPY src/consumer.py ./src/consumer.py
+COPY src/API.py ./src/API.py
+COPY config/requirements.txt ./config/requirements.txt
+COPY config/salesforce.key ./config/salesforce.key
+COPY config/secrets.py ./config/secrets.py
+COPY src/heartbeat.py ./src/heartbeat.py
+COPY src/publisher.py ./src/publisher.py
+COPY resources/heartbeat_xsd.xml ./resources/heartbeat_xsd.xml
+COPY resources/user_xsd.xml ./resources/user_xsd.xml
+
+RUN ls -la
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r config/requirements.txt
 
 # Copy supervisord configuration file
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Command to run supervisord
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+
