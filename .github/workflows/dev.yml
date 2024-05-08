@@ -61,6 +61,17 @@ jobs:
           eval $(ssh-agent)
           ssh-add ~/.ssh/github_intratechconsulting
           ssh-add -l
+          echo "------------------------DEBUG LS-----------------------------------"
+          
+          ls -la
+          cd staging
+          ls -la
+          cd crm
+          ls -la
+          cd crm-api
+          ls -la
+          
+          echo "------------------------DEBUG LS-----------------------------------"
           cd ~/staging/crm/crm-api
           docker compose down
           docker rmi crm/api-publisher-consumer:latest
