@@ -33,9 +33,9 @@ def authenticate():
     ACCESS_TOKEN = response['access_token']
 
 
-# Get user api call
+# Get an user by id api call
 def get_user(user_id=None):
-    url = secrets.DOMAIN_NAME + "/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c+FROM+user__c+WHERE+Id+=+'" + user_id + "'"
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+\'{user_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -86,7 +86,7 @@ def get_user(user_id=None):
 
 # Add an user api call
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
-             house_number, company_email="", company_id="", source="", user_role="", invoice=""):
+             house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes", calendar_link=""):
 
     required_fields = {
         'user_id': user_id,
@@ -122,16 +122,18 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
         <source__c>{source}</source__c>
         <user_role__c>{user_role}</user_role__c>
         <invoice__c>{invoice}</invoice__c>
+        <calendar_link__c>{calendar_link}</calendar_link__c>
     </user__c>
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
+    print(response)
     # logger.info("add user" + response.text)
 
 
-# Get companies api call
-def get_companies():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+id__c,name__c,email__c,telephone__c,country__c,state__c,city__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c'
+# Get a company by id api call
+def get_company(company_id=None):
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -141,23 +143,42 @@ def get_companies():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        if data:
+            company_data = data[0]
+            root = ET.Element("company")
 
-        root = ET.Element("Companies")
+            address_element = None  # Initialize address_element to None
 
-        # Makes json data into xml data
-        for record in data:
-            company_element = ET.SubElement(root, "Company__c")
-            for field, value in record.items():
+            address_fields = ["country__c", "state__c", "city__c", "zip__c", "street__c", "house_number__c"]
+
+            for field, value in company_data.items():
                 if field == "attributes":
-                    continue
-                field_element = ET.SubElement(company_element, field)
-                field_element.text = str(value)
+                    field_element = ET.SubElement(root, "routing_key")
+                    field_element.text = "company.crm"
+                elif field == "telephone__c":
+                    field_element = ET.SubElement(root, "telephone")
+                    field_element.text = str(value)
+                    field_element = ET.SubElement(root, "logo")
+                    field_element.text = ""
+                    address_element = ET.SubElement(root, "address")
+                elif field in address_fields and address_element is not None:
+                    sub_field = field.split("__")[0]
+                    sub_field_element = ET.SubElement(address_element, sub_field)
+                    sub_field_element.text = str(value)
+                else:
+                    field_name = field.split("__")[0]
+                    field_element = ET.SubElement(root, str(field_name).lower())
+                    field_element.text = str(value)
 
-        xml_string = ET.tostring(root, encoding="unicode", method="xml")
-        return xml_string
+            xml_string = ET.tostring(root, encoding="unicode", method="xml")
+            # logger.info("get company: " + xml_string)
+            return xml_string
+        else:
+            print("No company found with this id: " + company_id)
+            return None
     except Exception as e:
-        print("Error fetching companies from Salesforce:", e)
-        return None
+            print("Error fetching companies from Salesforce:", e)
+            return None
 
 
 # Add a company api call
@@ -167,7 +188,8 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
         'name': name,
         'email': email
     }
-    check_required_fields(required_fields, id=id, name=name, email=email)
+
+    #check_required_fields(required_fields, id=id, name=first, email=email)
 
     url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
     headers = {
@@ -196,48 +218,67 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     print(response.text)
 
 
-# Get talks api call
-def get_talk():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Date__c+FROM+Talk__c'
+# Get a event by id api call
+def get_event(event_id=None):
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
     payload = {}
-
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        if data:
+            event_data = data[0]
+            root = ET.Element("event")
 
-        root = ET.Element("Talks")
+            speaker_element = None  # Initialize speaker_element to None
+            speaker_fields = ["user_id__c", "company_id__c"]
 
-        # Makes json data into xml data
-        for record in data:
-            talk_element = ET.SubElement(root, "Talk__c")
-            for field, value in record.items():
+            for field, value in event_data.items():
+                print(value, field)
                 if field == "attributes":
-                    continue
-                field_element = ET.SubElement(talk_element, field)
-                field_element.text = str(value)
+                    field_element = ET.SubElement(root, "routing_key")
+                    field_element.text = "event.crm"
+                elif field == "location__c":
+                    field_element = ET.SubElement(root, "location")
+                    field_element.text = str(value)
+                    speaker_element = ET.SubElement(root, "speaker")
+                elif field in speaker_fields and speaker_element is not None:
+                    sub_field = field.split("__")[0]
+                    sub_field_element = ET.SubElement(speaker_element, sub_field)
+                    sub_field_element.text = str(value)
+                elif field == "max_registrations__c" or field == "available_seats__c":
+                    field_element = ET.SubElement(root, field.split("__")[0])
+                    field_element.text = str(int(value))
+                else:
+                    field_name = field.split("__")[0]
+                    field_element = ET.SubElement(root, str(field_name).lower())
+                    field_element.text = str(value)
 
-        xml_string = ET.tostring(root, encoding="unicode", method="xml")
-        return xml_string
+            xml_string = ET.tostring(root, encoding="unicode", method="xml")
+            print(xml_string)
+            # logger.info("get company: " + xml_string)
+            return xml_string
+        else:
+            print("No event found with this id: " + event_id)
+            return None
     except Exception as e:
-        print("Error fetching talks from Salesforce:", e)
+        print("Error fetching event from Salesforce:", e)
         return None
 
 
-# Add a talk api call
-def add_talk(id, date, start_time, end_time, user_id, available_seats, description):
+# Add an event api call
+def add_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
     required_fields = {
         'date': date,
         'start_time': start_time,
         'end_time': end_time,
         'available_seats': available_seats
     }
-
-    check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time,
-                          available_seats=available_seats)
+    print("inside api")
+    #check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time, available_seats=available_seats)
 
     url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
     headers = {
@@ -250,19 +291,23 @@ def add_talk(id, date, start_time, end_time, user_id, available_seats, descripti
             <date__c>{date}</date__c>
             <start_time__c>{datetime.strptime(start_time, '%H:%M').strftime('%H:%M:%S')}</start_time__c>
             <end_time__c>{datetime.strptime(end_time, '%H:%M').strftime('%H:%M:%S')}</end_time__c>
+            <location__c>{location}</location__c>
             <user_id__c>{user_id}</user_id__c>
-            <available_seats__c>{available_seats}</available_seats__c>
+            <company_id__c>{company_id}</company_id__c>
+            <max_registrations__c>{str(int(max_registrations))}</max_registrations__c>
+            <available_seats__c>{str(int(available_seats))}</available_seats__c>
             <description__c>{description}</description__c>
         </event__c>
     '''
-
+    print(payload)
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add talk" + response.text)
+    print(response)
 
 
 # Get the attendances
-def get_attendance():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,Talk__c,Portal_user__c+FROM+talkAttendance__c'
+def get_attendance(attendance_id=None):
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,user_id__c,event_id__c+FROM+attendance__c+WHERE+Id+=\'{attendance_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -272,37 +317,44 @@ def get_attendance():
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        if data:
+            event_data = data[0]
+            root = ET.Element("attendance")
 
-        root = ET.Element("Attendance")
-
-        # Makes json data into xml data
-        for record in data:
-            attendance_element = ET.SubElement(root, "Attendance__c")
-            for field, value in record.items():
+            for field, value in event_data.items():
+                print(value, field)
                 if field == "attributes":
-                    continue
-                field_element = ET.SubElement(attendance_element, field)
-                field_element.text = str(value)
+                    field_element = ET.SubElement(root, "routing_key")
+                    field_element.text = "attendance.crm"
+                else:
+                    field_name = field.split("__")[0]
+                    field_element = ET.SubElement(root, str(field_name).lower())
+                    field_element.text = str(value)
 
-        xml_string = ET.tostring(root, encoding="unicode", method="xml")
-        return xml_string
+            xml_string = ET.tostring(root, encoding="unicode", method="xml")
+            print(xml_string)
+            # logger.info("get company: " + xml_string)
+            return xml_string
+        else:
+            print("No attendance found with this id: " + attendance_id)
+            return None
     except Exception as e:
         print("Error fetching attendance from Salesforce:", e)
         return None
 
 
 # Add an attendance
-def add_attendance(User=None, Talk=None):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/talkAttendance__c'
+def add_attendance(user_id=None, event_id=None):
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/attendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
-        <TalkAttendance__c>
-            <Portal_user__c>{User}</Portal_user__c>
-            <Talk__c>{Talk}</Talk__c>
-        </TalkAttendance__c>
+        <attendance__c>
+            <user_id__c>{user_id}</user_id__c>
+            <event_id__c>{event_id}</event_id__c>
+        </attendance__c>
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -324,12 +376,15 @@ def add_product(name):
 
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add product" + response.text)
-    print(response.text)
+    return response.json().get("id", None)
+
+
 
 
 # Returns product id if exists
-def product_exists(name):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Name=\'{name}\''
+def product_exists(id):
+    print('IN HERE', id)
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Id=\'{id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -342,9 +397,9 @@ def product_exists(name):
         data = response.json().get("records", [])
 
         if data:
-            return data[0]['Id']
+            return True
         else:
-            return None
+            return False
     except Exception as e:
         print("Error fetching product from Salesforce:", e)
         return False
@@ -460,3 +515,6 @@ def delete_change_object(id=None):
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
+
+authenticate()
+get_company('a03Qy000004cOQUIA2')
