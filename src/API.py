@@ -339,17 +339,17 @@ def get_attendance():
 
 
 # Add an attendance
-def add_attendance(User=None, Talk=None):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/talkAttendance__c'
+def add_attendance(user_id=None, event_id=None):
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/attendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
-        <TalkAttendance__c>
-            <Portal_user__c>{User}</Portal_user__c>
-            <Talk__c>{Talk}</Talk__c>
-        </TalkAttendance__c>
+        <attendance__c>
+            <user_id__c>{user_id}</user_id__c>
+            <event_id__c>{event_id}</event_id__c>
+        </attendance__c>
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)

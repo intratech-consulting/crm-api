@@ -82,17 +82,19 @@ def main():
 
             case 'attendance':
                 try:
+                    variables = {}
                     for child in root:
-                        variables = {}
-                        for field in child:
-                            if field.tag == "routing_key":
-                                continue
-                            variables[field.tag] = field.text.strip()
-                        API.add_attendance(**variables)
+                        if child.tag == "routing_key":
+                            pass
+                        else:
+                            variables[child.tag] = child.text.strip()
+                    print(variables)
+                    API.add_attendance(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     # logger.error("[ERROR] Request Failed", e)
+                    print("[ERROR] Request Failed", e)
 
             case 'order':
                 try:
