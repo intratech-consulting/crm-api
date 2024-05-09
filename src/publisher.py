@@ -45,6 +45,11 @@ def main():
                         xsd_tree = etree.parse('./resources/event_xsd.xml')
                         rc = "event.crm"
 
+                    case 'attendance':
+                        message = API.get_attendance(name_value)
+                        xsd_tree = etree.parse('./resources/attendance_xsd.xml')
+                        rc = "attendance.crm"
+
                     case _:
                         print(f" [x] Object type {object_type_value} not supported")
 

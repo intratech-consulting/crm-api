@@ -84,7 +84,7 @@ def main():
                 try:
                     variables = {}
                     for child in root:
-                        if child.tag == "routing_key":
+                        if child.tag == "routing_key" or child.tag == "id":
                             pass
                         else:
                             variables[child.tag] = child.text.strip()

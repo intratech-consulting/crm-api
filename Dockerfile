@@ -18,6 +18,7 @@ COPY resources/heartbeat_xsd.xml ./resources/heartbeat_xsd.xml
 COPY resources/user_xsd.xml ./resources/user_xsd.xml
 COPY resources/company_xsd.xml ./resources/company_xsd.xml
 COPY resources/event_xsd.xml ./resources/event_xsd.xml
+COPY resources/attendance_xsd.xml ./resources/attendance_xsd.xml
 
 RUN ls -la
 
