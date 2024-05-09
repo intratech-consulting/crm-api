@@ -80,7 +80,7 @@ def main():
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     # logger.error("[ERROR] Request Failed", e)
 
-            case 'Talk_attendances':
+            case 'attendance':
                 try:
                     for child in root:
                         variables = {}
@@ -98,34 +98,43 @@ def main():
                 try:
                     variables = {}
                     for child in root:
-                        if child.tag == "routing_key":
-                            continue
+                        print(child.tag, child.text)
                         if child.tag == "user_id":
-                            variables[child.tag] = child.text.strip()
+                            variables["user_id"] = child.text.strip()
                         elif child.tag == "products":
-                            for products in child:
-                                for product_field in products:
-                                    if product_field.tag == "name":
-                                        product_id = API.product_exists(product_field.text.strip())
-                                        if product_id == None:
-                                            API.add_product(product_field.text.strip())
-                                            product_id = API.product_exists(product_field.text.strip())
-                                        variables["product"] = product_id
+                            product_id = None
+                            product_name = None
+                            for product in child:
+                                for product_field in product:
+                                    print(product_field.tag, product_field.text)
+                                    if product_field.tag == "id":
+                                        product_id = product_field.text.strip()
+                                    elif product_field.tag == "name":
+                                        product_name = product_field.text.strip()
                                     elif product_field.tag == "amount":
-                                        variables[product_field.tag] = product_field.text.strip()
-                                id, old_amount = API.get_order(variables["user_id"], variables["product"])
-                                print(id, old_amount)
-                                if id != None:
-                                    variables["amount"] = str(int(old_amount) + int(variables["amount"]))
-                                    API.update_order(id, variables["amount"])
-                                else:
-                                    API.add_order(**variables)
+                                        variables["amount"] = product_field.text.strip()
+
+                            # Happens after every product
+                            if not API.product_exists(product_id):
+                                product_id = API.add_product(product_name)
+                            variables["product"] = product_id
+
+                            print(variables)
+                            order_id, old_amount = API.get_order(variables["user_id"], variables["product"])
+                            if order_id is not None:
+                                new_amount = str(int(old_amount) + int(variables["amount"]))
+                                API.update_order(order_id, new_amount)
+                            else:
+                                API.add_order(**variables)
+
                         else:
                             pass
+
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    print("[INFO] Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    # logger.error("[ERROR] Request Failed", e)
+                    print("[ERROR] Request Failed:", e)
 
             case _:
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

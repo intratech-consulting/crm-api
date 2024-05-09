@@ -371,12 +371,15 @@ def add_product(name):
 
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add product" + response.text)
-    print(response.text)
+    return response.json().get("id", None)
+
+
 
 
 # Returns product id if exists
-def product_exists(name):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Name=\'{name}\''
+def product_exists(id):
+    print('IN HERE', id)
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Id=\'{id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -389,9 +392,9 @@ def product_exists(name):
         data = response.json().get("records", [])
 
         if data:
-            return data[0]['Id']
+            return True
         else:
-            return None
+            return False
     except Exception as e:
         print("Error fetching product from Salesforce:", e)
         return False

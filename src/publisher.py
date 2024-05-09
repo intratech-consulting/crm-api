@@ -65,7 +65,7 @@ if __name__ == '__main__':
         print(API.ACCESS_TOKEN)
         while True:
             main()
-            time.sleep(5)
+            time.sleep(120)
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)
