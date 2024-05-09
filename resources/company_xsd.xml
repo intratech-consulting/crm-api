@@ -1,15 +1,14 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-    <xs:element name="user">
+    <xs:element name="company">
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="routing_key" type="xs:string"/>
-                <xs:element name="user_id" type="xs:string"/>
-                <xs:element name="first_name" type="xs:string"/>
-                <xs:element name="last_name" type="xs:string"/>
-                <xs:element name="email" type="xs:string"/>
-                <xs:element name="telephone" type="xs:string"/>
-                <xs:element name="birthday" type="xs:date"/>
+                <xs:element name="id" type="xs:string"/>
+                <xs:element name="name" type="xs:string"/>
+                <xs:element name="email" type="xs:string" minOccurs="0"/>
+                <xs:element name="telephone" type="xs:string" minOccurs="0"/>
+                <xs:element name="logo" type="xs:string" minOccurs="0"/>
                 <xs:element name="address">
                     <xs:complexType>
                         <xs:sequence>
@@ -22,15 +21,12 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="company_email" type="xs:string" minOccurs="0"/>
-                <xs:element name="company_id" type="xs:string" minOccurs="0"/>
-                <xs:element name="source" type="xs:string" minOccurs="0"/>
-                <xs:element name="user_role">
+                <xs:element name="type">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
+                            <xs:enumeration value="Customer"/>
+                            <xs:enumeration value="Sponsor"/>
                             <xs:enumeration value="Speaker"/>
-                            <xs:enumeration value="Individual"/>
-                            <xs:enumeration value="Employee"/>
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
@@ -41,7 +37,6 @@
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
-                <xs:element name="calendar_link" />
             </xs:sequence>
         </xs:complexType>
     </xs:element>
