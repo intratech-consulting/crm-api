@@ -58,7 +58,7 @@ def main():
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    # logger.error("[ERROR] Request Failed", e)
+                    print("[ERROR] Request Failed", e)
 
             case 'event':
                 try:
@@ -76,7 +76,7 @@ def main():
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    # logger.error("[ERROR] Request Failed", e)
+                    print("[ERROR] Request Failed", e)
 
             case 'attendance':
                 try:
@@ -91,7 +91,6 @@ def main():
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    # logger.error("[ERROR] Request Failed", e)
                     print("[ERROR] Request Failed", e)
 
             case 'order':
@@ -114,18 +113,18 @@ def main():
                                     elif product_field.tag == "amount":
                                         variables["amount"] = product_field.text.strip()
 
-                            # Happens after every product
-                            if not API.product_exists(product_id):
-                                product_id = API.add_product(product_name)
-                            variables["product"] = product_id
+                                # Happens after every product
+                                if not API.product_exists(product_id):
+                                    product_id = API.add_product(product_name)
+                                variables["product"] = product_id
 
-                            print(variables)
-                            order_id, old_amount = API.get_order(variables["user_id"], variables["product"])
-                            if order_id is not None:
-                                new_amount = str(int(old_amount) + int(variables["amount"]))
-                                API.update_order(order_id, new_amount)
-                            else:
-                                API.add_order(**variables)
+                                print(variables)
+                                order_id, old_amount = API.get_order(variables["user_id"], variables["product"])
+                                if order_id is not None:
+                                    new_amount = str(int(old_amount) + int(variables["amount"]))
+                                    API.update_order(order_id, new_amount)
+                                else:
+                                    API.add_order(**variables)
 
                         else:
                             pass
