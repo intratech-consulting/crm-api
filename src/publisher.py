@@ -33,34 +33,44 @@ def main():
                     case 'user':
                         message = API.get_user(name_value)
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
-                        schema = etree.XMLSchema(xsd_tree)
-
-                        # Parse the documents
-                        xml_doc = etree.fromstring(message.encode())
-
-                        if not schema.validate(xml_doc):
-                            print('Invalid XML')
-                            return
-
+                        rc = "user.crm"
 
                     case 'company':
-                        message = API.get_companies(name_value)
+                        message = API.get_company(name_value)
+                        xsd_tree = etree.parse('./resources/company_xsd.xml')
+                        rc = "company.crm"
+                        
                     case 'event':
-                        message = API.get_talk(name_value)
+                        message = API.get_event(name_value)
+                        xsd_tree = etree.parse('./resources/event_xsd.xml')
+                        rc = "event.crm"
+
+                    case 'attendance':
+                        message = API.get_attendance(name_value)
+                        xsd_tree = etree.parse('./resources/attendance_xsd.xml')
+                        rc = "attendance.crm"
+
                     case _:
                         print(f" [x] Object type {object_type_value} not supported")
+
+                schema = etree.XMLSchema(xsd_tree)
+                xml_doc = etree.fromstring(message.encode())
+                if not schema.validate(xml_doc):
+                    print('Invalid XML')
+                    continue
                 API.delete_change_object(id_value)
 
             if message:
-                channel.basic_publish(exchange='amq.topic', routing_key='user.crm', body=message)
+                channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
 
 if __name__ == '__main__':
     try:
         print(' [*] Sending messages. To exit press CTRL+C')
         API.authenticate()
+        print(API.ACCESS_TOKEN)
         while True:
             main()
-            time.sleep(5)
+            time.sleep(120)
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)
