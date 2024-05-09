@@ -515,6 +515,3 @@ def delete_change_object(id=None):
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
-
-authenticate()
-get_company('a03Qy000004cOQUIA2')
