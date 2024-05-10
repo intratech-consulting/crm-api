@@ -34,7 +34,7 @@ def authenticate():
 
 
 # Get an user by id api call
-def get_user(user_id=None):
+def get_new_user(user_id=None):
     url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+\'{user_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
@@ -57,6 +57,8 @@ def get_user(user_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "user.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 elif field == "Id":
                     field_element = ET.SubElement(root, "user_id")
                     field_element.text = str(value)
@@ -132,7 +134,7 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
 
 
 # Get a company by id api call
-def get_company(company_id=None):
+def get_new_company(company_id=None):
     url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
@@ -155,6 +157,8 @@ def get_company(company_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "company.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 elif field == "telephone__c":
                     field_element = ET.SubElement(root, "telephone")
                     field_element.text = str(value)
@@ -219,7 +223,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
 
 
 # Get a event by id api call
-def get_event(event_id=None):
+def get_new_event(event_id=None):
     url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
@@ -241,6 +245,8 @@ def get_event(event_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "event.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 elif field == "location__c":
                     field_element = ET.SubElement(root, "location")
                     field_element.text = str(value)
@@ -306,7 +312,7 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
 
 
 # Get the attendances
-def get_attendance(attendance_id=None):
+def get_new_attendance(attendance_id=None):
     url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,user_id__c,event_id__c+FROM+attendance__c+WHERE+Id+=\'{attendance_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
@@ -326,6 +332,8 @@ def get_attendance(attendance_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "attendance.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, str(field_name).lower())
@@ -465,7 +473,7 @@ def get_order(user_id, product):
 
 # Get changedSalesforce data
 def get_changed_data():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c+FROM+changed_object__c'
+    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c,crud__c+FROM+changed_object__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -493,13 +501,6 @@ def get_changed_data():
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
         return None
-
-
-def check_required_fields(required_fields, **kwargs):
-    for field_name in required_fields:
-        if field_name not in kwargs or not kwargs[field_name] or kwargs[field_name].isspace():
-            raise ValueError(f"{field_name} cannot be empty or just spaces")
-
 
 # Delete Change Object api call
 def delete_change_object(id=None):
