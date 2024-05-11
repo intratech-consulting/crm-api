@@ -72,6 +72,18 @@ def main():
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
 
+            case 'company', 'update':
+                pass
+
+            case 'company', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_company(id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
+
             case 'event', 'create':
                 try:
                     variables = {}
@@ -90,6 +102,18 @@ def main():
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
 
+            case 'event', 'update':
+                pass
+
+            case 'event', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_event(id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
+
             case 'attendance', 'create':
                 try:
                     variables = {}
@@ -100,6 +124,18 @@ def main():
                             variables[child.tag] = child.text.strip()
                     print(variables)
                     API.add_attendance(**variables)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
+
+            case 'attendance', 'update':
+                pass
+
+            case 'attendance', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_attendance(id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

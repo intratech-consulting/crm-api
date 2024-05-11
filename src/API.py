@@ -311,7 +311,7 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
     response = requests.post(url, headers=headers, data=payload)
     print(response)
 
-# Delete an user api call
+# Delete an event api call
 def delete_event(event_id):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c/{event_id}'
     headers = {
@@ -381,7 +381,7 @@ def add_attendance(user_id=None, event_id=None):
     response = requests.post(url, headers=headers, data=payload)
     # logger.info("add attendance" + response.text)
 
-# Delete an user api call
+# Delete an attendance api call
 def delete_attendance(attendance_id):
     url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{attendance_id}'
     headers = {
