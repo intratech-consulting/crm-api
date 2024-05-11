@@ -30,7 +30,20 @@
                 <xs:element name="last_name" type="xs:string" nillable="true"/>
                 <xs:element name="email" type="xs:string" nillable="true"/>
                 <xs:element name="telephone" type="xs:string" nillable="true"/>
-                <xs:element name="birthday" type="xs:date" nillable="true"/>
+                <xs:element name="birthday">
+                    <xs:simpleType>
+                        <xs:union>
+                            <xs:simpleType>
+                                <xs:restriction base='xs:string'>
+                                    <xs:length value="0"/>
+                                </xs:restriction>
+                            </xs:simpleType>
+                            <xs:simpleType>
+                                <xs:restriction base='xs:date' />
+                            </xs:simpleType>
+                        </xs:union>
+                    </xs:simpleType>
+                </xs:element>
                 <xs:element name="address">
                     <xs:complexType>
                         <xs:sequence>
