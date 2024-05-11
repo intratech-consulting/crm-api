@@ -39,7 +39,50 @@ def main():
 
                     case 'user', 'update':
                         rc = "user.crm"
-                        message = 'update user' #TODO
+                        updated_fields = API.get_updated_user(id_value)
+                        updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+user__c+WHERE+Id+=+'{name_value}'")
+                        first_name__c = updated_values.get('first_name__c', '')
+                        last_name__c = updated_values.get('last_name__c', '')
+                        email__c = updated_values.get('email__c', '')
+                        telephone__c = updated_values.get('telephone__c', '')
+                        birthday__c = updated_values.get('birthday__c', '')
+                        country__c = updated_values.get('country__c', '')
+                        state__c = updated_values.get('state__c', '')
+                        city__c = updated_values.get('city__c', '')
+                        zip__c = updated_values.get('zip__c', '')
+                        street__c = updated_values.get('street__c', '')
+                        house_number__c = updated_values.get('house_number__c', '')
+                        company_email__c = updated_values.get('company_email__c', '')
+                        company_id__c = updated_values.get('company_id__c', '')
+                        source__c = updated_values.get('source__c', '')
+                        user_role__c = updated_values.get('user_role__c', '')
+                        invoice__c = updated_values.get('invoice__c', '')
+                        calendar_link__c = updated_values.get('calendar_link__c', '')
+                        message = f'''
+                            <user>
+                                <routing_key>{rc}</routing_key>
+                                <crud_operation>{crud_operation}</crud_operation>
+                                <id>{name_value}</id>
+                                <first_name>{first_name__c}</first_name>
+                                <last_name>{last_name__c}</last_name>
+                                <email>{email__c}</email>
+                                <telephone>{telephone__c}</telephone>
+                                <birthday>{birthday__c}</birthday>
+                                <address>
+                                    <country>{country__c}</country>
+                                    <state>{state__c}</state>
+                                    <city>{city__c}</city>
+                                    <zip>{zip__c}</zip>
+                                    <street>{street__c}</street>
+                                    <house_number>{house_number__c}</house_number>
+                                </address>
+                                <company_email>{company_email__c}</company_email>
+                                <company_id>{company_id__c}</company_id>
+                                <source>{source__c}</source>
+                                <user_role>{user_role__c}</user_role>
+                                <invoice>{invoice__c}</invoice>
+                                <calendar_link>{calendar_link__c}</calendar_link>
+                            </user>'''
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'user', 'delete':
@@ -78,8 +121,40 @@ def main():
 
                     case 'company', 'update':
                         rc = "company.crm"
-                        message = 'update company' #TODO
-                        xsd_tree = etree.parse('./resources/company_xsd.xml')
+                        updated_fields = API.get_updated_company(id_value)
+                        updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+company__c+WHERE+Id+=+'{name_value}'")
+                        name__c = updated_values.get('Name', '')
+                        email__c = updated_values.get('email__c', '')
+                        telephone__c = updated_values.get('telephone__c', '')
+                        country__c = updated_values.get('country__c', '')
+                        state__c = updated_values.get('state__c', '')
+                        city__c = updated_values.get('city__c', '')
+                        zip__c = updated_values.get('zip__c', '')
+                        street__c = updated_values.get('street__c', '')
+                        house_number__c = updated_values.get('house_number__c', '')
+                        type__c = updated_values.get('type__c', '')
+                        invoice__c = updated_values.get('invoice__c', '')
+                        message = f'''
+                            <company>
+                                <routing_key>{rc}</routing_key>
+                                <crud_operation>{crud_operation}</crud_operation>
+                                <id>{name_value}</id>
+                                <name>{name__c}</name>
+                                <email>{email__c}</email>
+                                <telephone>{telephone__c}</telephone>
+                                <logo></logo>
+                                <address>
+                                    <country>{country__c}</country>
+                                    <state>{state__c}</state>
+                                    <city>{city__c}</city>
+                                    <zip>{zip__c}</zip>
+                                    <street>{street__c}</street>
+                                    <house_number>{house_number__c}</house_number>
+                                </address>
+                                <type>{type__c}</type>
+                                <invoice>{invoice__c}</invoice>
+                            </company>'''
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'company', 'delete':
                         rc = "company.crm"
@@ -111,8 +186,36 @@ def main():
                         xsd_tree = etree.parse('./resources/event_xsd.xml')
 
                     case 'event', 'update':
-                        message = 'update event' #TODO
-                        xsd_tree = etree.parse('./resources/event_xsd.xml')
+                        rc = "event.crm"
+                        updated_fields = API.get_updated_event(id_value)
+                        updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+event__c+WHERE+Id+=+'{name_value}'")
+                        date__c = updated_values.get('date__c', '')
+                        start_time__c = updated_values.get('start_time__c', '')
+                        end_time__c = updated_values.get('end_time__c', '')
+                        location__c = updated_values.get('location__c', '')
+                        user_id__c = updated_values.get('user_id__c', '')
+                        company_id__c = updated_values.get('company_id__c', '')
+                        max_registrations__c = updated_values.get('max_registrations__c', '')
+                        available_seats__c = updated_values.get('available_seats__c', '')
+                        description__c = updated_values.get('description__c', '')
+                        message = f'''
+                            <event>
+                                <routing_key>{rc}</routing_key>
+                                <crud_operation>{crud_operation}</crud_operation>
+                                <id>{name_value}</id>
+                                <date>{date__c}</date>
+                                <start_time>{start_time__c}</start_time>
+                                <end_time>{end_time__c}</end_time>
+                                <location>{location__c}</location>
+                                <speaker>
+                                    <user_id>{user_id__c}</user_id>
+                                    <company_id>{company_id__c}</company_id>
+                                </speaker>
+                                <max_registrations>{max_registrations__c}</max_registrations>
+                                <available_seats>{available_seats__c}</available_seats>
+                                <description>{description__c}</description>
+                            </event>'''
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'event', 'delete':
                         rc = "event.crm"
@@ -143,8 +246,19 @@ def main():
 
                     case 'attendance', 'update':
                         rc = "attendance.crm"
-                        message = 'update attendance' #TODO
-                        xsd_tree = etree.parse('./resources/attendance_xsd.xml')
+                        updated_fields = API.get_updated_attendance(id_value)
+                        updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+attendance__c+WHERE+Id+=+'{name_value}'")
+                        user_id__c = updated_values.get('user_id__c', '')
+                        event_id__c = updated_values.get('event_id__c', '')
+                        message = f'''
+                            <attendance>
+                                <routing_key>{rc}</routing_key>
+                                <crud_operation>{crud_operation}</crud_operation>
+                                <id>{name_value}</id>
+                                <user_id>{user_id__c}</user_id>
+                                <event_id>{event_id__c}</event_id>
+                            </attendance>'''
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'attendance', 'delete':
                         rc = "attendance.crm"

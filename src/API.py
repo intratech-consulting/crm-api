@@ -88,7 +88,6 @@ def get_new_user(user_id=None):
         print("Error fetching users from Salesforce:", e)
         return None
 
-
 # Add an user api call
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
              house_number, company_email="", company_id="", source="", user_role="customer", invoice="", calendar_link=""):
@@ -528,6 +527,99 @@ def get_changed_data():
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
         return None
+    
+# Get updated user fields from changedSalesforce data
+def get_updated_user(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
+
+# Get updated company fields from changedSalesforce data
+def get_updated_company(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+name__c,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
+    
+# Get updated event fields from changedSalesforce data
+def get_updated_event(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
+    
+# Get updated attendance fields from changedSalesforce data
+def get_updated_attendance(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+user_id__c,event_id__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
+
+# Get updated values
+def get_updated_values(query=None):
+    url = secrets.DOMAIN_NAME + query
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        data = response.json().get("records", [])
+        return data[0]
+    except Exception as e:
+        print("Error fetching users from Salesforce:", e)
+        return None
 
 # Delete Change Object api call
 def delete_change_object(id=None):
@@ -539,7 +631,7 @@ def delete_change_object(id=None):
 
     try:
         response = requests.delete(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        response.raise_for_status() 
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
