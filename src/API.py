@@ -473,7 +473,7 @@ def get_order(user_id, product):
 
 # Get changedSalesforce data
 def get_changed_data():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c,crud__c+FROM+changed_object__c'
+    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c,crud__c+FROM+changed_object__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
