@@ -93,12 +93,12 @@ def main():
                                 <telephone></telephone>
                                 <logo></logo>
                                 <address>
-                                        <country></country>
-                                        <state></state>
-                                        <city></city>
-                                        <zip></zip>
-                                        <street></street>
-                                        <house_number></house_number>
+                                    <country></country>
+                                    <state></state>
+                                    <city></city>
+                                    <zip></zip>
+                                    <street></street>
+                                    <house_number></house_number>
                                 </address>
                                 <type></type>
                                 <invoice></invoice>

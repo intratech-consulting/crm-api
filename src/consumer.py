@@ -40,7 +40,18 @@ def main():
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
-                    # logger.error("[ERROR] Request Failed", e)
+
+            case 'user', 'update':
+                pass
+
+            case 'user', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_user(id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
 
             case 'company', 'create':
                 try:

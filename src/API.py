@@ -35,7 +35,7 @@ def authenticate():
 
 # Get an user by id api call
 def get_new_user(user_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+\'{user_id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+\'{user_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -61,19 +61,22 @@ def get_new_user(user_id=None):
                     field_element.text = "create"
                 elif field == "Id":
                     field_element = ET.SubElement(root, "user_id")
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
                 elif field == "birthday__c":
                     field_element = ET.SubElement(root, "birthday")
                     field_element.text = str(value)
                     address_element = ET.SubElement(root, "address")
+                elif field == "house_number__c":
+                    field_element = ET.SubElement(address_element, "house_number")
+                    field_element.text = "" if value == None else str(int(value))
                 elif field in address_fields and address_element is not None:
                     sub_field = field.split("__")[0]
                     sub_field_element = ET.SubElement(address_element, sub_field)
-                    sub_field_element.text = str(value)
+                    sub_field_element.text = "" if value == None else str(value).lower()
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, field_name)
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             # logger.info("get users: " + xml_string)
@@ -88,18 +91,9 @@ def get_new_user(user_id=None):
 
 # Add an user api call
 def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
-             house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes", calendar_link=""):
-
-    required_fields = {
-        'user_id': user_id,
-        'first_name': first_name,
-        'last_name': last_name,
-        'email': email,
-    }
-
-    #check_required_fields(required_fields, user_id=user_id, first_name=first_name, last_name=last_name, email=email)
-
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/user__c'
+             house_number, company_email="", company_id="", source="", user_role="customer", invoice="", calendar_link=""):
+    
+    url = secrets.DOMAIN_NAME + f'sobjects/user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -128,14 +122,25 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
     </user__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
     print(response)
-    # logger.info("add user" + response.text)
 
+# Delete an user api call
+def delete_user(user_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/user__c/{user_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
 
 # Get a company by id api call
 def get_new_company(company_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -161,18 +166,21 @@ def get_new_company(company_id=None):
                     field_element.text = "create"
                 elif field == "telephone__c":
                     field_element = ET.SubElement(root, "telephone")
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
                     field_element = ET.SubElement(root, "logo")
                     field_element.text = ""
                     address_element = ET.SubElement(root, "address")
+                elif field == "house_number__c":
+                    field_element = ET.SubElement(address_element, "house_number")
+                    field_element.text = "" if value == None else str(int(value))
                 elif field in address_fields and address_element is not None:
                     sub_field = field.split("__")[0]
                     sub_field_element = ET.SubElement(address_element, sub_field)
-                    sub_field_element.text = str(value)
+                    sub_field_element.text = "" if value == None else str(value).lower()
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, str(field_name).lower())
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             # logger.info("get company: " + xml_string)
@@ -187,15 +195,7 @@ def get_new_company(company_id=None):
 
 # Add a company api call
 def add_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
-    required_fields = {
-        'id': id,
-        'name': name,
-        'email': email
-    }
-
-    #check_required_fields(required_fields, id=id, name=first, email=email)
-
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -221,10 +221,23 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     # logger.info("add company" + response.text)
     print(response.text)
 
+# Delete a company api call
+def delete_company(company_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/company__c/{company_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
+
 
 # Get a event by id api call
 def get_new_event(event_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -249,19 +262,19 @@ def get_new_event(event_id=None):
                     field_element.text = "create"
                 elif field == "location__c":
                     field_element = ET.SubElement(root, "location")
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
                     speaker_element = ET.SubElement(root, "speaker")
                 elif field in speaker_fields and speaker_element is not None:
                     sub_field = field.split("__")[0]
                     sub_field_element = ET.SubElement(speaker_element, sub_field)
-                    sub_field_element.text = str(value)
+                    sub_field_element.text = "" if value == None else str(value).lower()
                 elif field == "max_registrations__c" or field == "available_seats__c":
                     field_element = ET.SubElement(root, field.split("__")[0])
-                    field_element.text = str(int(value))
+                    field_element.text = "" if value == None else str(int(value))
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, str(field_name).lower())
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             print(xml_string)
@@ -277,16 +290,7 @@ def get_new_event(event_id=None):
 
 # Add an event api call
 def add_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
-    required_fields = {
-        'date': date,
-        'start_time': start_time,
-        'end_time': end_time,
-        'available_seats': available_seats
-    }
-    print("inside api")
-    #check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time, available_seats=available_seats)
-
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/event__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -305,15 +309,25 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
             <description__c>{description}</description__c>
         </event__c>
     '''
-    print(payload)
-    response = requests.request("POST", url, headers=headers, data=payload)
-    # logger.info("add talk" + response.text)
+    response = requests.post(url, headers=headers, data=payload)
     print(response)
 
+# Delete an user api call
+def delete_event(event_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/event__c/{event_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
 
 # Get the attendances
 def get_new_attendance(attendance_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,user_id__c,event_id__c+FROM+attendance__c+WHERE+Id+=\'{attendance_id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,user_id__c,event_id__c+FROM+attendance__c+WHERE+Id+=\'{attendance_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -337,7 +351,7 @@ def get_new_attendance(attendance_id=None):
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, str(field_name).lower())
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             print(xml_string)
@@ -353,7 +367,7 @@ def get_new_attendance(attendance_id=None):
 
 # Add an attendance
 def add_attendance(user_id=None, event_id=None):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/attendance__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/attendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -365,13 +379,26 @@ def add_attendance(user_id=None, event_id=None):
         </attendance__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
     # logger.info("add attendance" + response.text)
+
+# Delete an user api call
+def delete_attendance(attendance_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{attendance_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
 
 
 # Add a product
 def add_product(name):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/product__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/product__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -392,7 +419,7 @@ def add_product(name):
 # Returns product id if exists
 def product_exists(id):
     print('IN HERE', id)
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Id=\'{id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id+FROM+product__c+WHERE+Id=\'{id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -415,7 +442,7 @@ def product_exists(id):
 
 # Add an order
 def add_order(user_id, product, amount):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/order__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/order__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -428,12 +455,12 @@ def add_order(user_id, product, amount):
         </order__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
     # logger.info("add order" + response.text)
 
 
 def update_order(order_id, amount):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/sobjects/order__c/{order_id}'
+    url = secrets.DOMAIN_NAME + f'sobjects/order__c/{order_id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -449,7 +476,7 @@ def update_order(order_id, amount):
 
 # Get order to change amount
 def get_order(user_id, product):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -473,7 +500,7 @@ def get_order(user_id, product):
 
 # Get changedSalesforce data
 def get_changed_data():
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c,crud__c+FROM+changed_object__c'
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,Name,object_type__c,crud__c+FROM+changed_object__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -504,7 +531,7 @@ def get_changed_data():
 
 # Delete Change Object api call
 def delete_change_object(id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/sobjects/changed_object__c/{id}'
+    url = secrets.DOMAIN_NAME + f'sobjects/changed_object__c/{id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
