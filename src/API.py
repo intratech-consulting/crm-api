@@ -135,6 +135,41 @@ def add_user(id, first_name, last_name, email, telephone, birthday, country, sta
     print(response)
     return response.json().get('id', None)
 
+# Update an user api call
+def update_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
+             house_number, company_email, company_id, source, user_role, invoice, calendar_link):
+    
+    url = secrets.DOMAIN_NAME + f'sobjects/user__c/{user_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = f'''
+    <user__c>
+        <first_name__c>{first_name}</first_name__c>
+        <last_name__c>{last_name}</last_name__c>
+        <email__c>{email}</email__c>
+        <telephone__c>{telephone}</telephone__c>
+        <birthday__c>{birthday}</birthday__c>
+        <country__c>{country}</country__c>
+        <state__c>{state}</state__c>
+        <city__c>{city}</city__c>
+        <zip__c>{zip}</zip__c>
+        <street__c>{street}</street__c>
+        <house_number__c>{house_number}</house_number__c>
+        <company_email__c>{company_email}</company_email__c>
+        <company_id__c>{company_id}</company_id__c>
+        <source__c>{source}</source__c>
+        <user_role__c>{user_role}</user_role__c>
+        <invoice__c>{invoice}</invoice__c>
+        <calendar_link__c>{calendar_link}</calendar_link__c>
+    </user__c>
+    '''
+
+    response = requests.patch(url, headers=headers, data=payload)
+    print(response)
+
 # Delete an user api call
 def delete_user(user_id):
     url = secrets.DOMAIN_NAME + f'sobjects/user__c/{user_id}'
@@ -228,10 +263,38 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
         </Company__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
-    # logger.info("add company" + response.text)
+    response = requests.post(url, headers=headers, data=payload)
     print(response.text)
     return response.json().get('id', None)
+
+# Update a company api call
+def update_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
+    url = secrets.DOMAIN_NAME + f'sobjects/Company__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = f'''
+        <Company__c>
+            <id__c>{id}</id__c>
+            <name>{name}</name>
+            <email__c>{email}</email__c>
+            <telephone__c>{telephone}</telephone__c>
+            <country__c>{country}</country__c>
+            <state__c>{state}</state__c>
+            <city__c>{city}</city__c>
+            <zip__c>{zip}</zip__c>
+            <street__c>{street}</street__c>
+            <house_number__c>{house_number}</house_number__c>
+            <type__c>{type}</type__c>
+            <invoice__c>{invoice}</invoice__c>
+        </Company__c>
+    '''
+
+    response = requests.patch(url, headers=headers, data=payload)
+    print(response.text)
+
+
 
 # Delete a company api call
 def delete_company(company_id):
@@ -325,6 +388,30 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
     print(response)
     return response.json().get('id', None)
 
+# Update an event api call
+def update_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
+    url = secrets.DOMAIN_NAME + f'sobjects/event__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = f'''
+        <event__c>
+            <id__c>{id}</id__c>
+            <date__c>{date}</date__c>
+            <start_time__c>{datetime.strptime(start_time, '%H:%M').strftime('%H:%M:%S')}</start_time__c>
+            <end_time__c>{datetime.strptime(end_time, '%H:%M').strftime('%H:%M:%S')}</end_time__c>
+            <location__c>{location}</location__c>
+            <user_id__c>{user_id}</user_id__c>
+            <company_id__c>{company_id}</company_id__c>
+            <max_registrations__c>{str(int(max_registrations))}</max_registrations__c>
+            <available_seats__c>{str(int(available_seats))}</available_seats__c>
+            <description__c>{description}</description__c>
+        </event__c>
+    '''
+    response = requests.patch(url, headers=headers, data=payload)
+    print(response)
+
 # Delete an event api call
 def delete_event(event_id):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c/{event_id}'
@@ -393,7 +480,24 @@ def add_attendance(user_id=None, event_id=None):
     '''
 
     response = requests.post(url, headers=headers, data=payload)
-    # logger.info("add attendance" + response.text)
+    print(response)
+
+# Update an attendance
+def update_attendance(id=None, user_id=None, event_id=None):
+    url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = f'''
+        <attendance__c>
+            <user_id__c>{user_id}</user_id__c>
+            <event_id__c>{event_id}</event_id__c>
+        </attendance__c>
+    '''
+
+    response = requests.patch(url, headers=headers, data=payload)
+    print(response)
 
 # Delete an attendance api call
 def delete_attendance(attendance_id):
