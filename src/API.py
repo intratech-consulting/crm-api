@@ -34,8 +34,8 @@ def authenticate():
 
 
 # Get an user by id api call
-def get_user(user_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+\'{user_id}\''
+def get_new_user(user_id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+\'{user_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -57,21 +57,28 @@ def get_user(user_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "user.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 elif field == "Id":
-                    field_element = ET.SubElement(root, "user_id")
-                    field_element.text = str(value)
+                    field_element = ET.SubElement(root, "id")
+                    field_element.text = "" if value == None else str(value).lower()
+                    print("id:", value)
                 elif field == "birthday__c":
                     field_element = ET.SubElement(root, "birthday")
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
                     address_element = ET.SubElement(root, "address")
+                elif field == "house_number__c" or field == "zip__c":
+                    sub_field = field.split("__")[0]
+                    sub_field_element = ET.SubElement(address_element, sub_field)
+                    sub_field_element.text = "" if value == None else str(int(value))
                 elif field in address_fields and address_element is not None:
                     sub_field = field.split("__")[0]
                     sub_field_element = ET.SubElement(address_element, sub_field)
-                    sub_field_element.text = str(value)
+                    sub_field_element.text = "" if value == None else str(value).lower()
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, field_name)
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             # logger.info("get users: " + xml_string)
@@ -85,19 +92,9 @@ def get_user(user_id=None):
 
 
 # Add an user api call
-def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
+def add_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
              house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes", calendar_link=""):
-
-    required_fields = {
-        'user_id': user_id,
-        'first_name': first_name,
-        'last_name': last_name,
-        'email': email,
-    }
-
-    #check_required_fields(required_fields, user_id=user_id, first_name=first_name, last_name=last_name, email=email)
-
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/user__c'
+    url = secrets.DOMAIN_NAME + 'sobjects/user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -105,7 +102,6 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
 
     payload = f'''
     <user__c>
-        <user_id__c>{user_id}</user_id__c>
         <first_name__c>{first_name}</first_name__c>
         <last_name__c>{last_name}</last_name__c>
         <email__c>{email}</email__c>
@@ -126,14 +122,71 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
     </user__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
     print(response)
-    # logger.info("add user" + response.text)
+    return response.json().get('id', None)
+
+# Update an user api call
+def update_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
+             house_number, company_email, company_id, source, user_role, invoice, calendar_link):
+    
+    url = secrets.DOMAIN_NAME + f'sobjects/user__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = '''
+    <user__c>
+        {}
+    </user__c>
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "telephone": telephone,
+                "birthday": birthday,
+                "country": country,
+                "state": state,
+                "city": city,
+                "zip": zip,
+                "street": street,
+                "house_number": house_number,
+                "company_email": company_email,
+                "company_id": company_id,
+                "source": source,
+                "user_role": user_role,
+                "invoice": invoice,
+                "calendar_link": calendar_link,
+            }.items() if value != ''
+        ])
+    )
+    print(url, headers, payload)
+
+
+    response = requests.patch(url, headers=headers, data=payload)
+    print(response)
+
+# Delete an user api call
+def delete_user(user_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/user__c/{user_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
 
 
 # Get a company by id api call
-def get_company(company_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
+def get_new_company(company_id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -155,20 +208,25 @@ def get_company(company_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "company.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 elif field == "telephone__c":
                     field_element = ET.SubElement(root, "telephone")
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
                     field_element = ET.SubElement(root, "logo")
                     field_element.text = ""
                     address_element = ET.SubElement(root, "address")
+                elif field == "house_number__c":
+                    field_element = ET.SubElement(address_element, "house_number")
+                    field_element.text = "" if value == None else str(int(value))
                 elif field in address_fields and address_element is not None:
                     sub_field = field.split("__")[0]
                     sub_field_element = ET.SubElement(address_element, sub_field)
-                    sub_field_element.text = str(value)
+                    sub_field_element.text = "" if value == None else str(value).lower()
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, str(field_name).lower())
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             # logger.info("get company: " + xml_string)
@@ -183,15 +241,7 @@ def get_company(company_id=None):
 
 # Add a company api call
 def add_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
-    required_fields = {
-        'id': id,
-        'name': name,
-        'email': email
-    }
-
-    #check_required_fields(required_fields, id=id, name=first, email=email)
-
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/Company__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/Company__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -213,14 +263,63 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
         </Company__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
-    # logger.info("add company" + response.text)
+    response = requests.post(url, headers=headers, data=payload)
+    print(response.text)
+    return response.json().get('id', None)
+
+# Update a company api call
+def update_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
+    url = secrets.DOMAIN_NAME + f'sobjects/Company__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = '''
+    <Company__c>
+        {}
+    </Company__c>
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "name": name,
+                "email": email,
+                "telephone": telephone,
+                "country": country,
+                "state": state,
+                "city": city,
+                "zip": zip,
+                "street": street,
+                "house_number": house_number,
+                "type": type,
+                "invoice": invoice,
+            }.items() if value != ''
+        ])
+    )
+
+
+    response = requests.patch(url, headers=headers, data=payload)
     print(response.text)
 
 
+
+# Delete a company api call
+def delete_company(company_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/company__c/{company_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
+
+
 # Get a event by id api call
-def get_event(event_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
+def get_new_event(event_id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -241,21 +340,23 @@ def get_event(event_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "event.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 elif field == "location__c":
                     field_element = ET.SubElement(root, "location")
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
                     speaker_element = ET.SubElement(root, "speaker")
                 elif field in speaker_fields and speaker_element is not None:
                     sub_field = field.split("__")[0]
                     sub_field_element = ET.SubElement(speaker_element, sub_field)
-                    sub_field_element.text = str(value)
+                    sub_field_element.text = "" if value == None else str(value).lower()
                 elif field == "max_registrations__c" or field == "available_seats__c":
                     field_element = ET.SubElement(root, field.split("__")[0])
-                    field_element.text = str(int(value))
+                    field_element.text = "" if value == None else str(int(value))
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, str(field_name).lower())
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             print(xml_string)
@@ -271,43 +372,86 @@ def get_event(event_id=None):
 
 # Add an event api call
 def add_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
-    required_fields = {
-        'date': date,
-        'start_time': start_time,
-        'end_time': end_time,
-        'available_seats': available_seats
-    }
-    print("inside api")
-    #check_required_fields(required_fields, date=date, start_time=start_time, end_time=end_time, available_seats=available_seats)
-
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/event__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/event__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    payload = f'''
-        <event__c>
-            <id__c>{id}</id__c>
-            <date__c>{date}</date__c>
-            <start_time__c>{datetime.strptime(start_time, '%H:%M').strftime('%H:%M:%S')}</start_time__c>
-            <end_time__c>{datetime.strptime(end_time, '%H:%M').strftime('%H:%M:%S')}</end_time__c>
-            <location__c>{location}</location__c>
-            <user_id__c>{user_id}</user_id__c>
-            <company_id__c>{company_id}</company_id__c>
-            <max_registrations__c>{str(int(max_registrations))}</max_registrations__c>
-            <available_seats__c>{str(int(available_seats))}</available_seats__c>
-            <description__c>{description}</description__c>
-        </event__c>
-    '''
+
+    payload = '''
+    <event__c>
+        {}
+    </event__c>
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "date": date,
+                "start_time": "" if start_time == None else datetime.strptime(start_time, '%H:%M:%S').strftime('%H:%M:%S'),
+                "end_time": "" if end_time == None else datetime.strptime(end_time, '%H:%M:%S').strftime('%H:%M:%S'),
+                "location": location,
+                "user_id": user_id,
+                "company_id": company_id,
+                "max_registrations": max_registrations,
+                "available_seats": available_seats,
+                "description": description,
+            }.items() if value != ''
+        ])
+    )
+
+    response = requests.post(url, headers=headers, data=payload)
+    print(response)
+    return response.json().get('id', None)
+
+# Update an event api call
+def update_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
+    url = secrets.DOMAIN_NAME + f'sobjects/event__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = '''
+    <event__c>
+        {}
+    </event__c>
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "date": date,
+                "start_time": datetime.strptime(start_time, '%H:%M:%S').strftime('%H:%M:%S') if start_time else "",
+                "end_time": datetime.strptime(end_time, '%H:%M:%S').strftime('%H:%M:%S') if end_time else "",
+                "location": location,
+                "user_id": user_id,
+                "company_id": company_id,
+                "max_registrations": max_registrations,
+                "available_seats": available_seats,
+                "description": description,
+            }.items() if value != ''
+        ])
+    )
+    print(url)
+    print(headers)
     print(payload)
-    response = requests.request("POST", url, headers=headers, data=payload)
-    # logger.info("add talk" + response.text)
+    response = requests.patch(url, headers=headers, data=payload)
     print(response)
 
+# Delete an event api call
+def delete_event(event_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/event__c/{event_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
 
 # Get the attendances
-def get_attendance(attendance_id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,user_id__c,event_id__c+FROM+attendance__c+WHERE+Id+=\'{attendance_id}\''
+def get_new_attendance(attendance_id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,user_id__c,event_id__c+FROM+attendance__c+WHERE+Id+=\'{attendance_id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -326,10 +470,12 @@ def get_attendance(attendance_id=None):
                 if field == "attributes":
                     field_element = ET.SubElement(root, "routing_key")
                     field_element.text = "attendance.crm"
+                    field_element = ET.SubElement(root, "crud_operation")
+                    field_element.text = "create"
                 else:
                     field_name = field.split("__")[0]
                     field_element = ET.SubElement(root, str(field_name).lower())
-                    field_element.text = str(value)
+                    field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
             print(xml_string)
@@ -345,7 +491,7 @@ def get_attendance(attendance_id=None):
 
 # Add an attendance
 def add_attendance(user_id=None, event_id=None):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/attendance__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/attendance__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -357,13 +503,44 @@ def add_attendance(user_id=None, event_id=None):
         </attendance__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
-    # logger.info("add attendance" + response.text)
+    response = requests.post(url, headers=headers, data=payload)
+    print(response)
+    return response.json().get('id', None)
+
+# Update an attendance
+def update_attendance(id=None, user_id=None, event_id=None):
+    url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = f'''
+        <attendance__c>
+            <user_id__c>{user_id}</user_id__c>
+            <event_id__c>{event_id}</event_id__c>
+        </attendance__c>
+    '''
+
+    response = requests.patch(url, headers=headers, data=payload)
+    print(response)
+
+# Delete an attendance api call
+def delete_attendance(attendance_id):
+    url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{attendance_id}'
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+
+    payload = {}
+
+    response = requests.delete(url, headers=headers, data=payload)
+    print(response)
 
 
 # Add a product
 def add_product(name):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/product__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/product__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -384,7 +561,7 @@ def add_product(name):
 # Returns product id if exists
 def product_exists(id):
     print('IN HERE', id)
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id+FROM+product__c+WHERE+Id=\'{id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id+FROM+product__c+WHERE+Id=\'{id}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -407,7 +584,7 @@ def product_exists(id):
 
 # Add an order
 def add_order(user_id, product, amount):
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/sobjects/order__c'
+    url = secrets.DOMAIN_NAME + f'sobjects/order__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -420,12 +597,12 @@ def add_order(user_id, product, amount):
         </order__c>
     '''
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
     # logger.info("add order" + response.text)
 
 
 def update_order(order_id, amount):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/sobjects/order__c/{order_id}'
+    url = secrets.DOMAIN_NAME + f'sobjects/order__c/{order_id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -441,7 +618,7 @@ def update_order(order_id, amount):
 
 # Get order to change amount
 def get_order(user_id, product):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -465,7 +642,7 @@ def get_order(user_id, product):
 
 # Get changedSalesforce data
 def get_changed_data():
-    url = secrets.DOMAIN_NAME + '/services/data/v60.0/query?q=SELECT+Id,Name,object_type__c+FROM+changed_object__c'
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,Name,object_type__c,crud__c+FROM+changed_object__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
@@ -494,16 +671,102 @@ def get_changed_data():
         print("Error fetching changed data from Salesforce:", e)
         return None
 
+# Get updated user fields from changedSalesforce data
+def get_updated_user(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
 
-def check_required_fields(required_fields, **kwargs):
-    for field_name in required_fields:
-        if field_name not in kwargs or not kwargs[field_name] or kwargs[field_name].isspace():
-            raise ValueError(f"{field_name} cannot be empty or just spaces")
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
 
+# Get updated company fields from changedSalesforce data
+def get_updated_company(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+name__c,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
+
+# Get updated event fields from changedSalesforce data
+def get_updated_event(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
+
+# Get updated attendance fields from changedSalesforce data
+def get_updated_attendance(id=None):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+user_id__c,event_id__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json().get("records", [])
+        changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        return changed_data
+    except Exception as e:
+        print("Error fetching changed data from Salesforce:", e)
+        return None
+
+# Get updated values
+def get_updated_values(query=None):
+    url = secrets.DOMAIN_NAME + query
+    headers = {
+        'Authorization': 'Bearer ' + ACCESS_TOKEN
+    }
+    payload = {}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        data = response.json().get("records", [])
+        return data[0]
+    except Exception as e:
+        print("Error fetching users from Salesforce:", e)
+        return None
 
 # Delete Change Object api call
 def delete_change_object(id=None):
-    url = secrets.DOMAIN_NAME + f'/services/data/v60.0/sobjects/changed_object__c/{id}'
+    url = secrets.DOMAIN_NAME + f'sobjects/changed_object__c/{id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN
     }
@@ -511,7 +774,7 @@ def delete_change_object(id=None):
 
     try:
         response = requests.delete(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
+        response.raise_for_status()
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
