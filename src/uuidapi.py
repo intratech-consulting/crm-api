@@ -44,7 +44,7 @@ def delete_service_id(master_uuid, service):
     url = f"http://{secrets.HOST}:6000/updateServiceId"
     payload = {
         "MASTERUUID": master_uuid,
-        "NewServiceId": "",
+        "NewServiceId": None,
         "Service": service
     }
     response = requests.post(url, headers=headers, data=json.dumps(payload))

@@ -231,6 +231,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     response = requests.request("POST", url, headers=headers, data=payload)
     # logger.info("add company" + response.text)
     print(response.text)
+    return response.json().get('id', None)
 
 # Delete a company api call
 def delete_company(company_id):
@@ -322,6 +323,7 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
     '''
     response = requests.post(url, headers=headers, data=payload)
     print(response)
+    return response.json().get('id', None)
 
 # Delete an event api call
 def delete_event(event_id):

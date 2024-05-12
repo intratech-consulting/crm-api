@@ -59,6 +59,7 @@ def main():
                         API.delete_user(service_id)
                         delete_service_id(master_uuid=master_uuid, service="crm")
                         ch.basic_ack(delivery_tag=method.delivery_tag)
+                        print("[INFO] Deleted User with Master UUID:", master_uuid)
                     else:
                         print("Service ID not found for Master UUID:", master_uuid)
                         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
@@ -78,23 +79,25 @@ def main():
                         elif child.tag == "logo":
                             pass
                         else:
-
                             variables[child.tag] = child.text
-                    variables["service_id"] = service_id
-                    API.add_company(**variables)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    service_id = API.add_company(**variables)
+                    add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
 
-            case 'company', 'update':
-                pass
-
             case 'company', 'delete':
                 try:
-                    id = root.find('id').text
-                    API.delete_company(id)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    master_uuid = root.find('id').text
+                    service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
+                    if service_id is not None:
+                        API.delete_company(service_id)
+                        delete_service_id(master_uuid=master_uuid, service="crm")
+                        ch.basic_ack(delivery_tag=method.delivery_tag)
+                        print("[INFO] Deleted Company with Master UUID:", master_uuid)
+                    else:
+                        print("Service ID not found for Master UUID:", master_uuid)
+                        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
@@ -110,8 +113,8 @@ def main():
                                 variables[speaker_field.tag] = speaker_field.text
                         else:
                             variables[child.tag] = child.text.strip()
-                    variables["service_id"] = service_id
-                    API.add_event(**variables)
+                    service_id = API.add_event(**variables)
+                    add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
@@ -122,9 +125,12 @@ def main():
 
             case 'event', 'delete':
                 try:
-                    id = root.find('id').text
-                    API.delete_event(id)
+                    master_uuid = root.find('id').text
+                    service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
+                    API.delete_event(service_id)
+                    delete_service_id(master_uuid=master_uuid, service="crm")
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    print("[INFO] Deleted Event with Master UUID:", master_uuid)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
@@ -137,8 +143,8 @@ def main():
                             pass
                         else:
                             variables[child.tag] = child.text.strip()
-                    variables["service_id"] = service_id
-                    API.add_attendance(**variables)
+                    service_id = API.add_attendance(**variables)
+                    add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
@@ -149,9 +155,12 @@ def main():
 
             case 'attendance', 'delete':
                 try:
-                    id = root.find('id').text
-                    API.delete_attendance(id)
+                    master_uuid = root.find('id').text
+                    service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
+                    API.delete_attendance(service_id)
+                    delete_service_id(master_uuid=master_uuid, service="crm")
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    print("[INFO] Deleted Event with Master UUID:", master_uuid)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
