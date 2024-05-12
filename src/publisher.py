@@ -48,7 +48,7 @@ def main():
                         if zip_element is not None and zip_element.text is not None:
                             zip_element.text = str(int(float(zip_element.text)))
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
-                        xsd_tree = etree.parse('../resources/user_xsd.xml')
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'user', 'update':
                         rc = "user.crm"
@@ -104,7 +104,7 @@ def main():
                                 <invoice>{invoice__c}</invoice>
                                 <calendar_link>{calendar_link__c}</calendar_link>
                             </user>'''
-                        xsd_tree = etree.parse('../resources/user_xsd.xml')
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'user', 'delete':
                         rc = "user.crm"
@@ -138,7 +138,7 @@ def main():
                                 <invoice></invoice>
                                 <calendar_link></calendar_link>
                             </user>'''
-                        xsd_tree = etree.parse('../resources/user_xsd.xml')
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'company', 'create':
                         rc = "company.crm"
@@ -150,7 +150,7 @@ def main():
                             master_uuid = create_master_uuid(id_value, "crm")
                             id_element.text = master_uuid
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
-                        xsd_tree = etree.parse('../resources/company_xsd.xml')
+                        xsd_tree = etree.parse('./resources/company_xsd.xml')
 
                     case 'company', 'update':
                         rc = "company.crm"
@@ -197,7 +197,7 @@ def main():
                                 <type>{type__c}</type>
                                 <invoice>{invoice__c}</invoice>
                             </company>'''
-                        xsd_tree = etree.parse('../resources/user_xsd.xml')
+                        xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'company', 'delete':
                         rc = "company.crm"
@@ -238,7 +238,7 @@ def main():
                             master_uuid = create_master_uuid(id_value, "crm")
                             id_element.text = master_uuid
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
-                        xsd_tree = etree.parse('../resources/event_xsd.xml')
+                        xsd_tree = etree.parse('./resources/event_xsd.xml')
 
                     case 'event', 'update':
                         rc = "event.crm"
@@ -328,7 +328,7 @@ def main():
                             event_master_uuid = get_master_uuid(event_id_value, "crm")
                             event_id_element.text = event_master_uuid
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
-                        xsd_tree = etree.parse('../resources/attendance_xsd.xml')
+                        xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
                     case 'attendance', 'update':
                         rc = "attendance.crm"
@@ -374,7 +374,7 @@ def main():
                                 <user_id></user_id>
                                 <event_id></event_id>
                             </attendance>'''
-                        xsd_tree = etree.parse('../resources/attendance_xsd.xml')
+                        xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
                     case _:
                         print(f" [x] Object type {object_type_value} not supported")
