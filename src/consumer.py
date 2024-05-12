@@ -63,7 +63,6 @@ def main():
                                 variables[address_field.tag] = "" if address_field.text == None else address_field.text
                         else:
                             variables[child.tag] = "" if child.text == None else child.text
-                    print(variables)
                     API.update_user(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:

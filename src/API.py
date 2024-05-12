@@ -61,8 +61,7 @@ def get_new_user(user_id=None):
                     field_element.text = "create"
                 elif field == "Id":
                     field_element = ET.SubElement(root, "id")
-                    field_element.text = "" if value == None else str(value).lower()
-                    print("id:", value)
+                    field_element.text = "" if value == None else str(value)
                 elif field == "birthday__c":
                     field_element = ET.SubElement(root, "birthday")
                     field_element.text = "" if value == None else str(value).lower()
@@ -210,6 +209,9 @@ def get_new_company(company_id=None):
                     field_element.text = "company.crm"
                     field_element = ET.SubElement(root, "crud_operation")
                     field_element.text = "create"
+                elif field == "Id":
+                    field_element = ET.SubElement(root, "id")
+                    field_element.text = "" if value == None else str(value)
                 elif field == "telephone__c":
                     field_element = ET.SubElement(root, "telephone")
                     field_element.text = "" if value == None else str(value).lower()

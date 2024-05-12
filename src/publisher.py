@@ -43,7 +43,11 @@ def main():
                             master_id_value = id_element.text
                             master_uuid = create_master_uuid(master_id_value, "crm")
                             id_element.text = master_uuid
-                            print(f" [x] Master UUID: {master_uuid}")
+                        company_id_element = root.find('company_id')
+                        if company_id_element is not None:
+                            company_id_value = company_id_element.text
+                            company_master_uuid = get_master_uuid(company_id_value, "crm")
+                            company_id_element.text = company_master_uuid
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
 
