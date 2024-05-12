@@ -75,6 +75,8 @@ def main():
                             house_number__c = str(int(house_number__c))
                         company_email__c = updated_values.get('company_email__c', '')
                         company_id__c = updated_values.get('company_id__c', '')
+                        if company_id__c != '':
+                            company_id__c = get_master_uuid(company_id__c, "crm")
                         source__c = updated_values.get('source__c', '')
                         user_role__c = updated_values.get('user_role__c', '')
                         invoice__c = updated_values.get('invoice__c', '')

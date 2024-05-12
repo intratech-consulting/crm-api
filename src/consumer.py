@@ -36,9 +36,11 @@ def main():
                     for child in root:
                         if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
-                        if child.tag == "address":
+                        elif child.tag == "address":
                             for address_field in child:
                                 variables[address_field.tag] = address_field.text
+                        elif child.tag == "company_id":
+                            variables[child.tag] = get_service_id('crm', child.text)
                         else:
                             variables[child.tag] = child.text
                     service_id = API.add_user(**variables)
@@ -54,7 +56,7 @@ def main():
                     for child in root:
                         if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
-                        elif child.tag == "id":
+                        elif child.tag == "id" or child.tag == "company_id":
                             variables[child.tag] = get_service_id('crm', child.text)
                         elif child.tag == "address":
                             for address_field in child:
