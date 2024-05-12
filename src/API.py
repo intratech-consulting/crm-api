@@ -505,6 +505,7 @@ def add_attendance(user_id=None, event_id=None):
 
     response = requests.post(url, headers=headers, data=payload)
     print(response)
+    return response.json().get('id', None)
 
 # Update an attendance
 def update_attendance(id=None, user_id=None, event_id=None):

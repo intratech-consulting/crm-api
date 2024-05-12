@@ -200,6 +200,7 @@ def main():
                         else:
                             variables[child.tag] = child.text.strip()
                     service_id = API.add_attendance(**variables)
+                    print(root.find('id').text, "crm", service_id)
                     add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
@@ -207,7 +208,21 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'attendance', 'update':
-                pass
+                try:
+                    variables = {}
+                    for child in root:
+                        print(child.tag, child.text)
+                        if child.tag == "routing_key" or child.tag == "crud_operation":
+                            continue
+                        elif child.tag == "id":
+                            variables[child.tag] = get_service_id('crm', child.text)
+                        else:
+                            variables[child.tag] = "" if child.text == None else child.text
+                    API.update_attendance(**variables)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
 
             case 'attendance', 'delete':
                 try:
