@@ -60,7 +60,7 @@ def get_new_user(user_id=None):
                     field_element = ET.SubElement(root, "crud_operation")
                     field_element.text = "create"
                 elif field == "Id":
-                    field_element = ET.SubElement(root, "user_id")
+                    field_element = ET.SubElement(root, "id")
                     field_element.text = "" if value == None else str(value).lower()
                 elif field == "birthday__c":
                     field_element = ET.SubElement(root, "birthday")

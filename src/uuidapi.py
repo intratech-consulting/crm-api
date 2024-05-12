@@ -10,6 +10,19 @@ headers = {
 }
 
 
+def create_master_uuid(service_id, service_name):
+    url = f"http://{secrets.HOST}:6000/createMasterUuid"
+    payload = {
+        "ServiceId": service_id,
+        "Service": service_name
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    if response.status_code == 200 and response.json().get("success") or response.status_code == 201 and response.json().get("success"):
+        return response.json().get("MasterUuid")
+    else:
+        return None
+
+
 def get_service_id(service_name, master_uuid):
     url = f"http://{secrets.HOST}:6000/getServiceId"
     payload = {
@@ -19,6 +32,19 @@ def get_service_id(service_name, master_uuid):
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     if response.status_code == 200:
         return response.json()[service_name]
+    else:
+        return None
+
+
+def get_master_uuid(service_id, service_name):
+    url = f"http://{secrets.HOST}:6000/getMasterUuid"
+    payload = {
+        "ServiceId": service_id,
+        "Service": service_name
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    if response.status_code == 200:
+        return response.json().get("UUID")
     else:
         return None
 

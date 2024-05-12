@@ -3,6 +3,9 @@ import pika, sys, os
 from lxml import etree
 import xml.etree.ElementTree as ET
 import time
+
+from src.uuidapi import *
+
 sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
@@ -35,12 +38,30 @@ def main():
                     case 'user', 'create':
                         rc = "user.crm"
                         message = API.get_new_user(name_value)
-                        xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        root = ET.fromstring(message)
+                        id_element = root.find('id')
+                        if id_element is not None:
+                            id_value = id_element.text
+                            master_uuid = create_master_uuid(id_value, "crm")
+                            id_element.text = master_uuid
+                        zip_element = root.find('.//zip')
+                        if zip_element is not None and zip_element.text is not None:
+                            zip_element.text = str(int(float(zip_element.text)))
+                        message = ET.tostring(root, encoding='utf-8').decode('utf-8')
+                        xsd_tree = etree.parse('../resources/user_xsd.xml')
 
                     case 'user', 'update':
                         rc = "user.crm"
                         updated_fields = API.get_updated_user(id_value)
                         updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+user__c+WHERE+Id+=+'{name_value}'")
+
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
+                        updated_values['id'] = master_uuid
+
                         first_name__c = updated_values.get('first_name__c', '')
                         last_name__c = updated_values.get('last_name__c', '')
                         email__c = updated_values.get('email__c', '')
@@ -83,15 +104,20 @@ def main():
                                 <invoice>{invoice__c}</invoice>
                                 <calendar_link>{calendar_link__c}</calendar_link>
                             </user>'''
-                        xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        xsd_tree = etree.parse('../resources/user_xsd.xml')
 
                     case 'user', 'delete':
                         rc = "user.crm"
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
                         message = f'''
                             <user>
                                 <routing_key>{rc}</routing_key>
                                 <crud_operation>{crud_operation}</crud_operation>
-                                <id>{name_value}</id>
+                                <id>{master_uuid}</id>
                                 <first_name></first_name>
                                 <last_name></last_name>
                                 <email></email>
@@ -112,17 +138,33 @@ def main():
                                 <invoice></invoice>
                                 <calendar_link></calendar_link>
                             </user>'''
-                        xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        xsd_tree = etree.parse('../resources/user_xsd.xml')
 
                     case 'company', 'create':
                         rc = "company.crm"
                         message = API.get_new_company(name_value)
-                        xsd_tree = etree.parse('./resources/company_xsd.xml')
+                        root = ET.fromstring(message)
+                        id_element = root.find('id')
+                        if id_element is not None:
+                            id_value = id_element.text
+                            master_uuid = create_master_uuid(id_value, "crm")
+                            id_element.text = master_uuid
+                        message = ET.tostring(root, encoding='utf-8').decode('utf-8')
+                        xsd_tree = etree.parse('../resources/company_xsd.xml')
 
                     case 'company', 'update':
                         rc = "company.crm"
                         updated_fields = API.get_updated_company(id_value)
                         updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+company__c+WHERE+Id+=+'{name_value}'")
+
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
+
+                        updated_values['id'] = master_uuid
+
                         name__c = updated_values.get('Name', '')
                         email__c = updated_values.get('email__c', '')
                         telephone__c = updated_values.get('telephone__c', '')
@@ -134,6 +176,7 @@ def main():
                         house_number__c = updated_values.get('house_number__c', '')
                         type__c = updated_values.get('type__c', '')
                         invoice__c = updated_values.get('invoice__c', '')
+
                         message = f'''
                             <company>
                                 <routing_key>{rc}</routing_key>
@@ -154,15 +197,20 @@ def main():
                                 <type>{type__c}</type>
                                 <invoice>{invoice__c}</invoice>
                             </company>'''
-                        xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        xsd_tree = etree.parse('../resources/user_xsd.xml')
 
                     case 'company', 'delete':
                         rc = "company.crm"
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
                         message = f'''
                             <company>
                                 <routing_key>{rc}</routing_key>
                                 <crud_operation>{crud_operation}</crud_operation>
-                                <id>{name_value}</id>
+                                <id>{master_uuid}</id>
                                 <name></name>
                                 <email></email>
                                 <telephone></telephone>
@@ -179,16 +227,32 @@ def main():
                                 <invoice></invoice>
                             </company>'''
                         xsd_tree = etree.parse('./resources/company_xsd.xml')
-                        
+
                     case 'event', 'create':
                         rc = "event.crm"
                         message = API.get_new_event(name_value)
-                        xsd_tree = etree.parse('./resources/event_xsd.xml')
+                        root = ET.fromstring(message)
+                        id_element = root.find('id')
+                        if id_element is not None:
+                            id_value = id_element.text
+                            master_uuid = create_master_uuid(id_value, "crm")
+                            id_element.text = master_uuid
+                        message = ET.tostring(root, encoding='utf-8').decode('utf-8')
+                        xsd_tree = etree.parse('../resources/event_xsd.xml')
 
                     case 'event', 'update':
                         rc = "event.crm"
                         updated_fields = API.get_updated_event(id_value)
                         updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+event__c+WHERE+Id+=+'{name_value}'")
+
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
+
+                        updated_values['id'] = master_uuid
+
                         date__c = updated_values.get('date__c', '')
                         start_time__c = updated_values.get('start_time__c', '')
                         end_time__c = updated_values.get('end_time__c', '')
@@ -219,6 +283,11 @@ def main():
 
                     case 'event', 'delete':
                         rc = "event.crm"
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
                         message = f'''
                             <event>
                                     <routing_key>{rc}</routing_key>
@@ -242,35 +311,70 @@ def main():
                     case 'attendance', 'create':
                         rc = "attendance.crm"
                         message = API.get_new_attendance(name_value)
-                        xsd_tree = etree.parse('./resources/attendance_xsd.xml')
+                        root = ET.fromstring(message)
+                        id_element = root.find('id')
+                        if id_element is not None:
+                            id_value = id_element.text
+                            master_uuid = create_master_uuid(id_value, "crm")
+                            id_element.text = master_uuid
+                        user_id_element = root.find('user_id')
+                        if user_id_element is not None:
+                            user_id_value = user_id_element.text
+                            user_master_uuid = get_master_uuid(user_id_value, "crm")
+                            user_id_element.text = user_master_uuid
+                        event_id_element = root.find('event_id')
+                        if event_id_element is not None:
+                            event_id_value = event_id_element.text
+                            event_master_uuid = get_master_uuid(event_id_value, "crm")
+                            event_id_element.text = event_master_uuid
+                        message = ET.tostring(root, encoding='utf-8').decode('utf-8')
+                        xsd_tree = etree.parse('../resources/attendance_xsd.xml')
 
                     case 'attendance', 'update':
                         rc = "attendance.crm"
                         updated_fields = API.get_updated_attendance(id_value)
                         updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+attendance__c+WHERE+Id+=+'{name_value}'")
-                        user_id__c = updated_values.get('user_id__c', '')
-                        event_id__c = updated_values.get('event_id__c', '')
+
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
+                        updated_values['id'] = master_uuid
+                        user_id_value = updated_values.get('user_id__c')
+                        if user_id_value is not None:
+                            user_master_uuid = get_master_uuid(user_id_value, "crm")
+                            updated_values['user_id__c'] = user_master_uuid
+                        event_id_value = updated_values.get('event_id__c')
+                        if event_id_value is not None:
+                            event_master_uuid = get_master_uuid(event_id_value, "crm")
+                            updated_values['event_id__c'] = event_master_uuid
                         message = f'''
                             <attendance>
                                 <routing_key>{rc}</routing_key>
                                 <crud_operation>{crud_operation}</crud_operation>
-                                <id>{name_value}</id>
-                                <user_id>{user_id__c}</user_id>
-                                <event_id>{event_id__c}</event_id>
+                                <id>{updated_values['id']}</id>
+                                <user_id>{updated_values['user_id__c']}</user_id>
+                                <event_id>{updated_values['event_id__c']}</event_id>
                             </attendance>'''
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
 
                     case 'attendance', 'delete':
                         rc = "attendance.crm"
+                        try:
+                            master_uuid = get_master_uuid(name_value, "crm")
+                        except Exception as e:
+                            print(f"An error occurred while getting the master_uuid: {e}")
+                            return
                         message = f'''
                             <attendance>
                                 <routing_key>{rc}</routing_key>
                                 <crud_operation>{crud_operation}</crud_operation>
-                                <id>{name_value}</id>
+                                <id>{master_uuid}</id>
                                 <user_id></user_id>
                                 <event_id></event_id>
                             </attendance>'''
-                        xsd_tree = etree.parse('./resources/attendance_xsd.xml')
+                        xsd_tree = etree.parse('../resources/attendance_xsd.xml')
 
                     case _:
                         print(f" [x] Object type {object_type_value} not supported")
