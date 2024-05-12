@@ -27,9 +27,6 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           sudo apt-get install sshpass
 
-      - name: Print SSH config
-        run: cat ~/.ssh/config
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -62,12 +59,11 @@ jobs:
           ssh-add ~/.ssh/github_intratechconsulting
           cd ~/staging/crm/crm-api
           docker compose down
-          docker rmi crm/api-publisher-consumer:latest
           git checkout dev
           git pull
           echo -e "HOST='${{ secrets.SSH_HOST }}'\nKEY_FILE='${{ secrets.SALESFORCE_KEY_FILE }}'\nISSUER='${{ secrets.SALESFORCE_CONSUMER_KEY }}'\nSUBJECT='${{ secrets.SALESFORCE_SUBJECT }}'\nDOMAIN_NAME='${{ secrets.SALESFORCE_DOMAIN_NAME }}'\nACCESS_TOKEN=''" > ./config/secrets.py
           echo "${{ secrets.SALESFORCE_PRIVATE_KEY }}" > ./config/salesforce.key
-          docker compose up -d
+          docker compose up --build -d
           ENDSSH
 
       - name: Check deployment status
