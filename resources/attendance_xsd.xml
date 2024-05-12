@@ -3,10 +3,31 @@
     <xs:element name="attendance">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="routing_key" type="xs:string"/>
-                <xs:element name="id" type="xs:string"/>
-                <xs:element name="user_id" type="xs:string"/>
-                <xs:element name="event_id" type="xs:string"/>
+                <xs:element name="routing_key">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element name="crud_operation">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="create"/>
+                            <xs:enumeration value="update"/>
+                            <xs:enumeration value="delete"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element name="id">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:minLength value="1"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element name="user_id" type="xs:string" nillable="true"/>
+                <xs:element name="event_id" type="xs:string" nillable="true"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

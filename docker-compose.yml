@@ -7,3 +7,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9966:9966"
+    restart: unless-stopped
