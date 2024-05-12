@@ -128,13 +128,12 @@ def add_user(id, first_name, last_name, email, telephone, birthday, country, sta
 # Update an user api call
 def update_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
              house_number, company_email, company_id, source, user_role, invoice, calendar_link):
-    
+    print("update user: " + id)
     url = secrets.DOMAIN_NAME + f'sobjects/user__c/{id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-
     payload = '''
     <user__c>
         {}
@@ -163,8 +162,6 @@ def update_user(id, first_name, last_name, email, telephone, birthday, country, 
             }.items() if value != ''
         ])
     )
-    print(url, headers, payload)
-
 
     response = requests.patch(url, headers=headers, data=payload)
     print(response)

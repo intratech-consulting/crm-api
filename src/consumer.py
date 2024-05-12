@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import pika, sys, os
 import xml.etree.ElementTree as ET
 
@@ -11,6 +12,10 @@ from uuidapi import *
 
 
 def main():
+    # Create a custom logger
+    logger = logging.getLogger(__name__)
+    initialize_logger(logger)
+
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
@@ -31,6 +36,7 @@ def main():
 
         match root.tag, crud_operation:
             case 'user', 'create':
+                logger.info("Consumer received a create user request")
                 try:
                     variables = {}
                     for child in root:
@@ -40,7 +46,8 @@ def main():
                             for address_field in child:
                                 variables[address_field.tag] = address_field.text
                         elif child.tag == "company_id":
-                            variables[child.tag] = get_service_id('crm', child.text)
+                            if(child.text is not None):
+                                variables[child.tag] = get_service_id('crm', child.text)
                         else:
                             variables[child.tag] = child.text
                     service_id = API.add_user(**variables)
@@ -51,18 +58,23 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'user', 'update':
+                logger.info("Consumer received an update user request")
                 try:
                     variables = {}
                     for child in root:
                         if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
                         elif child.tag == "id" or child.tag == "company_id":
-                            variables[child.tag] = get_service_id('crm', child.text)
+                            if(child.text is not None):
+                                variables[child.tag] = get_service_id('crm', child.text)
+                            else:
+                                variables[child.tag] = ""
                         elif child.tag == "address":
                             for address_field in child:
                                 variables[address_field.tag] = "" if address_field.text == None else address_field.text
                         else:
                             variables[child.tag] = "" if child.text == None else child.text
+                    logger.debug(variables)
                     API.update_user(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
@@ -70,6 +82,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'user', 'delete':
+                logger.info("Consumer received a delete user request")
                 try:
                     master_uuid = root.find('id').text
                     service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
@@ -86,6 +99,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'company', 'create':
+                logger.info("Consumer received a create company request")
                 try:
                     variables = {}
                     for child in root:
@@ -105,6 +119,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'company', 'update':
+                logger.info("Consumer received an update company request")
                 try:
                     variables = {}
                     for child in root:
@@ -126,6 +141,7 @@ def main():
 
 
             case 'company', 'delete':
+                logger.info("Consumer received a delete company request")
                 try:
                     master_uuid = root.find('id').text
                     service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
@@ -142,6 +158,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'event', 'create':
+                logger.info("Consumer received a create event request")
                 try:
                     variables = {}
                     for child in root:
@@ -160,6 +177,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'event', 'update':
+                logger.info("Consumer received an update event request")
                 try:
                     variables = {}
                     for child in root:
@@ -181,6 +199,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'event', 'delete':
+                logger.info("Consumer received a delete event request")
                 try:
                     master_uuid = root.find('id').text
                     service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
@@ -193,6 +212,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'attendance', 'create':
+                logger.info("Consumer received a create attendance request")
                 try:
                     variables = {}
                     for child in root:
@@ -209,6 +229,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'attendance', 'update':
+                logger.info("Consumer received an update attendance request")
                 try:
                     variables = {}
                     for child in root:
@@ -226,6 +247,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'attendance', 'delete':
+                logger.info("Consumer received a delete attendance request")
                 try:
                     master_uuid = root.find('id').text
                     service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
@@ -238,6 +260,7 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'order', 'create':
+                logger.info("Consumer received a create order request")
                 try:
                     variables = {}
                     for child in root:
@@ -287,6 +310,33 @@ def main():
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
+
+def initialize_logger(logger):
+    # Set the level of this logger.
+    # DEBUG, INFO, WARNING, ERROR, CRITICAL can be used depending on the granularity of log you want.
+    logger.setLevel(logging.DEBUG)
+
+    # Create handlers
+    c_handler = logging.StreamHandler()
+    s_handler = logging.StreamHandler(sys.stdout)
+    c_handler.setLevel(logging.DEBUG)
+    s_handler.setLevel(logging.DEBUG)
+
+    # Create formatters and add it to handlers
+    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    s_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    c_handler.setFormatter(c_format)
+    s_handler.setFormatter(s_format)
+
+    # Add handlers to the logger
+    logger.addHandler(c_handler)
+    logger.addHandler(s_handler)
+
+    logger.debug('This is a debug message')
+    logger.info('This is an info message')
+
+    logger.warning('This is a warning')
+    logger.error('This is an error')
 
 
 if __name__ == '__main__':
