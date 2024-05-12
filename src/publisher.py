@@ -4,11 +4,10 @@ from lxml import etree
 import xml.etree.ElementTree as ET
 import time
 
-from src.uuidapi import *
-
 sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
+from uuidapi import *
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
@@ -41,12 +40,10 @@ def main():
                         root = ET.fromstring(message)
                         id_element = root.find('id')
                         if id_element is not None:
-                            id_value = id_element.text
-                            master_uuid = create_master_uuid(id_value, "crm")
+                            master_id_value = id_element.text
+                            master_uuid = create_master_uuid(master_id_value, "crm")
                             id_element.text = master_uuid
-                        zip_element = root.find('.//zip')
-                        if zip_element is not None and zip_element.text is not None:
-                            zip_element.text = str(int(float(zip_element.text)))
+                            print(f" [x] Master UUID: {master_uuid}")
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
 
@@ -60,8 +57,7 @@ def main():
                         except Exception as e:
                             print(f"An error occurred while getting the master_uuid: {e}")
                             return
-                        updated_values['id'] = master_uuid
-
+                        
                         first_name__c = updated_values.get('first_name__c', '')
                         last_name__c = updated_values.get('last_name__c', '')
                         email__c = updated_values.get('email__c', '')
@@ -71,8 +67,12 @@ def main():
                         state__c = updated_values.get('state__c', '')
                         city__c = updated_values.get('city__c', '')
                         zip__c = updated_values.get('zip__c', '')
+                        if zip__c != '':
+                            zip__c = str(int(zip__c))
                         street__c = updated_values.get('street__c', '')
                         house_number__c = updated_values.get('house_number__c', '')
+                        if house_number__c != '':
+                            house_number__c = str(int(house_number__c))
                         company_email__c = updated_values.get('company_email__c', '')
                         company_id__c = updated_values.get('company_id__c', '')
                         source__c = updated_values.get('source__c', '')
@@ -83,7 +83,7 @@ def main():
                             <user>
                                 <routing_key>{rc}</routing_key>
                                 <crud_operation>{crud_operation}</crud_operation>
-                                <id>{name_value}</id>
+                                <id>{master_uuid}</id>
                                 <first_name>{first_name__c}</first_name>
                                 <last_name>{last_name__c}</last_name>
                                 <email>{email__c}</email>
@@ -388,9 +388,8 @@ def main():
                 else:
                     print(' [x] Object sent successfully')
                     API.delete_change_object(id_value)
-
-            if message:
-                channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
+                    if message:
+                        channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
 
 if __name__ == '__main__':
     try:

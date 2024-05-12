@@ -17,6 +17,7 @@ def create_master_uuid(service_id, service_name):
         "Service": service_name
     }
     response = requests.post(url, headers=headers, data=json.dumps(payload))
+    print(response.json(), response.status_code)
     if response.status_code == 200 and response.json().get("success") or response.status_code == 201 and response.json().get("success"):
         return response.json().get("MasterUuid")
     else:
@@ -31,6 +32,7 @@ def get_service_id(service_name, master_uuid):
     }
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     if response.status_code == 200:
+        print(response.json()[service_name])
         return response.json()[service_name]
     else:
         return None
