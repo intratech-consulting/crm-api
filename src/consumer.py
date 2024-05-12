@@ -53,9 +53,15 @@ def main():
 
             case 'user', 'delete':
                 try:
-                    id = root.find('id').text
-                    API.delete_user(id)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    master_uuid = root.find('id').text
+                    service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
+                    if service_id is not None:
+                        API.delete_user(service_id)
+                        delete_service_id(master_uuid=master_uuid, service="crm")
+                        ch.basic_ack(delivery_tag=method.delivery_tag)
+                    else:
+                        print("Service ID not found for Master UUID:", master_uuid)
+                        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
