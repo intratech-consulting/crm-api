@@ -42,7 +42,21 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'user', 'update':
-                pass
+                try:
+                    variables = {}
+                    for child in root:
+                        if child.tag == "routing_key" or child.tag == "crud_operation":
+                            continue
+                        if child.tag == "address":
+                            for address_field in child:
+                                variables[address_field.tag] = address_field.text
+                        else:
+                            variables[child.tag] = child.text
+                    API.update_user(**variables)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
 
             case 'user', 'delete':
                 try:
