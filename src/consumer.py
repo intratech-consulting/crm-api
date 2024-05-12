@@ -159,7 +159,25 @@ def main():
                     print("[ERROR] Request Failed", e)
 
             case 'event', 'update':
-                pass
+                try:
+                    variables = {}
+                    for child in root:
+                        if child.tag == "routing_key" or child.tag == "crud_operation":
+                            continue
+                        elif child.tag == "id":
+                            variables[child.tag] = get_service_id('crm', child.text)
+                        elif child.tag == "speaker":
+                            for speaker_field in child:
+                                variables[speaker_field.tag] = "" if speaker_field.text == None else speaker_field.text
+                        elif child.tag == "max_registrations" or child.tag == "available_seats":
+                            variables[child.tag] = "" if child.text == None else str(int(child.text))
+                        else:
+                            variables[child.tag] = "" if child.text == None else child.text
+                    API.update_event(**variables)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
 
             case 'event', 'delete':
                 try:

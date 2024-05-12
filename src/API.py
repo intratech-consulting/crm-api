@@ -274,22 +274,29 @@ def update_company(id, name, email, telephone, country, state, city, zip, street
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    payload = f'''
-        <Company__c>
-            <id__c>{id}</id__c>
-            <name>{name}</name>
-            <email__c>{email}</email__c>
-            <telephone__c>{telephone}</telephone__c>
-            <country__c>{country}</country__c>
-            <state__c>{state}</state__c>
-            <city__c>{city}</city__c>
-            <zip__c>{zip}</zip__c>
-            <street__c>{street}</street__c>
-            <house_number__c>{house_number}</house_number__c>
-            <type__c>{type}</type__c>
-            <invoice__c>{invoice}</invoice__c>
-        </Company__c>
-    '''
+    payload = '''
+    <Company__c>
+        {}
+    </Company__c>
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "name": name,
+                "email": email,
+                "telephone": telephone,
+                "country": country,
+                "state": state,
+                "city": city,
+                "zip": zip,
+                "street": street,
+                "house_number": house_number,
+                "type": type,
+                "invoice": invoice,
+            }.items() if value != ''
+        ])
+    )
+
 
     response = requests.patch(url, headers=headers, data=payload)
     print(response.text)
@@ -370,20 +377,28 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    payload = f'''
-        <event__c>
-            <id__c>{id}</id__c>
-            <date__c>{date}</date__c>
-            <start_time__c>{datetime.strptime(start_time, '%H:%M').strftime('%H:%M:%S')}</start_time__c>
-            <end_time__c>{datetime.strptime(end_time, '%H:%M').strftime('%H:%M:%S')}</end_time__c>
-            <location__c>{location}</location__c>
-            <user_id__c>{user_id}</user_id__c>
-            <company_id__c>{company_id}</company_id__c>
-            <max_registrations__c>{str(int(max_registrations))}</max_registrations__c>
-            <available_seats__c>{str(int(available_seats))}</available_seats__c>
-            <description__c>{description}</description__c>
-        </event__c>
-    '''
+
+    payload = '''
+    <event__c>
+        {}
+    </event__c>
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "date": date,
+                "start_time": "" if start_time == None else datetime.strptime(start_time, '%H:%M:%S').strftime('%H:%M:%S'),
+                "end_time": "" if end_time == None else datetime.strptime(end_time, '%H:%M:%S').strftime('%H:%M:%S'),
+                "location": location,
+                "user_id": user_id,
+                "company_id": company_id,
+                "max_registrations": max_registrations,
+                "available_seats": available_seats,
+                "description": description,
+            }.items() if value != ''
+        ])
+    )
+
     response = requests.post(url, headers=headers, data=payload)
     print(response)
     return response.json().get('id', None)
@@ -395,20 +410,29 @@ def update_event(id, date, start_time, end_time, location, user_id, company_id, 
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    payload = f'''
-        <event__c>
-            <id__c>{id}</id__c>
-            <date__c>{date}</date__c>
-            <start_time__c>{datetime.strptime(start_time, '%H:%M').strftime('%H:%M:%S')}</start_time__c>
-            <end_time__c>{datetime.strptime(end_time, '%H:%M').strftime('%H:%M:%S')}</end_time__c>
-            <location__c>{location}</location__c>
-            <user_id__c>{user_id}</user_id__c>
-            <company_id__c>{company_id}</company_id__c>
-            <max_registrations__c>{str(int(max_registrations))}</max_registrations__c>
-            <available_seats__c>{str(int(available_seats))}</available_seats__c>
-            <description__c>{description}</description__c>
-        </event__c>
-    '''
+    payload = '''
+    <event__c>
+        {}
+    </event__c>
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "date": date,
+                "start_time": datetime.strptime(start_time, '%H:%M:%S').strftime('%H:%M:%S') if start_time else "",
+                "end_time": datetime.strptime(end_time, '%H:%M:%S').strftime('%H:%M:%S') if end_time else "",
+                "location": location,
+                "user_id": user_id,
+                "company_id": company_id,
+                "max_registrations": max_registrations,
+                "available_seats": available_seats,
+                "description": description,
+            }.items() if value != ''
+        ])
+    )
+    print(url)
+    print(headers)
+    print(payload)
     response = requests.patch(url, headers=headers, data=payload)
     print(response)
 
