@@ -85,11 +85,11 @@ def get_user(user_id=None):
 
 
 # Add an user api call
-def add_user(user_id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
+def add_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
              house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes", calendar_link=""):
 
     required_fields = {
-        'user_id': user_id,
+        'user_id': id,
         'first_name': first_name,
         'last_name': last_name,
         'email': email,
@@ -105,7 +105,7 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
 
     payload = f'''
     <user__c>
-        <user_id__c>{user_id}</user_id__c>
+        <user_id__c>{id}</user_id__c>
         <first_name__c>{first_name}</first_name__c>
         <last_name__c>{last_name}</last_name__c>
         <email__c>{email}</email__c>
@@ -128,7 +128,8 @@ def add_user(user_id, first_name, last_name, email, telephone, birthday, country
 
     response = requests.request("POST", url, headers=headers, data=payload)
     print(response)
-    # logger.info("add user" + response.text)
+
+    return response.json().get('id', None)
 
 
 # Get a company by id api call

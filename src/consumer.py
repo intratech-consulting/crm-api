@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 import pika, sys, os
 import xml.etree.ElementTree as ET
+
+import requests
+import json
 sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
+from uuidapi import *
 
 
 def main():
@@ -14,6 +18,8 @@ def main():
     queue_name = 'crm'
 
     channel.queue_declare(queue=queue_name, durable=True)
+
+    service_name = 'crm'
 
     def callback(ch, method, properties, body):
 
@@ -34,12 +40,12 @@ def main():
                                 variables[address_field.tag] = address_field.text
                         else:
                             variables[child.tag] = child.text
-                    API.add_user(**variables)
+                    service_id = API.add_user(**variables)
+                    add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
-                    # logger.error("[ERROR] Request Failed", e)
 
             case 'company':
                 try:
@@ -53,7 +59,9 @@ def main():
                         elif child.tag == "logo":
                             pass
                         else:
+
                             variables[child.tag] = child.text
+                    variables["service_id"] = service_id
                     API.add_company(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
@@ -71,7 +79,7 @@ def main():
                                 variables[speaker_field.tag] = speaker_field.text
                         else:
                             variables[child.tag] = child.text.strip()
-                    print(variables)
+                    variables["service_id"] = service_id
                     API.add_event(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
@@ -86,7 +94,7 @@ def main():
                             pass
                         else:
                             variables[child.tag] = child.text.strip()
-                    print(variables)
+                    variables["service_id"] = service_id
                     API.add_attendance(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                 except Exception as e:
