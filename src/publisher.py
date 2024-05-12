@@ -146,8 +146,8 @@ def main():
                         root = ET.fromstring(message)
                         id_element = root.find('id')
                         if id_element is not None:
-                            id_value = id_element.text
-                            master_uuid = create_master_uuid(id_value, "crm")
+                            master_id_value = id_element.text
+                            master_uuid = create_master_uuid(master_id_value, "crm")
                             id_element.text = master_uuid
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
                         xsd_tree = etree.parse('./resources/company_xsd.xml')
@@ -162,8 +162,6 @@ def main():
                         except Exception as e:
                             print(f"An error occurred while getting the master_uuid: {e}")
                             return
-
-                        updated_values['id'] = master_uuid
 
                         name__c = updated_values.get('Name', '')
                         email__c = updated_values.get('email__c', '')
@@ -181,7 +179,7 @@ def main():
                             <company>
                                 <routing_key>{rc}</routing_key>
                                 <crud_operation>{crud_operation}</crud_operation>
-                                <id>{name_value}</id>
+                                <id>{master_uuid}</id>
                                 <name>{name__c}</name>
                                 <email>{email__c}</email>
                                 <telephone>{telephone__c}</telephone>
@@ -197,7 +195,7 @@ def main():
                                 <type>{type__c}</type>
                                 <invoice>{invoice__c}</invoice>
                             </company>'''
-                        xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        xsd_tree = etree.parse('./resources/company_xsd.xml')
 
                     case 'company', 'delete':
                         rc = "company.crm"
