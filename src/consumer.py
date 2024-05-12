@@ -27,13 +27,14 @@ def main():
         xml_string = body
         xml_string = xml_string.decode().strip()
         root = ET.fromstring(xml_string)
+        crud_operation = root.find('crud_operation').text
 
-        match root.tag:
-            case 'user':
+        match root.tag, crud_operation:
+            case 'user', 'create':
                 try:
                     variables = {}
                     for child in root:
-                        if child.tag == "routing_key":
+                        if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
                         if child.tag == "address":
                             for address_field in child:
@@ -47,11 +48,23 @@ def main():
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
 
-            case 'company':
+            case 'user', 'update':
+                pass
+
+            case 'user', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_user(id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
+
+            case 'company', 'create':
                 try:
                     variables = {}
                     for child in root:
-                        if child.tag == "routing_key":
+                        if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
                         if child.tag == "address":
                             for address_field in child:
@@ -68,11 +81,23 @@ def main():
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
 
-            case 'event':
+            case 'company', 'update':
+                pass
+
+            case 'company', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_company(id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
+
+            case 'event', 'create':
                 try:
                     variables = {}
                     for child in root:
-                        if child.tag == "routing_key":
+                        if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
                         if child.tag == "speaker":
                             for speaker_field in child:
@@ -86,11 +111,23 @@ def main():
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
 
-            case 'attendance':
+            case 'event', 'update':
+                pass
+
+            case 'event', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_event(id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
+
+            case 'attendance', 'create':
                 try:
                     variables = {}
                     for child in root:
-                        if child.tag == "routing_key" or child.tag == "id":
+                        if child.tag == "routing_key" or child.tag == 'crud_operation' or child.tag == "id":
                             pass
                         else:
                             variables[child.tag] = child.text.strip()
@@ -101,7 +138,19 @@ def main():
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     print("[ERROR] Request Failed", e)
 
-            case 'order':
+            case 'attendance', 'update':
+                pass
+
+            case 'attendance', 'delete':
+                try:
+                    id = root.find('id').text
+                    API.delete_attendance(id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                    print("[ERROR] Request Failed", e)
+
+            case 'order', 'create':
                 try:
                     variables = {}
                     for child in root:
