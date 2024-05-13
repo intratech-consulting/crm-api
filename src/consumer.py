@@ -29,6 +29,7 @@ def main():
         root = ET.fromstring(xml_string)
         crud_operation = root.find('crud_operation').text
         logger.info(f"Received a {crud_operation} request for {root.tag}")
+        logger.debug(f"Message: {xml_string}")
 
         match root.tag, crud_operation:
             case 'user', 'create':

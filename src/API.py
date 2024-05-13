@@ -105,13 +105,13 @@ def get_new_user(user_id=None):
                     field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
-            # logger.info("get users: " + xml_string)
+            logger.debug(f"Response: {response};\nData: {data};\nXML: {xml_string}")
             return xml_string
         else:
-            print("No user found with this id: " + user_id)
+            logger.error(f"No user found with this id: {user_id}")
             return None
     except Exception as e:
-        print("Error fetching users from Salesforce:", e)
+        logger.error(f"Error fetching users from Salesforce: {e}")
         return None
 
 
@@ -147,7 +147,7 @@ def add_user(id, first_name, last_name, email, telephone, birthday, country, sta
     '''
 
     response = requests.post(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
 # Update an user api call
@@ -189,7 +189,7 @@ def update_user(id, first_name, last_name, email, telephone, birthday, country, 
     )
 
     response = requests.patch(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
 
 # Delete an user api call
 def delete_user(user_id):
@@ -202,7 +202,7 @@ def delete_user(user_id):
     payload = {}
 
     response = requests.delete(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
 
 
 # Get a company by id api call
@@ -253,13 +253,13 @@ def get_new_company(company_id=None):
                     field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
-            # logger.info("get company: " + xml_string)
+            logger.debug(f"Response: {response};\nData: {data};\nXML: {xml_string}")
             return xml_string
         else:
-            print("No company found with this id: " + company_id)
+            logger.error(f"No company found with this id: {company_id}")
             return None
     except Exception as e:
-            print("Error fetching companies from Salesforce:", e)
+            logger.error(f"Error fetching companies from Salesforce: {e}")
             return None
 
 
@@ -288,7 +288,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     '''
 
     response = requests.post(url, headers=headers, data=payload)
-    print(response.text)
+    logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
 # Update a company api call
@@ -323,7 +323,7 @@ def update_company(id, name, email, telephone, country, state, city, zip, street
 
 
     response = requests.patch(url, headers=headers, data=payload)
-    print(response.text)
+    logger.debug(f"Response: {response};")
 
 
 
@@ -338,7 +338,7 @@ def delete_company(company_id):
     payload = {}
 
     response = requests.delete(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
 
 
 # Get a event by id api call
@@ -383,14 +383,13 @@ def get_new_event(event_id=None):
                     field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
-            print(xml_string)
-            # logger.info("get company: " + xml_string)
+            logger.debug(f"Response: {response};\nData: {data};\nXML: {xml_string}")
             return xml_string
         else:
-            print("No event found with this id: " + event_id)
+            logger.error(f"No event found with this id: {event_id}")
             return None
     except Exception as e:
-        print("Error fetching event from Salesforce:", e)
+        logger.error(f"Error fetching event from Salesforce: {e}")
         return None
 
 
@@ -424,7 +423,7 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
     )
 
     response = requests.post(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
 # Update an event api call
@@ -454,11 +453,8 @@ def update_event(id, date, start_time, end_time, location, user_id, company_id, 
             }.items() if value != ''
         ])
     )
-    print(url)
-    print(headers)
-    print(payload)
     response = requests.patch(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
 
 # Delete an event api call
 def delete_event(event_id):
@@ -471,7 +467,7 @@ def delete_event(event_id):
     payload = {}
 
     response = requests.delete(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
 
 # Get the attendances
 def get_new_attendance(attendance_id=None):
@@ -502,14 +498,13 @@ def get_new_attendance(attendance_id=None):
                     field_element.text = "" if value == None else str(value).lower()
 
             xml_string = ET.tostring(root, encoding="unicode", method="xml")
-            print(xml_string)
-            # logger.info("get company: " + xml_string)
+            logger.debug(f"Response: {response};\nData: {data};\nXML: {xml_string}")
             return xml_string
         else:
-            print("No attendance found with this id: " + attendance_id)
+            logger.error(f"No attendance found with this id: {attendance_id}")
             return None
     except Exception as e:
-        print("Error fetching attendance from Salesforce:", e)
+        logger.error(f"Error fetching attendance from Salesforce: {e}")
         return None
 
 
@@ -528,7 +523,7 @@ def add_attendance(user_id=None, event_id=None):
     '''
 
     response = requests.post(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
 # Update an attendance
@@ -546,7 +541,7 @@ def update_attendance(id=None, user_id=None, event_id=None):
     '''
 
     response = requests.patch(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
 
 # Delete an attendance api call
 def delete_attendance(attendance_id):
@@ -559,7 +554,7 @@ def delete_attendance(attendance_id):
     payload = {}
 
     response = requests.delete(url, headers=headers, data=payload)
-    print(response)
+    logger.debug(f"Response: {response};")
 
 
 # Add a product
@@ -576,7 +571,7 @@ def add_product(name):
     '''
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    # logger.info("add product" + response.text)
+    logger.debug(f"Response: {response};")
     return response.json().get("id", None)
 
 
@@ -622,7 +617,7 @@ def add_order(user_id, product, amount):
     '''
 
     response = requests.post(url, headers=headers, data=payload)
-    # logger.info("add order" + response.text)
+    logger.debug(f"Response: {response};")
 
 
 def update_order(order_id, amount):
@@ -637,7 +632,7 @@ def update_order(order_id, amount):
         </order__c>
     '''
     response = requests.request("PATCH", url, headers=headers, data=payload)
-    # logger.info("add order" + response.text)
+    logger.debug(f"Response: {response};")
 
 
 # Get order to change amount
@@ -690,6 +685,7 @@ def get_changed_data():
                 field_element.text = str(value)
 
         xml_string = ET.tostring(root, encoding="unicode", method="xml")
+        logger.debug(f"Response: {response};\nData: {data};\nXML: {xml_string}")
         return xml_string
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
@@ -709,6 +705,7 @@ def get_updated_user(id=None):
         response.raise_for_status()
         data = response.json().get("records", [])
         changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        logger.debug(f"Response: {response};\nData: {data}")
         return changed_data
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
@@ -728,6 +725,7 @@ def get_updated_company(id=None):
         response.raise_for_status()
         data = response.json().get("records", [])
         changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        logger.debug(f"Response: {response};\nData: {data}")
         return changed_data
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
@@ -747,6 +745,7 @@ def get_updated_event(id=None):
         response.raise_for_status()
         data = response.json().get("records", [])
         changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        logger.debug(f"Response: {response};\nData: {data}")
         return changed_data
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
@@ -766,6 +765,7 @@ def get_updated_attendance(id=None):
         response.raise_for_status()
         data = response.json().get("records", [])
         changed_data = [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
+        logger.debug(f"Response: {response};\nData: {data}")
         return changed_data
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
@@ -783,6 +783,7 @@ def get_updated_values(query=None):
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         data = response.json().get("records", [])
+        logger.debug(f"Response: {response};\nData: {data}")
         return data[0]
     except Exception as e:
         print("Error fetching users from Salesforce:", e)
@@ -799,6 +800,7 @@ def delete_change_object(id=None):
     try:
         response = requests.delete(url, headers=headers)
         response.raise_for_status()
+        logger.debug(f"Response: {response}")
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
