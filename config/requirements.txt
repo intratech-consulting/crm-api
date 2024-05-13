@@ -6,3 +6,4 @@ lxml
 responses
 lxml
 testcontainers
+colorlog
