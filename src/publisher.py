@@ -430,7 +430,7 @@ if __name__ == '__main__':
         logger.info("Waiting for messages to send. To exit press CTRL+C")
         while True:
             main()
-            time.sleep(120)
+            time.sleep(10)
     except Exception as e:
         logger.error(f"Request Failed {e}")
         sys.exit(1)
