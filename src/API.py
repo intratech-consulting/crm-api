@@ -1,3 +1,4 @@
+import logging
 import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
@@ -7,6 +8,26 @@ import sys
 sys.path.append('/app')
 import config.secrets as secrets
 
+def initialize_logger(logger):
+    # Set the level of this logger.
+    # DEBUG, INFO, WARNING, ERROR, CRITICAL can be used depending on the granularity of log you want.
+    logger.setLevel(logging.INFO)
+
+    # Create handlers
+    c_handler = logging.StreamHandler()
+    s_handler = logging.StreamHandler(sys.stdout)
+    c_handler.setLevel(logging.INFO)
+    s_handler.setLevel(logging.INFO)
+
+    # Create formatters and add it to handlers
+    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    s_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    c_handler.setFormatter(c_format)
+    s_handler.setFormatter(s_format)
+
+    # Add handlers to the logger
+    logger.addHandler(c_handler)
+    logger.addHandler(s_handler)
 
 # Get the access token and domain name
 def authenticate():
@@ -31,6 +52,7 @@ def authenticate():
     response = req.json()
     global ACCESS_TOKEN
     ACCESS_TOKEN = response['access_token']
+    logger.info("Authenticated successfully")
 
 
 # Get an user by id api call
@@ -777,3 +799,7 @@ def delete_change_object(id=None):
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
+    
+# Create a custom logger
+logger = logging.getLogger(__name__)
+initialize_logger(logger)
