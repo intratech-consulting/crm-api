@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import colorlog
 import pika, sys, os
 from lxml import etree
 import xml.etree.ElementTree as ET
@@ -401,29 +402,31 @@ def main():
                         channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
 
 def initialize_logger(logger):
-    # Set the level of this logger.
-    # DEBUG, INFO, WARNING, ERROR, CRITICAL can be used depending on the granularity of log you want.
-    logger.setLevel(logging.INFO)
+    # Set level for the logger
+    logger.setLevel(logging.DEBUG)
 
-    # Create handlers
-    c_handler = logging.StreamHandler()
-    s_handler = logging.StreamHandler(sys.stdout)
-    c_handler.setLevel(logging.INFO)
-    s_handler.setLevel(logging.INFO)
+    # Create a color formatter
+    formatter = colorlog.ColoredFormatter(
+        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+    )
 
-    # Create formatters and add it to handlers
-    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-    s_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    c_handler.setFormatter(c_format)
-    s_handler.setFormatter(s_format)
+    # Create a stream handler and set the formatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
 
-    # Add handlers to the logger
-    logger.addHandler(c_handler)
-    logger.addHandler(s_handler)
+    # Add the handler to the logger
+    logger.addHandler(handler)
 
 if __name__ == '__main__':
     # Create a custom logger
-    logger = logging.getLogger(__name__)
+    logger = colorlog.getLogger(__name__)
     initialize_logger(logger)
     try:
         API.authenticate()

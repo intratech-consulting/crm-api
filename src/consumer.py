@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import colorlog
 import pika, sys, os
 import xml.etree.ElementTree as ET
 
@@ -47,6 +48,7 @@ def main():
                     service_id = API.add_user(**variables)
                     add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -69,6 +71,7 @@ def main():
                             variables[child.tag] = "" if child.text == None else child.text
                     API.update_user(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -81,6 +84,7 @@ def main():
                         API.delete_user(service_id)
                         delete_service_id(master_uuid=master_uuid, service=team_name)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -100,6 +104,8 @@ def main():
                             variables[child.tag] = child.text
                     service_id = API.add_company(**variables)
                     add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -119,6 +125,7 @@ def main():
                             variables[child.tag] = "" if child.text == None else child.text
                     API.update_company(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -132,6 +139,7 @@ def main():
                         API.delete_company(service_id)
                         delete_service_id(master_uuid=master_uuid, service=team_name)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -150,6 +158,7 @@ def main():
                     service_id = API.add_event(**variables)
                     add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -171,6 +180,7 @@ def main():
                             variables[child.tag] = "" if child.text == None else child.text
                     API.update_event(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -182,6 +192,7 @@ def main():
                     API.delete_event(service_id)
                     delete_service_id(master_uuid=master_uuid, service=team_name)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -197,6 +208,7 @@ def main():
                     service_id = API.add_attendance(**variables)
                     add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -213,6 +225,7 @@ def main():
                             variables[child.tag] = "" if child.text == None else child.text
                     API.update_attendance(**variables)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -223,6 +236,7 @@ def main():
                     API.delete_attendance(service_id)
                     delete_service_id(master_uuid=master_uuid, service=team_name)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
+                    logger.info("Request Succeeded")
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
@@ -276,30 +290,31 @@ def main():
     channel.start_consuming()
 
 def initialize_logger(logger):
-    # Set the level of this logger.
-    # DEBUG, INFO, WARNING, ERROR, CRITICAL can be used depending on the granularity of log you want.
-    logger.setLevel(logging.INFO)
+    # Set level for the logger
+    logger.setLevel(logging.DEBUG)
 
-    # Create handlers
-    c_handler = logging.StreamHandler()
-    s_handler = logging.StreamHandler(sys.stdout)
-    c_handler.setLevel(logging.INFO)
-    s_handler.setLevel(logging.INFO)
+    # Create a color formatter
+    formatter = colorlog.ColoredFormatter(
+        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
+        log_colors={
+            'DEBUG':    'cyan',
+            'INFO':     'green',
+            'WARNING':  'yellow',
+            'ERROR':    'red',
+            'CRITICAL': 'red,bg_white',
+        },
+    )
 
-    # Create formatters and add it to handlers
-    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-    s_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    c_handler.setFormatter(c_format)
-    s_handler.setFormatter(s_format)
+    # Create a stream handler and set the formatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
 
-    # Add handlers to the logger
-    logger.addHandler(c_handler)
-    logger.addHandler(s_handler)
-
+    # Add the handler to the logger
+    logger.addHandler(handler)
 
 if __name__ == '__main__':
     # Create a custom logger
-    logger = logging.getLogger(__name__)
+    logger = colorlog.getLogger(__name__)
     initialize_logger(logger)
     try:
         API.authenticate()
