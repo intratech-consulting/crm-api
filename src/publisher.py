@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import pika, sys, os
 from lxml import etree
 import xml.etree.ElementTree as ET
@@ -10,6 +11,10 @@ import src.API as API
 from uuidapi import *
 
 def main():
+    # Create a custom logger
+    logger = logging.getLogger(__name__)
+    initialize_logger(logger)
+
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
@@ -32,7 +37,7 @@ def main():
 
                 message = None
 
-                print(f" [x] Sending: Id={id_value}, Name={name_value}, Object Type={object_type_value}, Crud={crud_operation}")
+                logger.info(f"Sending: Object Type={object_type_value}, Crud={crud_operation}")
                 match object_type_value, crud_operation:
                     case 'user', 'create':
                         rc = "user.crm"
@@ -59,7 +64,7 @@ def main():
                         try:
                             master_uuid = get_master_uuid(name_value, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
                         
                         first_name__c = updated_values.get('first_name__c', '')
@@ -117,7 +122,7 @@ def main():
                         try:
                             master_uuid = get_master_uuid(name_value, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
                         message = f'''
                             <user>
@@ -166,7 +171,7 @@ def main():
                         try:
                             master_uuid = get_master_uuid(name_value, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
 
                         name__c = updated_values.get('Name', '')
@@ -208,7 +213,7 @@ def main():
                         try:
                             master_uuid = get_master_uuid(name_value, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
                         message = f'''
                             <company>
@@ -252,7 +257,7 @@ def main():
                         try:
                             master_uuid = get_master_uuid(name_value, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
 
                         date__c = updated_values.get('date__c', '')
@@ -288,7 +293,7 @@ def main():
                         try:
                             master_uuid = get_master_uuid(name_value, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
                         message = f'''
                             <event>
@@ -342,7 +347,7 @@ def main():
                             master_uuid = get_master_uuid(name_value, "crm")
                             master_uuid = create_master_uuid(master_uuid, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
                         
                         user_id_value = updated_values.get('user_id__c')
@@ -368,7 +373,7 @@ def main():
                         try:
                             master_uuid = get_master_uuid(name_value, "crm")
                         except Exception as e:
-                            print(f"An error occurred while getting the master_uuid: {e}")
+                            logger.error(f"An error occurred while getting the master_uuid: {e}")
                             return
                         message = f'''
                             <attendance>
@@ -381,27 +386,51 @@ def main():
                         xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
                     case _:
-                        print(f" [x] Object type {object_type_value} not supported")
+                        logger.info(f"Object type {object_type_value} not supported")
 
-                print(f" [x] Message: {message}")
+                logger.info(f"Message: {message}")
 
                 schema = etree.XMLSchema(xsd_tree)
                 xml_doc = etree.fromstring(message.encode())
                 if not schema.validate(xml_doc):
-                    print(' [x] Invalid XML')
+                    logger.info('Invalid XML')
                 else:
-                    print(' [x] Object sent successfully')
+                    logger.info('Object sent successfully')
                     API.delete_change_object(id_value)
                     if message:
                         channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
 
+def initialize_logger(logger):
+    # Set the level of this logger.
+    # DEBUG, INFO, WARNING, ERROR, CRITICAL can be used depending on the granularity of log you want.
+    logger.setLevel(logging.INFO)
+
+    # Create handlers
+    c_handler = logging.StreamHandler()
+    s_handler = logging.StreamHandler(sys.stdout)
+    c_handler.setLevel(logging.INFO)
+    s_handler.setLevel(logging.INFO)
+
+    # Create formatters and add it to handlers
+    c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    s_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    c_handler.setFormatter(c_format)
+    s_handler.setFormatter(s_format)
+
+    # Add handlers to the logger
+    logger.addHandler(c_handler)
+    logger.addHandler(s_handler)
+
 if __name__ == '__main__':
+    # Create a custom logger
+    logger = logging.getLogger(__name__)
+    initialize_logger(logger)
     try:
-        print(' [*] Sending messages. To exit press CTRL+C')
         API.authenticate()
+        logger.info("Waiting for messages to send. To exit press CTRL+C")
         while True:
             main()
             time.sleep(120)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"Request Failed {e}")
         sys.exit(1)
