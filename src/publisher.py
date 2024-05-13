@@ -389,7 +389,7 @@ def main():
                     case _:
                         logger.info(f"Object type {object_type_value} not supported")
 
-                logger.info(f"Message: {message}")
+                logger.debug(f"Message: {message}")
 
                 schema = etree.XMLSchema(xsd_tree)
                 xml_doc = etree.fromstring(message.encode())
