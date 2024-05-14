@@ -15,6 +15,7 @@ COPY config/secrets.py ./config/secrets.py
 COPY src/monitoring.py ./src/monitoring.py
 COPY src/publisher.py ./src/publisher.py
 COPY src/uuidapi.py ./src/uuidapi.py
+COPY src/xml_parser.py ./src/xml_parser.py
 COPY resources/heartbeat_xsd.xml ./resources/heartbeat_xsd.xml
 COPY resources/log_xsd.xml ./resources/log_xsd.xml
 COPY resources/user_xsd.xml ./resources/user_xsd.xml
