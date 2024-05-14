@@ -407,7 +407,7 @@ if __name__ == '__main__':
         API.authenticate()
         logger.info("Waiting for messages to send. To exit press CTRL+C")
         while True:
-            main(logger)
+            main()
             time.sleep(120)
     except Exception as e:
         logger.error(f"Request Failed {e}")

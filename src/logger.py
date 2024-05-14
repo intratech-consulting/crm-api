@@ -8,7 +8,8 @@ def configure_logger(logger):
 
     # Create a color formatter
     formatter = colorlog.ColoredFormatter(
-        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
+        '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
         log_colors={
             'DEBUG': 'cyan',
             'INFO': 'green',

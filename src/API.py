@@ -30,8 +30,7 @@ def authenticate():
                         })
 
     response = req.json()
-    global ACCESS_TOKEN
-    ACCESS_TOKEN = response['access_token']
+    secrets.ACCESS_TOKEN = response['access_token']
     logger.info("Authenticated successfully")
 
 
@@ -39,7 +38,7 @@ def authenticate():
 def get_new_user(user_id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+user__c+WHERE+Id+=+\'{user_id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
     payload = {}
 
@@ -98,7 +97,7 @@ def add_user(id, first_name, last_name, email, telephone, birthday, country, sta
              calendar_link=""):
     url = secrets.DOMAIN_NAME + 'sobjects/user__c'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
 
@@ -144,7 +143,7 @@ def update_user(id, first_name, last_name, email, telephone, birthday, country, 
     print("update user: " + id)
     url = secrets.DOMAIN_NAME + f'sobjects/user__c/{id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = '''
@@ -184,7 +183,7 @@ def update_user(id, first_name, last_name, email, telephone, birthday, country, 
 def delete_user(user_id):
     url = secrets.DOMAIN_NAME + f'sobjects/user__c/{user_id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
 
@@ -198,7 +197,7 @@ def delete_user(user_id):
 def get_new_company(company_id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
     payload = {}
 
@@ -256,7 +255,7 @@ def get_new_company(company_id=None):
 def add_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
     url = secrets.DOMAIN_NAME + f'sobjects/Company__c'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
@@ -285,7 +284,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
 def update_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
     url = secrets.DOMAIN_NAME + f'sobjects/Company__c/{id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = '''
@@ -319,7 +318,7 @@ def update_company(id, name, email, telephone, country, state, city, zip, street
 def delete_company(company_id):
     url = secrets.DOMAIN_NAME + f'sobjects/company__c/{company_id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
 
@@ -333,7 +332,7 @@ def delete_company(company_id):
 def get_new_event(event_id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
     payload = {}
     try:
@@ -386,7 +385,7 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
               description):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
 
@@ -422,7 +421,7 @@ def update_event(id, date, start_time, end_time, location, user_id, company_id, 
                  description):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c/{id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = '''
@@ -453,7 +452,7 @@ def update_event(id, date, start_time, end_time, location, user_id, company_id, 
 def delete_event(event_id):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c/{event_id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
 
@@ -467,7 +466,7 @@ def delete_event(event_id):
 def get_new_attendance(attendance_id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,user_id__c,event_id__c+FROM+attendance__c+WHERE+Id+=\'{attendance_id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
     payload = {}
 
@@ -506,7 +505,7 @@ def get_new_attendance(attendance_id=None):
 def add_attendance(user_id=None, event_id=None):
     url = secrets.DOMAIN_NAME + f'sobjects/attendance__c'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
@@ -525,7 +524,7 @@ def add_attendance(user_id=None, event_id=None):
 def update_attendance(id=None, user_id=None, event_id=None):
     url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
@@ -543,7 +542,7 @@ def update_attendance(id=None, user_id=None, event_id=None):
 def delete_attendance(attendance_id):
     url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{attendance_id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
 
@@ -557,7 +556,7 @@ def delete_attendance(attendance_id):
 def add_product(name):
     url = secrets.DOMAIN_NAME + f'sobjects/product__c'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
@@ -576,7 +575,7 @@ def product_exists(id):
     print('IN HERE', id)
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id+FROM+product__c+WHERE+Id=\'{id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = {}
@@ -599,7 +598,7 @@ def product_exists(id):
 def add_order(user_id, product, amount):
     url = secrets.DOMAIN_NAME + f'sobjects/order__c'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
@@ -617,7 +616,7 @@ def add_order(user_id, product, amount):
 def update_order(order_id, amount):
     url = secrets.DOMAIN_NAME + f'sobjects/order__c/{order_id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = f'''
@@ -633,7 +632,7 @@ def update_order(order_id, amount):
 def get_order(user_id, product):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product__c=\'{product}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = {}
@@ -657,7 +656,7 @@ def get_order(user_id, product):
 def get_changed_data():
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,Name,object_type__c,crud__c+FROM+changed_object__c'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = {}
@@ -690,7 +689,7 @@ def get_changed_data():
 def get_updated_user(id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = {}
@@ -711,7 +710,7 @@ def get_updated_user(id=None):
 def get_updated_company(id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+name__c,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = {}
@@ -732,7 +731,7 @@ def get_updated_company(id=None):
 def get_updated_event(id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = {}
@@ -753,7 +752,7 @@ def get_updated_event(id=None):
 def get_updated_attendance(id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+user_id__c,event_id__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
     payload = {}
@@ -774,7 +773,7 @@ def get_updated_attendance(id=None):
 def get_updated_values(query=None):
     url = secrets.DOMAIN_NAME + query
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
     payload = {}
 
@@ -793,7 +792,7 @@ def get_updated_values(query=None):
 def delete_change_object(id=None):
     url = secrets.DOMAIN_NAME + f'sobjects/changed_object__c/{id}'
     headers = {
-        'Authorization': 'Bearer ' + ACCESS_TOKEN
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
     payload = {}
 

@@ -6,6 +6,7 @@ from datetime import datetime
 sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
+from logger import init_logger
 
 TEAM = 'crm'
 
@@ -66,8 +67,7 @@ def log(logger, process, message, error='false'):
 
 if __name__ == '__main__':
     # Create a custom logger
-    logger = colorlog.getLogger(__name__)
-    API.initialize_logger(logger)
+    logger = init_logger('__monitoring__')
     try:
         while True:
             heartbeat(datetime.now())
