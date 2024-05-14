@@ -1,15 +1,12 @@
 #!/usr/bin/env python
-import logging
-import colorlog
 import pika, sys, os
 import xml.etree.ElementTree as ET
 
-import requests
-import json
 sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
 from uuidapi import *
+from src.logger import init_logger
 
 
 def main():
@@ -290,33 +287,10 @@ def main():
     logger.info("Waiting for messages to receive. To exit press CTRL+C")
     channel.start_consuming()
 
-def initialize_logger(logger):
-    # Set level for the logger
-    logger.setLevel(logging.DEBUG)
-
-    # Create a color formatter
-    formatter = colorlog.ColoredFormatter(
-        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
-        log_colors={
-            'DEBUG':    'cyan',
-            'INFO':     'green',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'red,bg_white',
-        },
-    )
-
-    # Create a stream handler and set the formatter
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(handler)
 
 if __name__ == '__main__':
     # Create a custom logger
-    logger = colorlog.getLogger(__name__)
-    initialize_logger(logger)
+    logger = init_logger("__consumer__")
     try:
         API.authenticate()
         main()
