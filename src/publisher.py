@@ -7,6 +7,7 @@ import time
 sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
+import monitoring as m
 from uuidapi import *
 from logger import init_logger
 
@@ -33,7 +34,7 @@ def main():
 
                 message = None
 
-                logger.info(f"Sending: Object Type={object_type_value}, Crud={crud_operation}")
+                logger.debug(f"Sending: Object Type={object_type_value}, Crud={crud_operation}")
                 match object_type_value, crud_operation:
                     case 'user', 'create':
                         rc = "user.crm"
@@ -51,6 +52,7 @@ def main():
                             company_id_element.text = company_master_uuid
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        m.log(logger, f'{crud_operation} {object_type_value}', f'Succesfully published "{crud_operation} {object_type_value}" with UUID {master_uuid} on RabbitMQ!')
 
                     case 'user', 'update':
                         rc = "user.crm"
@@ -112,6 +114,7 @@ def main():
                                 <calendar_link>{calendar_link__c}</calendar_link>
                             </user>'''
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        m.log(logger, f'{crud_operation} {object_type_value}', f'Succesfully published "{crud_operation} {object_type_value}" with UUID {master_uuid} on RabbitMQ!')
 
                     case 'user', 'delete':
                         rc = "user.crm"
@@ -146,6 +149,7 @@ def main():
                                 <calendar_link></calendar_link>
                             </user>'''
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        m.log(logger, f'{crud_operation} {object_type_value}', f'Succesfully published "{crud_operation} {object_type_value}" with UUID {master_uuid} on RabbitMQ!')
 
                     case 'company', 'create':
                         rc = "company.crm"
@@ -389,7 +393,7 @@ def main():
                 schema = etree.XMLSchema(xsd_tree)
                 xml_doc = etree.fromstring(message.encode())
                 if not schema.validate(xml_doc):
-                    logger.info('Invalid XML')
+                    logger.error('Invalid XML')
                 else:
                     logger.info('Object sent successfully')
                     API.delete_change_object(id_value)
@@ -403,7 +407,7 @@ if __name__ == '__main__':
         API.authenticate()
         logger.info("Waiting for messages to send. To exit press CTRL+C")
         while True:
-            main()
+            main(logger)
             time.sleep(120)
     except Exception as e:
         logger.error(f"Request Failed {e}")

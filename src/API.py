@@ -102,27 +102,36 @@ def add_user(id, first_name, last_name, email, telephone, birthday, country, sta
         'Content-Type': 'application/xml'
     }
 
-    payload = f'''
+    payload = '''
     <user__c>
-        <first_name__c>{first_name}</first_name__c>
-        <last_name__c>{last_name}</last_name__c>
-        <email__c>{email}</email__c>
-        <telephone__c>{telephone}</telephone__c>
-        <birthday__c>{birthday}</birthday__c>
-        <country__c>{country}</country__c>
-        <state__c>{state}</state__c>
-        <city__c>{city}</city__c>
-        <zip__c>{zip}</zip__c>
-        <street__c>{street}</street__c>
-        <house_number__c>{house_number}</house_number__c>
-        <company_email__c>{company_email}</company_email__c>
-        <company_id__c>{company_id}</company_id__c>
-        <source__c>{source}</source__c>
-        <user_role__c>{user_role}</user_role__c>
-        <invoice__c>{invoice}</invoice__c>
-        <calendar_link__c>{calendar_link}</calendar_link__c>
+        {}
     </user__c>
-    '''
+    '''.format(
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "telephone": telephone,
+                "birthday": birthday,
+                "country": country,
+                "state": state,
+                "city": city,
+                "zip": zip,
+                "street": street,
+                "house_number": house_number,
+                "company_email": company_email,
+                "company_id": company_id,
+                "source": source,
+                "user_role": user_role,
+                "invoice": invoice,
+                "calendar_link": calendar_link,
+            }.items() if value != '' and value != None
+        ])
+    )
+
+    logger.debug(f"Payload: {payload};")
 
     response = requests.post(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")

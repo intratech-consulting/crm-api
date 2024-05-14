@@ -1,0 +1,15 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="LogEntry">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="SystemName" type="xs:string"/>
+                <xs:element name="FunctionName" type="xs:string"/>
+                <xs:element name="Logs" type="xs:string"/>
+                <xs:element name="Error" type="xs:boolean"/>
+                <xs:element name="Timestamp" type="xs:dateTime"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+</xs:schema>
