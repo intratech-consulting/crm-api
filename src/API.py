@@ -130,7 +130,7 @@ def add_user(id, first_name, last_name, email, telephone, birthday, country, sta
         ])
     )
 
-    logger.debug(f"Payload: {payload};")
+    logger.debug(f"Url: {url}; Headers: {headers}; Payload: {payload};")
 
     response = requests.post(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
@@ -171,10 +171,11 @@ def update_user(id, first_name, last_name, email, telephone, birthday, country, 
                 "user_role": user_role,
                 "invoice": invoice,
                 "calendar_link": calendar_link,
-            }.items() if value != ''
+            }.items() if value != '' and value != None
         ])
     )
 
+    logger.debug(f"Url: {url}; Headers: {headers}; Payload: {payload};")
     response = requests.patch(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
 
@@ -189,6 +190,7 @@ def delete_user(user_id):
 
     payload = {}
 
+    logger.debug(f"Url: {url}; Headers: {headers}; Payload: {payload};")
     response = requests.delete(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
 
