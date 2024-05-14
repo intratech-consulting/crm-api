@@ -24,7 +24,7 @@ def create_master_uuid(service_id, service_name):
         return None
 
 
-def get_service_id(service_name, master_uuid):
+def get_service_id(master_uuid, service_name):
     url = f"http://{secrets.HOST}:6000/getServiceId"
     payload = {
         "MASTERUUID": master_uuid,
@@ -51,7 +51,7 @@ def get_master_uuid(service_id, service_name):
         return None
 
 
-def add_service_id(master_uuid, service, service_id):
+def add_service_id(master_uuid, service_id, service):
     url = f"http://{secrets.HOST}:6000/addServiceId"
     payload = {
         "MasterUuid": master_uuid,

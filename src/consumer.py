@@ -16,9 +16,9 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
 
-    team_name = 'crm'
+    TEAM = 'crm'
 
-    channel.queue_declare(queue=team_name, durable=True)
+    channel.queue_declare(queue=TEAM, durable=True)
 
     def callback(ch, method, properties, body):
 
@@ -42,11 +42,11 @@ def main():
                                 variables[address_field.tag] = address_field.text
                         elif child.tag == "company_id":
                             if(child.text is not None):
-                                variables[child.tag] = get_service_id(team_name, child.text)
+                                variables[child.tag] = get_service_id(child.text, TEAM)
                         else:
                             variables[child.tag] = child.text
                     service_id = API.add_user(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
+                    add_service_id(root.find('id').text, service_id, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -61,7 +61,7 @@ def main():
                             continue
                         elif child.tag == "id" or child.tag == "company_id":
                             if(child.text is not None):
-                                variables[child.tag] = get_service_id(team_name, child.text)
+                                variables[child.tag] = get_service_id(child.text, TEAM)
                             else:
                                 variables[child.tag] = ""
                         elif child.tag == "address":
@@ -79,10 +79,10 @@ def main():
             case 'user', 'delete':
                 try:
                     master_uuid = root.find('id').text
-                    service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
+                    service_id = get_service_id(master_uuid, TEAM)
                     if service_id is not None:
                         API.delete_user(service_id)
-                        delete_service_id(master_uuid=master_uuid, service=team_name)
+                        delete_service_id(master_uuid, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -103,7 +103,7 @@ def main():
                         else:
                             variables[child.tag] = child.text
                     service_id = API.add_company(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
+                    add_service_id(root.find('id').text, service_id, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -117,7 +117,7 @@ def main():
                         if child.tag == "routing_key" or child.tag == "crud_operation" or child.tag == "logo":
                             continue
                         elif child.tag == "id":
-                            variables[child.tag] = get_service_id(team_name, child.text)
+                            variables[child.tag] = get_service_id(child.text, TEAM)
                         elif child.tag == "address":
                             for address_field in child:
                                 variables[address_field.tag] = "" if address_field.text == None else address_field.text
@@ -137,7 +137,7 @@ def main():
                     service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
                     if service_id is not None:
                         API.delete_company(service_id)
-                        delete_service_id(master_uuid=master_uuid, service=team_name)
+                        delete_service_id(master_uuid, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -156,7 +156,7 @@ def main():
                         else:
                             variables[child.tag] = child.text.strip()
                     service_id = API.add_event(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
+                    add_service_id(root.find('id').text, service_id, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -170,7 +170,7 @@ def main():
                         if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
                         elif child.tag == "id":
-                            variables[child.tag] = get_service_id(team_name, child.text)
+                            variables[child.tag] = get_service_id(child.text, TEAM)
                         elif child.tag == "speaker":
                             for speaker_field in child:
                                 variables[speaker_field.tag] = "" if speaker_field.text == None else speaker_field.text
@@ -188,9 +188,9 @@ def main():
             case 'event', 'delete':
                 try:
                     master_uuid = root.find('id').text
-                    service_id = get_service_id(service_name=team_name, master_uuid=master_uuid)
+                    service_id = get_service_id(master_uuid, TEAM)
                     API.delete_event(service_id)
-                    delete_service_id(master_uuid=master_uuid, service=team_name)
+                    delete_service_id(master_uuid, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -206,7 +206,7 @@ def main():
                         else:
                             variables[child.tag] = child.text.strip()
                     service_id = API.add_attendance(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
+                    add_service_id(root.find('id').text, service_id, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -220,7 +220,7 @@ def main():
                         if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
                         elif child.tag == "id":
-                            variables[child.tag] = get_service_id(team_name, child.text)
+                            variables[child.tag] = get_service_id(child.text, TEAM)
                         else:
                             variables[child.tag] = "" if child.text == None else child.text
                     API.update_attendance(**variables)
@@ -232,9 +232,9 @@ def main():
             case 'attendance', 'delete':
                 try:
                     master_uuid = root.find('id').text
-                    service_id = get_service_id(service_name=team_name, master_uuid=master_uuid)
+                    service_id = get_service_id(master_uuid, TEAM)
                     API.delete_attendance(service_id)
-                    delete_service_id(master_uuid=master_uuid, service=team_name)
+                    delete_service_id(master_uuid, TEAM)
                     ch.basic_ack(delivery_tag=method.delivery_tag)
                     logger.info("Request Succeeded")
                 except Exception as e:
@@ -284,7 +284,7 @@ def main():
                 ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                 logger.error("This message is not valid")
 
-    channel.basic_consume(queue=team_name, on_message_callback=callback, auto_ack=False)
+    channel.basic_consume(queue=TEAM, on_message_callback=callback, auto_ack=False)
 
     logger.info("Waiting for messages to receive. To exit press CTRL+C")
     channel.start_consuming()
