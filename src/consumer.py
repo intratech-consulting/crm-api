@@ -39,13 +39,16 @@ def main():
                 # Case: create user request from RabbitMQ
                 case 'user', 'create':
                         read_xml_user(variables, root)
-                        service_id = add_user(**variables)
+                        payload = write_xml_user(**variables)
+                        service_id = add_user(payload)
                         add_service_id(root.find('id').text, service_id, TEAM)
 
                 # Case: update user request from RabbitMQ
                 case 'user', 'update':
                         read_xml_user(variables, root)
-                        update_user(**variables)
+                        logger.debug(f"Variables: {variables}")
+                        payload = write_xml_user(**variables)
+                        update_user(variables['id'], payload)
 
                 # Case: delete user request from RabbitMQ
                 case 'user', 'delete':
@@ -112,45 +115,36 @@ def main():
                             delete_attendance(service_id)
                             delete_service_id(master_uuid, TEAM)
 
-
+                # Case: create order request from RabbitMQ (STILL NEEDS REFACTORING)
                 case 'order', 'create':
-                    try:
-                        variables = {}
-                        for child in root:
-                            if child.tag == "user_id":
-                                variables["user_id"] = child.text.strip()
-                            elif child.tag == "products":
-                                product_id = None
-                                product_name = None
-                                for product in child:
-                                    for product_field in product:
-                                        if product_field.tag == "id":
-                                            product_id = product_field.text.strip()
-                                        elif product_field.tag == "name":
-                                            product_name = product_field.text.strip()
-                                        elif product_field.tag == "amount":
-                                            variables["amount"] = product_field.text.strip()
+                    for child in root:
+                        if child.tag == "user_id":
+                            variables["user_id"] = child.text.strip()
+                        elif child.tag == "products":
+                            product_id = None
+                            product_name = None
+                            for product in child:
+                                for product_field in product:
+                                    if product_field.tag == "id":
+                                        product_id = product_field.text.strip()
+                                    elif product_field.tag == "name":
+                                        product_name = product_field.text.strip()
+                                    elif product_field.tag == "amount":
+                                        variables["amount"] = product_field.text.strip()
 
-                                    # Happens after every product
-                                    if not API.product_exists(product_id):
-                                        product_id = API.add_product(product_name)
-                                    variables["product"] = product_id
+                                # Happens after every product
+                                if not product_exists(product_id):
+                                    product_id = add_product(product_name)
+                                variables["product"] = product_id
 
-                                    order_id, old_amount = API.get_order(variables["user_id"], variables["product"])
-                                    if order_id is not None:
-                                        new_amount = str(int(old_amount) + int(variables["amount"]))
-                                        API.update_order(order_id, new_amount)
-                                    else:
-                                        API.add_order(**variables)
-
-                            else:
-                                pass
-
-                        ch.basic_ack(delivery_tag=method.delivery_tag)
-                        logger.info("Request Succeeded")
-                    except Exception as e:
-                        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                        logger.error(f"Request Failed: {e}")
+                                order_id, old_amount = get_order(variables["user_id"], variables["product"])
+                                if order_id is not None:
+                                    new_amount = str(int(old_amount) + int(variables["amount"]))
+                                    update_order(order_id, new_amount)
+                                else:
+                                    add_order(**variables)
+                        else:
+                            pass
 
             # Acknowledge the message
             ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -170,7 +164,7 @@ if __name__ == '__main__':
     # Create a custom logger
     logger = init_logger("__consumer__")
     try:
-        API.authenticate()
+        authenticate()
         main()
     except Exception as e:
         logger.error(f"Failed to start consumer: {e}")

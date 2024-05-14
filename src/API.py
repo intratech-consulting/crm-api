@@ -6,6 +6,7 @@ import sys
 
 sys.path.append('/app')
 import config.secrets as secrets
+from xml_parser import *
 from logger import init_logger
 
 
@@ -40,145 +41,35 @@ def get_new_user(user_id=None):
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
-    payload = {}
-
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
-        data = response.json().get("records", [])
-        if data:
-            user_data = data[0]
-            root = ET.Element("user")
-
-            address_element = None  # Initialize address_element to None
-
-            address_fields = ["country__c", "state__c", "city__c", "zip__c", "street__c", "house_number__c"]
-
-            for field, value in user_data.items():
-                if field == "attributes":
-                    field_element = ET.SubElement(root, "routing_key")
-                    field_element.text = "user.crm"
-                    field_element = ET.SubElement(root, "crud_operation")
-                    field_element.text = "create"
-                elif field == "Id":
-                    field_element = ET.SubElement(root, "id")
-                    field_element.text = "" if value == None else str(value)
-                elif field == "birthday__c":
-                    field_element = ET.SubElement(root, "birthday")
-                    field_element.text = "" if value == None else str(value).lower()
-                    address_element = ET.SubElement(root, "address")
-                elif field == "house_number__c" or field == "zip__c":
-                    sub_field = field.split("__")[0]
-                    sub_field_element = ET.SubElement(address_element, sub_field)
-                    sub_field_element.text = "" if value == None else str(int(value))
-                elif field in address_fields and address_element is not None:
-                    sub_field = field.split("__")[0]
-                    sub_field_element = ET.SubElement(address_element, sub_field)
-                    sub_field_element.text = "" if value == None else str(value).lower()
-                else:
-                    field_name = field.split("__")[0]
-                    field_element = ET.SubElement(root, field_name)
-                    field_element.text = "" if value == None else str(value).lower()
-
-            xml_string = ET.tostring(root, encoding="unicode", method="xml")
-            logger.debug(f"Response: {response};\nData: {data};\nXML: {xml_string}")
-            return xml_string
-        else:
-            logger.error(f"No user found with this id: {user_id}")
-            return None
-    except Exception as e:
-        logger.error(f"Error fetching users from Salesforce: {e}")
-        return None
-
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    data = response.json().get("records", [])
+    if data:
+        return create_xml_user(data)
 
 # Add an user api call
-def add_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
-             house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes",
-             calendar_link=""):
+def add_user(payload):
     url = secrets.DOMAIN_NAME + 'sobjects/user__c'
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-
-    payload = '''
-    <user__c>
-        {}
-    </user__c>
-    '''.format(
-        ''.join([
-            f'<{field}__c>{value}</{field}__c>'
-            for field, value in {
-                "first_name": first_name,
-                "last_name": last_name,
-                "email": email,
-                "telephone": telephone,
-                "birthday": birthday,
-                "country": country,
-                "state": state,
-                "city": city,
-                "zip": zip,
-                "street": street,
-                "house_number": house_number,
-                "company_email": company_email,
-                "company_id": company_id,
-                "source": source,
-                "user_role": user_role,
-                "invoice": invoice,
-                "calendar_link": calendar_link,
-            }.items() if value != '' and value != None
-        ])
-    )
-
     logger.debug(f"Url: {url}; Headers: {headers}; Payload: {payload};")
 
     response = requests.post(url, headers=headers, data=payload)
-    logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
-
 # Update an user api call
-def update_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
-                house_number, company_email, company_id, source, user_role, invoice, calendar_link):
+def update_user(id, payload):
     print("update user: " + id)
     url = secrets.DOMAIN_NAME + f'sobjects/user__c/{id}'
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    payload = '''
-    <user__c>
-        {}
-    </user__c>
-    '''.format(
-        ''.join([
-            f'<{field}__c>{value}</{field}__c>'
-            for field, value in {
-                "first_name": first_name,
-                "last_name": last_name,
-                "email": email,
-                "telephone": telephone,
-                "birthday": birthday,
-                "country": country,
-                "state": state,
-                "city": city,
-                "zip": zip,
-                "street": street,
-                "house_number": house_number,
-                "company_email": company_email,
-                "company_id": company_id,
-                "source": source,
-                "user_role": user_role,
-                "invoice": invoice,
-                "calendar_link": calendar_link,
-            }.items() if value != '' and value != None
-        ])
-    )
-
     logger.debug(f"Url: {url}; Headers: {headers}; Payload: {payload};")
-    response = requests.patch(url, headers=headers, data=payload)
-    logger.debug(f"Response: {response};")
 
+    response = requests.patch(url, headers=headers, data=payload)
 
 # Delete an user api call
 def delete_user(user_id):
@@ -188,12 +79,8 @@ def delete_user(user_id):
         'Content-Type': 'application/xml'
     }
 
-    payload = {}
-
-    logger.debug(f"Url: {url}; Headers: {headers}; Payload: {payload};")
-    response = requests.delete(url, headers=headers, data=payload)
-    logger.debug(f"Response: {response};")
-
+    logger.debug(f"Url: {url}; Headers: {headers};")
+    response = requests.delete(url, headers=headers)
 
 # Get a company by id api call
 def get_new_company(company_id=None):
