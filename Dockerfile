@@ -12,10 +12,11 @@ COPY src/API.py ./src/API.py
 COPY config/requirements.txt ./config/requirements.txt
 COPY config/salesforce.key ./config/salesforce.key
 COPY config/secrets.py ./config/secrets.py
-COPY src/heartbeat.py ./src/heartbeat.py
+COPY src/monitoring.py ./src/monitoring.py
 COPY src/publisher.py ./src/publisher.py
 COPY src/uuidapi.py ./src/uuidapi.py
 COPY resources/heartbeat_xsd.xml ./resources/heartbeat_xsd.xml
+COPY resources/log_xsd.xml ./resources/log_xsd.xml
 COPY resources/user_xsd.xml ./resources/user_xsd.xml
 COPY resources/company_xsd.xml ./resources/company_xsd.xml
 COPY resources/event_xsd.xml ./resources/event_xsd.xml

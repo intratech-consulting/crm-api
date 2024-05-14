@@ -9,13 +9,10 @@ import time
 sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
+import monitoring as m
 from uuidapi import *
 
-def main():
-    # Create a custom logger
-    logger = logging.getLogger(__name__)
-    initialize_logger(logger)
-
+def main(logger):
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
@@ -38,7 +35,7 @@ def main():
 
                 message = None
 
-                logger.info(f"Sending: Object Type={object_type_value}, Crud={crud_operation}")
+                logger.debug(f"Sending: Object Type={object_type_value}, Crud={crud_operation}")
                 match object_type_value, crud_operation:
                     case 'user', 'create':
                         rc = "user.crm"
@@ -56,6 +53,7 @@ def main():
                             company_id_element.text = company_master_uuid
                         message = ET.tostring(root, encoding='utf-8').decode('utf-8')
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        m.log(logger, f'{crud_operation} {object_type_value}', f'Succesfully published "{crud_operation} {object_type_value}" with UUID {master_uuid} on RabbitMQ!')
 
                     case 'user', 'update':
                         rc = "user.crm"
@@ -117,6 +115,7 @@ def main():
                                 <calendar_link>{calendar_link__c}</calendar_link>
                             </user>'''
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        m.log(logger, f'{crud_operation} {object_type_value}', f'Succesfully published "{crud_operation} {object_type_value}" with UUID {master_uuid} on RabbitMQ!')
 
                     case 'user', 'delete':
                         rc = "user.crm"
@@ -151,6 +150,7 @@ def main():
                                 <calendar_link></calendar_link>
                             </user>'''
                         xsd_tree = etree.parse('./resources/user_xsd.xml')
+                        m.log(logger, f'{crud_operation} {object_type_value}', f'Succesfully published "{crud_operation} {object_type_value}" with UUID {master_uuid} on RabbitMQ!')
 
                     case 'company', 'create':
                         rc = "company.crm"
@@ -394,45 +394,22 @@ def main():
                 schema = etree.XMLSchema(xsd_tree)
                 xml_doc = etree.fromstring(message.encode())
                 if not schema.validate(xml_doc):
-                    logger.info('Invalid XML')
+                    logger.error('Invalid XML')
                 else:
                     logger.info('Object sent successfully')
                     API.delete_change_object(id_value)
                     if message:
                         channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
 
-def initialize_logger(logger):
-    # Set level for the logger
-    logger.setLevel(logging.DEBUG)
-
-    # Create a color formatter
-    formatter = colorlog.ColoredFormatter(
-        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
-        log_colors={
-            'DEBUG':    'cyan',
-            'INFO':     'green',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'red,bg_white',
-        },
-    )
-
-    # Create a stream handler and set the formatter
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(handler)
-
 if __name__ == '__main__':
     # Create a custom logger
     logger = colorlog.getLogger(__name__)
-    initialize_logger(logger)
+    API.initialize_logger(logger)
     try:
         API.authenticate()
         logger.info("Waiting for messages to send. To exit press CTRL+C")
         while True:
-            main()
+            main(logger)
             time.sleep(120)
     except Exception as e:
         logger.error(f"Request Failed {e}")
