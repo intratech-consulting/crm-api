@@ -6,23 +6,7 @@ WORKDIR /app
 # Update PATH environment variable
 ENV PATH="/root/cli/sf/bin:${PATH}"
 
-# Copy the Python scripts and requirements
-COPY src/consumer.py ./src/consumer.py
-COPY src/API.py ./src/API.py
-COPY config/requirements.txt ./config/requirements.txt
-COPY config/salesforce.key ./config/salesforce.key
-COPY config/secrets.py ./config/secrets.py
-COPY src/monitoring.py ./src/monitoring.py
-COPY src/publisher.py ./src/publisher.py
-COPY src/uuidapi.py ./src/uuidapi.py
-COPY src/xml_parser.py ./src/xml_parser.py
-COPY src/logger.py ./src/logger.py
-COPY resources/heartbeat_xsd.xml ./resources/heartbeat_xsd.xml
-COPY resources/log_xsd.xml ./resources/log_xsd.xml
-COPY resources/user_xsd.xml ./resources/user_xsd.xml
-COPY resources/company_xsd.xml ./resources/company_xsd.xml
-COPY resources/event_xsd.xml ./resources/event_xsd.xml
-COPY resources/attendance_xsd.xml ./resources/attendance_xsd.xml
+COPY . .
 
 RUN ls -la
 
