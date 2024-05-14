@@ -1,16 +1,13 @@
 #!/usr/bin/env python
-import logging
-import colorlog
 import pika, sys, os
 import xml.etree.ElementTree as ET
 
-import requests
-import json
 sys.path.append('/app')
 import config.secrets as secrets
 from API import *
 from uuidapi import *
 from xml_parser import *
+from logger import init_logger
 
 def main():
     # Global variables
@@ -171,8 +168,7 @@ def main():
 
 if __name__ == '__main__':
     # Create a custom logger
-    logger = colorlog.getLogger(__name__)
-    API.initialize_logger(logger)
+    logger = init_logger("__consumer__")
     try:
         API.authenticate()
         main()

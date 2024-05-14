@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import logging
-import colorlog
 import pika, sys, os
 from lxml import etree
 import xml.etree.ElementTree as ET
@@ -11,8 +9,9 @@ import config.secrets as secrets
 import src.API as API
 import monitoring as m
 from uuidapi import *
+from logger import init_logger
 
-def main(logger):
+def main():
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
@@ -403,8 +402,7 @@ def main(logger):
 
 if __name__ == '__main__':
     # Create a custom logger
-    logger = colorlog.getLogger(__name__)
-    API.initialize_logger(logger)
+    logger = init_logger("__publisher__")
     try:
         API.authenticate()
         logger.info("Waiting for messages to send. To exit press CTRL+C")

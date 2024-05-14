@@ -1,5 +1,3 @@
-import logging
-import colorlog
 import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
@@ -8,30 +6,8 @@ import sys
 
 sys.path.append('/app')
 import config.secrets as secrets
+from logger import init_logger
 
-def initialize_logger(logger):
-    # Set level for the logger
-    logger.setLevel(logging.DEBUG)
-
-    # Create a color formatter
-    formatter = colorlog.ColoredFormatter(
-        '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        log_colors={
-            'DEBUG':    'cyan',
-            'INFO':     'green',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'red,bg_white',
-        },
-    )
-
-    # Create a stream handler and set the formatter
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(handler)
 
 # Get the access token and domain name
 def authenticate():
@@ -118,7 +94,8 @@ def get_new_user(user_id=None):
 
 # Add an user api call
 def add_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
-             house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes", calendar_link=""):
+             house_number, company_email="", company_id="", source="", user_role="Customer", invoice="Yes",
+             calendar_link=""):
     url = secrets.DOMAIN_NAME + 'sobjects/user__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -160,9 +137,10 @@ def add_user(id, first_name, last_name, email, telephone, birthday, country, sta
     logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
+
 # Update an user api call
 def update_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
-             house_number, company_email, company_id, source, user_role, invoice, calendar_link):
+                house_number, company_email, company_id, source, user_role, invoice, calendar_link):
     print("update user: " + id)
     url = secrets.DOMAIN_NAME + f'sobjects/user__c/{id}'
     headers = {
@@ -200,6 +178,7 @@ def update_user(id, first_name, last_name, email, telephone, birthday, country, 
 
     response = requests.patch(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
+
 
 # Delete an user api call
 def delete_user(user_id):
@@ -269,8 +248,8 @@ def get_new_company(company_id=None):
             logger.error(f"No company found with this id: {company_id}")
             return None
     except Exception as e:
-            logger.error(f"Error fetching companies from Salesforce: {e}")
-            return None
+        logger.error(f"Error fetching companies from Salesforce: {e}")
+        return None
 
 
 # Add a company api call
@@ -300,6 +279,7 @@ def add_company(id, name, email, telephone, country, state, city, zip, street, h
     response = requests.post(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
     return response.json().get('id', None)
+
 
 # Update a company api call
 def update_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
@@ -331,10 +311,8 @@ def update_company(id, name, email, telephone, country, state, city, zip, street
         ])
     )
 
-
     response = requests.patch(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
-
 
 
 # Delete a company api call
@@ -404,7 +382,8 @@ def get_new_event(event_id=None):
 
 
 # Add an event api call
-def add_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
+def add_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats,
+              description):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -420,7 +399,8 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
             f'<{field}__c>{value}</{field}__c>'
             for field, value in {
                 "date": date,
-                "start_time": "" if start_time == None else datetime.strptime(start_time, '%H:%M:%S').strftime('%H:%M:%S'),
+                "start_time": "" if start_time == None else datetime.strptime(start_time, '%H:%M:%S').strftime(
+                    '%H:%M:%S'),
                 "end_time": "" if end_time == None else datetime.strptime(end_time, '%H:%M:%S').strftime('%H:%M:%S'),
                 "location": location,
                 "user_id": user_id,
@@ -436,8 +416,10 @@ def add_event(id, date, start_time, end_time, location, user_id, company_id, max
     logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
+
 # Update an event api call
-def update_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats, description):
+def update_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats,
+                 description):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c/{id}'
     headers = {
         'Authorization': 'Bearer ' + ACCESS_TOKEN,
@@ -466,6 +448,7 @@ def update_event(id, date, start_time, end_time, location, user_id, company_id, 
     response = requests.patch(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
 
+
 # Delete an event api call
 def delete_event(event_id):
     url = secrets.DOMAIN_NAME + f'sobjects/event__c/{event_id}'
@@ -478,6 +461,7 @@ def delete_event(event_id):
 
     response = requests.delete(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
+
 
 # Get the attendances
 def get_new_attendance(attendance_id=None):
@@ -536,6 +520,7 @@ def add_attendance(user_id=None, event_id=None):
     logger.debug(f"Response: {response};")
     return response.json().get('id', None)
 
+
 # Update an attendance
 def update_attendance(id=None, user_id=None, event_id=None):
     url = secrets.DOMAIN_NAME + f'sobjects/attendance__c/{id}'
@@ -552,6 +537,7 @@ def update_attendance(id=None, user_id=None, event_id=None):
 
     response = requests.patch(url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
+
 
 # Delete an attendance api call
 def delete_attendance(attendance_id):
@@ -583,8 +569,6 @@ def add_product(name):
     response = requests.request("POST", url, headers=headers, data=payload)
     logger.debug(f"Response: {response};")
     return response.json().get("id", None)
-
-
 
 
 # Returns product id if exists
@@ -701,6 +685,7 @@ def get_changed_data():
         print("Error fetching changed data from Salesforce:", e)
         return None
 
+
 # Get updated user fields from changedSalesforce data
 def get_updated_user(id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+first_name__c,last_name__c,email__c,telephone__c,birthday__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,company_email__c,company_id__c,source__c,user_role__c,invoice__c,calendar_link__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
@@ -720,6 +705,7 @@ def get_updated_user(id=None):
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
         return None
+
 
 # Get updated company fields from changedSalesforce data
 def get_updated_company(id=None):
@@ -741,6 +727,7 @@ def get_updated_company(id=None):
         print("Error fetching changed data from Salesforce:", e)
         return None
 
+
 # Get updated event fields from changedSalesforce data
 def get_updated_event(id=None):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
@@ -760,6 +747,7 @@ def get_updated_event(id=None):
     except Exception as e:
         print("Error fetching changed data from Salesforce:", e)
         return None
+
 
 # Get updated attendance fields from changedSalesforce data
 def get_updated_attendance(id=None):
@@ -781,6 +769,7 @@ def get_updated_attendance(id=None):
         print("Error fetching changed data from Salesforce:", e)
         return None
 
+
 # Get updated values
 def get_updated_values(query=None):
     url = secrets.DOMAIN_NAME + query
@@ -799,6 +788,7 @@ def get_updated_values(query=None):
         print("Error fetching users from Salesforce:", e)
         return None
 
+
 # Delete Change Object api call
 def delete_change_object(id=None):
     url = secrets.DOMAIN_NAME + f'sobjects/changed_object__c/{id}'
@@ -814,7 +804,7 @@ def delete_change_object(id=None):
     except Exception as e:
         print("Error deleting user from Salesforce:", e)
         return None
-    
+
+
 # Create a custom logger
-logger = colorlog.getLogger(__name__)
-initialize_logger(logger)
+logger = init_logger("__API__")
