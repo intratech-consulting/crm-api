@@ -8,7 +8,7 @@ sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
 from uuidapi import *
-from src.logger import init_logger
+from logger import init_logger
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')

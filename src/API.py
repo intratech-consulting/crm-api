@@ -6,7 +6,7 @@ import sys
 
 sys.path.append('/app')
 import config.secrets as secrets
-from src.logger import init_logger
+from logger import init_logger
 
 
 # Get the access token and domain name

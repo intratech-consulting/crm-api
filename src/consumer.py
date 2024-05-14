@@ -6,7 +6,7 @@ sys.path.append('/app')
 import config.secrets as secrets
 import src.API as API
 from uuidapi import *
-from src.logger import init_logger
+from logger import init_logger
 
 
 def main():
@@ -39,7 +39,7 @@ def main():
                             for address_field in child:
                                 variables[address_field.tag] = address_field.text
                         elif child.tag == "company_id":
-                            if(child.text is not None):
+                            if (child.text is not None):
                                 variables[child.tag] = get_service_id(team_name, child.text)
                         else:
                             variables[child.tag] = child.text
@@ -58,7 +58,7 @@ def main():
                         if child.tag == "routing_key" or child.tag == "crud_operation":
                             continue
                         elif child.tag == "id" or child.tag == "company_id":
-                            if(child.text is not None):
+                            if (child.text is not None):
                                 variables[child.tag] = get_service_id(team_name, child.text)
                             else:
                                 variables[child.tag] = ""
@@ -127,7 +127,6 @@ def main():
                 except Exception as e:
                     ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
                     logger.error(f"Request Failed {e}")
-
 
             case 'company', 'delete':
                 try:
