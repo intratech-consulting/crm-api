@@ -92,6 +92,9 @@ def create_xml_user(data):
     return ET.tostring(root, encoding="unicode", method="xml")
 
 def update_xml_user(rc, crud, id, updated_values):
+    master_id = get_master_uuid(id, TEAM)
+    if crud == 'delete':
+        delete_service_id(master_id, TEAM)
     first_name__c = updated_values.get('first_name__c', '')
     last_name__c = updated_values.get('last_name__c', '')
     email__c = updated_values.get('email__c', '')
@@ -120,7 +123,7 @@ def update_xml_user(rc, crud, id, updated_values):
     <user>
         <routing_key>{rc}</routing_key>
         <crud_operation>{crud}</crud_operation>
-        <id>{get_master_uuid(id, TEAM)}</id>
+        <id>{master_id}</id>
         <first_name>{first_name__c}</first_name>
         <last_name>{last_name__c}</last_name>
         <email>{email__c}</email>
@@ -219,6 +222,9 @@ def create_xml_company(data):
     return ET.tostring(root, encoding="unicode", method="xml")
 
 def update_xml_company(rc, crud, id, updated_values):
+    master_id = get_master_uuid(id, TEAM)
+    if crud == 'delete':
+        delete_service_id(master_id, TEAM)
     name__c = updated_values.get('Name', '')
     email__c = updated_values.get('email__c', '')
     telephone__c = updated_values.get('telephone__c', '')
@@ -239,7 +245,7 @@ def update_xml_company(rc, crud, id, updated_values):
     <company>
         <routing_key>{rc}</routing_key>
         <crud_operation>{crud}</crud_operation>
-        <id>{get_master_uuid(id, TEAM)}</id>
+        <id>{master_id}</id>
         <name>{name__c}</name>
         <email>{email__c}</email>
         <telephone>{telephone__c}</telephone>
@@ -328,6 +334,9 @@ def create_xml_event(data):
     return ET.tostring(root, encoding="unicode", method="xml")
 
 def update_xml_event(rc, crud, id, updated_values):
+    master_id = get_master_uuid(id, TEAM)
+    if crud == 'delete':
+        delete_service_id(master_id, TEAM)
     date__c = updated_values.get('date__c', '')
     start_time__c = updated_values.get('start_time__c', '')
     if start_time__c != '':
@@ -353,7 +362,7 @@ def update_xml_event(rc, crud, id, updated_values):
     <event>
         <routing_key>{rc}</routing_key>
         <crud_operation>{crud}</crud_operation>
-        <id>{get_master_uuid(id, TEAM)}</id>
+        <id>{master_id}</id>
         <date>{date__c}</date>
         <start_time>{start_time__c}</start_time>
         <end_time>{end_time__c}</end_time>
@@ -410,6 +419,9 @@ def create_xml_attendance(data):
     return ET.tostring(root, encoding="unicode", method="xml")
 
 def update_xml_attendance(rc, crud, id, updated_values):
+    master_id = get_master_uuid(id, TEAM)
+    if crud == 'delete':
+        delete_service_id(master_id, TEAM)
     user_id = updated_values.get('user_id__c', '')
     if user_id != '':
         user_id = get_master_uuid(user_id, TEAM)
@@ -421,7 +433,7 @@ def update_xml_attendance(rc, crud, id, updated_values):
     <attendance>
         <routing_key>{rc}</routing_key>
         <crud_operation>{crud}</crud_operation>
-        <id>{get_master_uuid(id, TEAM)}</id>
+        <id>{master_id}</id>
         <user_id>{user_id}</user_id>
         <event_id>{event_id}</event_id>
     </attendance>'''
