@@ -180,16 +180,14 @@ def add_order(payload):
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    logger.debug(f"url {url}, headers {headers}, payload {payload}")
     requests.post(url, headers=headers, data=payload)
 
-def update_order(order_id, payload):
-    url = secrets.DOMAIN_NAME + f'sobjects/order__c/{order_id}'
+def update_order(id, payload):
+    url = secrets.DOMAIN_NAME + f'sobjects/order__c/{id}'
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
     }
-    logger.debug(f"url {url}, headers {headers}, payload {payload}")
     requests.patch(url, headers=headers, data=payload)
 
 # Get order to change amount
