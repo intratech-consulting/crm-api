@@ -3,7 +3,7 @@
 ## Content of repository
 
 ### Heartbeat
-We have a heartbeat that will send 1 message every second over RabbitMQ to the control room team
+We have a heartbeat that will send 1 message every second over RabbitMQ to the control room team.
 
 ### Publisher
 We have a working publisher that will send any changes done on our salesforce platform through, to other teams in our infrastructure.
