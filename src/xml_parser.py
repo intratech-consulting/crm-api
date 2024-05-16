@@ -1,11 +1,16 @@
+import os
 import sys
 import xml.etree.ElementTree as ET
 
-sys.path.append('/app')
-import config.secrets as secrets
-from uuidapi import *
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
+from uuidapi import get_service_id, add_service_id
 
 TEAM = 'crm'
+
 
 def read_xml_user(variables, root):
     for child in root:
@@ -15,42 +20,49 @@ def read_xml_user(variables, root):
             for address_field in child:
                 variables[address_field.tag] = address_field.text
         elif child.tag == "id" or child.tag == "company_id":
-            if(child.text is not None):
+            if (child.text is not None):
+                print('I am doing the get_service_id')
                 variables[child.tag] = get_service_id(child.text, TEAM)
+                print('I have done the get_service_id')
             else:
                 variables[child.tag] = None
+                print('I have set the variable to None')
         else:
             variables[child.tag] = child.text
+            print('I have set the variable to the child.text')
 
-def write_xml_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street, house_number, company_email, company_id, source, user_role, invoice, calendar_link):
+
+def write_xml_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
+                   house_number, company_email, company_id, source, user_role, invoice, calendar_link):
     return '''
         <user__c>
             {}
         </user__c>
         '''.format(
-            ''.join([
-                f'<{field}__c>{value}</{field}__c>'
-                for field, value in {
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "email": email,
-                    "telephone": telephone,
-                    "birthday": birthday,
-                    "country": country,
-                    "state": state,
-                    "city": city,
-                    "zip": zip,
-                    "street": street,
-                    "house_number": house_number,
-                    "company_email": company_email,
-                    "company_id": company_id,
-                    "source": source,
-                    "user_role": user_role,
-                    "invoice": invoice,
-                    "calendar_link": calendar_link,
-                }.items() if value != '' and value != None
-            ])
-        )
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "telephone": telephone,
+                "birthday": birthday,
+                "country": country,
+                "state": state,
+                "city": city,
+                "zip": zip,
+                "street": street,
+                "house_number": house_number,
+                "company_email": company_email,
+                "company_id": company_id,
+                "source": source,
+                "user_role": user_role,
+                "invoice": invoice,
+                "calendar_link": calendar_link,
+            }.items() if value != '' and value != None
+        ])
+    )
+
 
 def create_xml_user(data):
     user_data = data[0]
@@ -88,6 +100,7 @@ def create_xml_user(data):
 
     xml_string = ET.tostring(root, encoding="unicode", method="xml")
 
+
 def read_xml_company(variables, root):
     for child in root:
         if child.tag == "routing_key" or child.tag == "crud_operation":
@@ -102,6 +115,7 @@ def read_xml_company(variables, root):
         else:
             variables[child.tag] = child.text
 
+
 def read_xml_event(variables, root):
     for child in root:
         if child.tag == "routing_key" or child.tag == "crud_operation":
@@ -113,6 +127,7 @@ def read_xml_event(variables, root):
                 variables[speaker_field.tag] = get_service_id(speaker_field.text, TEAM)
         else:
             variables[child.tag] = child.text
+
 
 def read_xml_attendance(variables, root):
     for child in root:

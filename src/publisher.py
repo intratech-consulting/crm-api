@@ -4,8 +4,11 @@ from lxml import etree
 import xml.etree.ElementTree as ET
 import time
 
-sys.path.append('/app')
-import config.secrets as secrets
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
 import src.API as API
 import monitoring as m
 from uuidapi import *
@@ -13,7 +16,7 @@ from logger import init_logger
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.PORT, credentials=credentials))
     channel = connection.channel()
     channel.exchange_declare(exchange="amq.topic", exchange_type="topic", durable=True)
 

@@ -2,10 +2,13 @@
 import pika, sys, os
 import xml.etree.ElementTree as ET
 
-sys.path.append('/app')
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
 import config.secrets as secrets
 from API import *
-from uuidapi import *
 from xml_parser import *
 from logger import init_logger
 
@@ -14,8 +17,12 @@ def main():
     TEAM = 'crm'
 
     # Connect to RabbitMQ
-    credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
+    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.PORT, credentials=credentials))
+    except Exception as e:
+        logger.error(f"Failed to connect to RabbitMQ: {e}")
+        sys.exit(1)
     channel = connection.channel()
     channel.queue_declare(queue=TEAM, durable=True)   
 

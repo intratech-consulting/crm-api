@@ -2,9 +2,13 @@ import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import jwt
-import sys
+import sys, os
 
-sys.path.append('/app')
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
 import config.secrets as secrets
 from xml_parser import *
 from logger import init_logger

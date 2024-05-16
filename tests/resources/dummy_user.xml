@@ -1,0 +1,24 @@
+<user>
+    <routing_key>user.crm</routing_key>
+    <crud_operation>create</crud_operation>
+    <id>0c3096a2-af0e-4f61-97eb-4323344ef0ec</id>
+    <first_name>John</first_name>
+    <last_name>Doe</last_name>
+    <email>john.doe@mail.com</email>
+    <telephone>+32467179912</telephone>
+    <birthday>2024-04-14</birthday>
+    <address>
+        <country>Belgium</country>
+        <state>Brussels</state>
+        <city>Brussels</city>
+        <zip>1000</zip>
+        <street>Nijverheidskaai</street>
+        <house_number>170</house_number>
+    </address>
+    <company_email>john.doe@company.com</company_email>
+    <company_id></company_id>
+    <source>salesforce</source>
+    <user_role>speaker</user_role>
+    <invoice>BE00 0000 0000 0000</invoice>
+    <calendar_link>www.example.com</calendar_link>
+</user>
