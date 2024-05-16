@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 
 sys.path.append('/app')
 import config.secrets as secrets
+from monitoring import log
 from API import *
 from uuidapi import *
 from xml_parser import *
@@ -150,11 +151,13 @@ def main():
             # Acknowledge the message
             ch.basic_ack(delivery_tag=method.delivery_tag)
             logger.info(f'Processed {crud_operation} request for {root.tag}')
+            log(logger, f"CONSUMER: {root.tag}.{crud_operation}", f"Processed {crud_operation} request for {root.tag}")
 
         # Handle exceptions from the consumer
         except Exception as e:
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
             logger.error(f'Failed to process {crud_operation} request for {root.tag}: {e}')
+            log(logger, f"CONSUMER: {root.tag}.{crud_operation}", f"Failed to process {crud_operation} request for {root.tag}: {e}", error='true')
 
     # Start consuming messages
     channel.basic_consume(queue=TEAM, on_message_callback=callback, auto_ack=False)

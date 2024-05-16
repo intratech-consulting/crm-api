@@ -107,10 +107,11 @@ def publish(channel):
                 delete_change_object(changed_object['changed_object_id'])
 
                 channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
-                log(logger, f'{changed_object['crud_operation']} {changed_object['object_type']}', f'Succesfully published "{changed_object['crud_operation']} {changed_object['object_type']}" on RabbitMQ!')
+                log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'Succesfully published "{changed_object['crud_operation']} {changed_object['object_type']}" on RabbitMQ!')
                         
     except Exception as e:
         logger.error(f"An error occurred while processing the message: {e}")
+        log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'An error occurred while processing "{changed_object['crud_operation']} {changed_object['object_type']}": {e}', 'true')
 
 if __name__ == '__main__':
     # Create a custom logger
