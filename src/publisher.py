@@ -4,7 +4,11 @@ from lxml import etree
 import xml.etree.ElementTree as ET
 import time
 
-sys.path.append('/app')
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
 import config.secrets as secrets
 from monitoring import log
 from API import *
