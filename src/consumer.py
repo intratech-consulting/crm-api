@@ -8,6 +8,7 @@ else:
     local_dir = os.path.dirname(os.path.realpath(__file__))
     sys.path.append(local_dir)
 import config.secrets as secrets
+from monitoring import log
 from API import *
 from xml_parser import *
 from logger import init_logger
@@ -45,17 +46,16 @@ def main():
             match root.tag, crud_operation:
                 # Case: create user request from RabbitMQ
                 case 'user', 'create':
-                        read_xml_user(variables, root)
-                        payload = write_xml_user(**variables)
-                        service_id = add_user(payload)
-                        add_service_id(root.find('id').text, service_id, TEAM)
+                    read_xml_user(variables, root)
+                    payload = write_xml_user(**variables)
+                    service_id = add_user(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
 
                 # Case: update user request from RabbitMQ
                 case 'user', 'update':
-                        read_xml_user(variables, root)
-                        logger.debug(f"Variables: {variables}")
-                        payload = write_xml_user(**variables)
-                        update_user(variables['id'], payload)
+                    read_xml_user(variables, root)
+                    payload = write_xml_user(**variables)
+                    update_user(variables['id'], payload)
 
                 # Case: delete user request from RabbitMQ
                 case 'user', 'delete':
@@ -68,13 +68,15 @@ def main():
                 # Case: create company request from RabbitMQ
                 case 'company', 'create':
                     read_xml_company(variables, root)
-                    service_id = add_company(**variables)
+                    payload = write_xml_company(**variables)
+                    service_id = add_company(payload)
                     add_service_id(root.find('id').text, service_id, TEAM)
 
                 # Case: update company request from RabbitMQ
                 case 'company', 'update':
                     read_xml_company(variables, root)
-                    update_company(**variables)
+                    payload = write_xml_company(**variables)
+                    update_company(variables['id'], payload)
 
                 # Case: delete company request from RabbitMQ
                 case 'company', 'delete':
@@ -86,14 +88,16 @@ def main():
 
                 # Case: create event request from RabbitMQ
                 case 'event', 'create':
-                        read_xml_event(variables, root)
-                        service_id = add_event(**variables)
-                        add_service_id(root.find('id').text, service_id, TEAM)
+                    read_xml_event(variables, root)
+                    payload = write_xml_event(**variables)
+                    service_id = add_event(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
 
                 # Case: update event request from RabbitMQ
                 case 'event', 'update':
-                        read_xml_event(variables, root)
-                        update_event(**variables)
+                    read_xml_event(variables, root)
+                    payload = write_xml_event(**variables)
+                    update_event(variables['id'], payload)
 
                 # Case: delete event request from RabbitMQ
                 case 'event', 'delete':
@@ -105,62 +109,62 @@ def main():
     
                 # Case: create attendance request from RabbitMQ
                 case 'attendance', 'create':
-                        read_xml_attendance(variables, root)
-                        service_id =add_attendance(**variables)
-                        add_service_id(root.find('id').text, service_id, TEAM)
+                    read_xml_attendance(variables, root)
+                    payload = write_xml_attendance(**variables)
+                    service_id = add_attendance(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
 
                 # Case: update attendance request from RabbitMQ
                 case 'attendance', 'update':
-                        read_xml_attendance(variables, root)
-                        update_attendance(**variables)
+                    read_xml_attendance(variables, root)
+                    payload = write_xml_attendance(**variables)
+                    update_attendance(variables['id'], payload)
 
                 # Case: delete attendance request from RabbitMQ
                 case 'attendance', 'delete':
-                        master_uuid = root.find('id').text
-                        service_id = get_service_id(master_uuid, TEAM)
-                        if service_id is not None:
-                            delete_attendance(service_id)
-                            delete_service_id(master_uuid, TEAM)
+                    master_uuid = root.find('id').text
+                    service_id = get_service_id(master_uuid, TEAM)
+                    if service_id is not None:
+                        delete_attendance(service_id)
+                        delete_service_id(master_uuid, TEAM)
+
+                # Case: create product request from RabbitMQ
+                case 'product', 'create':
+                    read_xml_product(variables, root)
+                    payload = write_xml_product(**variables)
+                    logger.debug(f"Payload: {payload}")
+                    service_id = add_product(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
+
+                # Case: update product request from RabbitMQ
+                case 'product', 'update':
+                    read_xml_product(variables, root)
+                    payload = write_xml_product(**variables)
+                    update_product(variables['id'], payload)
 
                 # Case: create order request from RabbitMQ (STILL NEEDS REFACTORING)
                 case 'order', 'create':
-                    for child in root:
-                        if child.tag == "user_id":
-                            variables["user_id"] = child.text.strip()
-                        elif child.tag == "products":
-                            product_id = None
-                            product_name = None
-                            for product in child:
-                                for product_field in product:
-                                    if product_field.tag == "id":
-                                        product_id = product_field.text.strip()
-                                    elif product_field.tag == "name":
-                                        product_name = product_field.text.strip()
-                                    elif product_field.tag == "amount":
-                                        variables["amount"] = product_field.text.strip()
-
-                                # Happens after every product
-                                if not product_exists(product_id):
-                                    product_id = add_product(product_name)
-                                variables["product"] = product_id
-
-                                order_id, old_amount = get_order(variables["user_id"], variables["product"])
-                                if order_id is not None:
-                                    new_amount = str(int(old_amount) + int(variables["amount"]))
-                                    update_order(order_id, new_amount)
-                                else:
-                                    add_order(**variables)
+                    read_xml_order(variables, root)
+                    for product in variables['products']:
+                        order_id, old_amount = get_order(variables['user_id'], product['product_id'])
+                        logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
+                        if order_id is not None:
+                            payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
+                            update_order(order_id, payload)
                         else:
-                            pass
+                            payload = write_xml_order(variables['user_id'], **product)
+                            add_order(payload)
 
             # Acknowledge the message
             ch.basic_ack(delivery_tag=method.delivery_tag)
             logger.info(f'Processed {crud_operation} request for {root.tag}')
+            log(logger, f"CONSUMER: {root.tag}.{crud_operation}", f"Processed {crud_operation} request for {root.tag}")
 
         # Handle exceptions from the consumer
         except Exception as e:
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
             logger.error(f'Failed to process {crud_operation} request for {root.tag}: {e}')
+            log(logger, f"CONSUMER: {root.tag}.{crud_operation}", f"Failed to process {crud_operation} request for {root.tag}: {e}", error='true')
 
     # Start consuming messages
     channel.basic_consume(queue=TEAM, on_message_callback=callback, auto_ack=False)

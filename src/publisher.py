@@ -11,8 +11,14 @@ else:
     sys.path.append(local_dir)
 import src.API as API
 import monitoring as m
+import config.secrets as secrets
+from monitoring import log
+from API import *
 from uuidapi import *
+from xml_parser import *
 from logger import init_logger
+
+TEAM = 'crm'
 
 def main():
     credentials = pika.PlainCredentials('user', 'password')
@@ -253,139 +259,27 @@ def main():
                         xsd_tree = etree.parse('./resources/event_xsd.xml')
 
                     case 'event', 'update':
-                        rc = "event.crm"
-                        updated_fields = API.get_updated_event(id_value)
-                        updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+event__c+WHERE+Id+=+'{name_value}'")
-
-                        try:
-                            master_uuid = get_master_uuid(name_value, "crm")
-                        except Exception as e:
-                            logger.error(f"An error occurred while getting the master_uuid: {e}")
-                            return
-
-                        date__c = updated_values.get('date__c', '')
-                        start_time__c = updated_values.get('start_time__c', '')
-                        end_time__c = updated_values.get('end_time__c', '')
-                        location__c = updated_values.get('location__c', '')
-                        user_id__c = updated_values.get('user_id__c', '')
-                        company_id__c = updated_values.get('company_id__c', '')
-                        max_registrations__c = updated_values.get('max_registrations__c', '')
-                        available_seats__c = updated_values.get('available_seats__c', '')
-                        description__c = updated_values.get('description__c', '')
-                        message = f'''
-                            <event>
-                                <routing_key>{rc}</routing_key>
-                                <crud_operation>{crud_operation}</crud_operation>
-                                <id>{master_uuid}</id>
-                                <date>{date__c}</date>
-                                <start_time>{start_time__c}</start_time>
-                                <end_time>{end_time__c}</end_time>
-                                <location>{location__c}</location>
-                                <speaker>
-                                    <user_id>{user_id__c}</user_id>
-                                    <company_id>{company_id__c}</company_id>
-                                </speaker>
-                                <max_registrations>{max_registrations__c}</max_registrations>
-                                <available_seats>{available_seats__c}</available_seats>
-                                <description>{description__c}</description>
-                            </event>'''
+                        updated_fields = get_updated_event(changed_object['changed_object_id'])
+                        updated_values = get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+event__c+WHERE+Id+=+'{changed_object['changed_object_name']}'")
+                        message = update_xml_event(rc, changed_object['crud_operation'], changed_object['changed_object_name'], updated_values)
                         xsd_tree = etree.parse('./resources/event_xsd.xml')
 
                     case 'event', 'delete':
-                        rc = "event.crm"
-                        try:
-                            master_uuid = get_master_uuid(name_value, "crm")
-                        except Exception as e:
-                            logger.error(f"An error occurred while getting the master_uuid: {e}")
-                            return
-                        message = f'''
-                            <event>
-                                    <routing_key>{rc}</routing_key>
-                                    <crud_operation>{crud_operation}</crud_operation>
-                                    <id>{master_uuid}</id>
-                                    <date></date>
-                                    <start_time></start_time>
-                                    <end_time></end_time>
-                                    <location></location>
-                                    <speaker>
-                                        <user_id></user_id>
-                                        <company_id></company_id> 
-                                    </speaker>
-                                    <max_registrations></max_registrations>
-                                    <available_seats></available_seats>
-                                    <description></description>
-                            </event>'''
+                        message = update_xml_event(rc, changed_object['crud_operation'], changed_object['changed_object_name'], {})
                         xsd_tree = etree.parse('./resources/event_xsd.xml')
-                        rc = "event.crm"
 
                     case 'attendance', 'create':
-                        rc = "attendance.crm"
-                        message = API.get_new_attendance(name_value)
-                        root = ET.fromstring(message)
-                        id_element = root.find('id')
-                        if id_element is not None:
-                            master_id_value = id_element.text
-                            master_uuid = create_master_uuid(master_id_value, "crm")
-                            id_element.text = master_uuid
-                        user_id_element = root.find('user_id')
-                        if user_id_element is not None:
-                            user_id_value = user_id_element.text
-                            user_master_uuid = get_master_uuid(user_id_value, "crm")
-                            user_id_element.text = user_master_uuid
-                        event_id_element = root.find('event_id')
-                        if event_id_element is not None:
-                            event_id_value = event_id_element.text
-                            event_master_uuid = get_master_uuid(event_id_value, "crm")
-                            event_id_element.text = event_master_uuid
-                        message = ET.tostring(root, encoding='utf-8').decode('utf-8')
+                        message = get_new_attendance(changed_object['changed_object_name'])
                         xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
                     case 'attendance', 'update':
-                        rc = "attendance.crm"
-                        updated_fields = API.get_updated_attendance(id_value)
-                        updated_values = API.get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+attendance__c+WHERE+Id+=+'{name_value}'")
-                        master_uuid, user_master_uuid, event_master_uuid = None, None, None
-
-                        try:
-                            master_uuid = get_master_uuid(name_value, "crm")
-                            master_uuid = create_master_uuid(master_uuid, "crm")
-                        except Exception as e:
-                            logger.error(f"An error occurred while getting the master_uuid: {e}")
-                            return
-                        
-                        user_id_value = updated_values.get('user_id__c')
-                        if user_id_value is not None:
-                            user_master_uuid = get_master_uuid(user_id_value, "crm")
-
-                        event_id_value = updated_values.get('event_id__c')
-                        if event_id_value is not None:
-                            event_master_uuid = get_master_uuid(event_id_value, "crm")
-
-                        message = f'''
-                            <attendance>
-                                <routing_key>{rc}</routing_key>
-                                <crud_operation>{crud_operation}</crud_operation>
-                                <id>{master_uuid}</id>
-                                <user_id>{"" if user_master_uuid == None else user_master_uuid}</user_id>
-                                <event_id>{"" if event_master_uuid == None else event_master_uuid}</event_id>
-                            </attendance>'''
+                        updated_fields = get_updated_attendance(changed_object['changed_object_id'])
+                        updated_values = get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+attendance__c+WHERE+Id+=+'{changed_object['changed_object_name']}'")
+                        message = update_xml_attendance(rc, changed_object['crud_operation'], changed_object['changed_object_name'], updated_values)
                         xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
                     case 'attendance', 'delete':
-                        rc = "attendance.crm"
-                        try:
-                            master_uuid = get_master_uuid(name_value, "crm")
-                        except Exception as e:
-                            logger.error(f"An error occurred while getting the master_uuid: {e}")
-                            return
-                        message = f'''
-                            <attendance>
-                                <routing_key>{rc}</routing_key>
-                                <crud_operation>{crud_operation}</crud_operation>
-                                <id>{master_uuid}</id>
-                                <user_id></user_id>
-                                <event_id></event_id>
-                            </attendance>'''
+                        message = update_xml_attendance(rc, changed_object['crud_operation'], changed_object['changed_object_name'], {})
                         xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
                     case _:
@@ -399,19 +293,23 @@ def main():
                     logger.error('Invalid XML')
                 else:
                     logger.info('Object sent successfully')
-                    API.delete_change_object(id_value)
-                    if message:
-                        channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
+                    delete_change_object(changed_object['changed_object_id'])
+
+                    channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
+                    log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'Succesfully published "{changed_object['crud_operation']} {changed_object['object_type']}" on RabbitMQ!')
+
+        except Exception as e:
+            logger.error(f"An error occurred while processing the message: {e}")
+            log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'An error occurred while processing "{changed_object['crud_operation']} {changed_object['object_type']}": {e}', 'true')
+
+        time.sleep(30)
 
 if __name__ == '__main__':
     # Create a custom logger
     logger = init_logger("__publisher__")
     try:
-        API.authenticate()
-        logger.info("Waiting for messages to send. To exit press CTRL+C")
-        while True:
-            main()
-            time.sleep(120)
+        authenticate()
+        main()
     except Exception as e:
-        logger.error(f"Request Failed {e}")
+        logger.error(f"Failed to start publisher: {e}")
         sys.exit(1)
