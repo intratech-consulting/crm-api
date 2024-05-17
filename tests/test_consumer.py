@@ -73,7 +73,7 @@ class TestRabbitMQ(unittest.TestCase):
 
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
             #TODO: Fix this sleep to busy wait
-            time.sleep(10)
+            time.sleep(2)
 
             channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
 
@@ -125,7 +125,7 @@ class TestRabbitMQ(unittest.TestCase):
 
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
             #TODO: Fix this sleep to busy wait
-            time.sleep(10)
+            time.sleep(2)
 
             channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
 
