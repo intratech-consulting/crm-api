@@ -21,15 +21,11 @@ def read_xml_user(variables, root):
                 variables[address_field.tag] = address_field.text
         elif child.tag == "id" or child.tag == "company_id":
             if (child.text is not None):
-                print('I am doing the get_service_id')
                 variables[child.tag] = get_service_id(child.text, TEAM)
-                print('I have done the get_service_id')
             else:
                 variables[child.tag] = None
-                print('I have set the variable to None')
         else:
             variables[child.tag] = child.text
-            print('I have set the variable to the child.text')
 
 
 def write_xml_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,

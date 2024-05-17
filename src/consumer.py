@@ -23,6 +23,7 @@ def main():
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.PORT, credentials=credentials))
     except Exception as e:
         logger.error(f"Failed to connect to RabbitMQ: {e}")
+        log(logger, "CONSUMER", f"Failed to connect to RabbitMQ: {e}", error='true')
         sys.exit(1)
     channel = connection.channel()
     channel.queue_declare(queue=TEAM, durable=True)   

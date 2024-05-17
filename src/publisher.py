@@ -19,7 +19,7 @@ from logger import init_logger
 TEAM = 'crm'
 
 def main():
-    credentials = pika.PlainCredentials('user', 'password')
+    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
     channel.exchange_declare(exchange="amq.topic", exchange_type="topic", durable=True)

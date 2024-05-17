@@ -19,35 +19,56 @@ import src.consumer as consumer
 import config.secrets as secrets
 
 class TestRabbitMQ(unittest.TestCase):
-    @patch('src.xml_parser.add_service_id')
-    @patch('src.xml_parser.get_service_id')
-    def test_rabbitmq_messages(self, add_service_id_mock, get_service_id_mock):
+    def test_user_create_should_make_valid_request(self):
         with RabbitMqContainer("rabbitmq:3-management", None, secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD) as rabbitmq:
-            get_service_id_mock.return_value = {
-                "crm": "1234"
-            }
-            add_service_id_mock.return_value = {
-                "success": True,
-                "message": "Service ID successfully added."
-            }
+            with patch('src.consumer.add_service_id') as add_service_id_mock, \
+                    patch('src.xml_parser.get_service_id') as get_service_id_mock, \
+                    patch('src.consumer.add_user') as add_user_mock, \
+                    patch('src.consumer.log') as log_mock:
 
-            channel: BlockingChannel = configure_rabbitMQ(rabbitmq)
+                get_service_id_mock.return_value = {
+                    "crm": "1234"
+                }
+                add_service_id_mock.return_value = {
+                    "success": True,
+                    "message": "Service ID successfully added."
+                }
+                add_user_mock.return_value = '12345'
 
-            consumer_thread = threading.Thread(target=consumer.main)
-            consumer_thread.daemon = True
-            consumer_thread.start()
+                log_mock.return_value = {
+                    "success": True,
+                    "message": "Log successfully added."
+                }
 
-            time.sleep(5)
+                channel: BlockingChannel = configure_rabbitMQ(rabbitmq)
 
-            with open('tests/resources/dummy_user.xml', 'r') as file:
-                test_message = file.read()
+                def run_consumer():
+                    with patch('src.consumer.add_service_id', add_service_id_mock), \
+                            patch('src.xml_parser.get_service_id', get_service_id_mock), \
+                            patch('src.consumer.add_user', add_user_mock):
+                        start_time = time.time()
+                        while time.time() - start_time < 10:  # Run for 5 seconds
+                            try:
+                                consumer.main()
+                            except pika.exceptions.StreamLostError:
+                                break
 
-            channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
-            channel.basic_consume(queue='crm', on_message_callback=callback, auto_ack=False)
+                consumer_thread = threading.Thread(target=run_consumer)
+                consumer_thread.daemon = True
+                consumer_thread.start()
 
-            self.assertTrue(channel._consumer_infos)  # If consumer_infos is not empty, message was received
+                with open('tests/resources/dummy_user.xml', 'r') as file:
+                    test_message = file.read()
 
-            consumer_thread.join()
+                channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
+                time.sleep(10)
+
+                channel.basic_consume(queue='crm', on_message_callback=callback, auto_ack=False)
+
+                self.assertTrue(channel._consumer_infos)  # If consumer_infos is not empty, message was received
+
+                # Assert that add_user was called with the correct options
+                add_user_mock.assert_called_once()
 
 
 def configure_rabbitMQ(rabbitmq) -> BlockingChannel:
