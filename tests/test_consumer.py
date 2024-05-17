@@ -63,7 +63,7 @@ class TestRabbitMQ(unittest.TestCase):
             consumer_thread.daemon = True
             consumer_thread.start()
 
-            with open('tests/resources/dummy_user.xml', 'r') as file:
+            with open('resources/dummy_user.xml', 'r') as file:
                 test_message = file.read()
 
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
@@ -115,7 +115,7 @@ class TestRabbitMQ(unittest.TestCase):
             consumer_thread.daemon = True
             consumer_thread.start()
 
-            with open('tests/resources/dummy_company.xml', 'r') as file:
+            with open('resources/dummy_company.xml', 'r') as file:
                 test_message = file.read()
 
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
