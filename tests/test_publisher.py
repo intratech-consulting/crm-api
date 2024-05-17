@@ -30,29 +30,71 @@ class TestPublisher(unittest.TestCase):
         cls.rabbitmq.stop()
 
     def test_user_create(self):
+        # Mock the get updated objects API response
+        def mock_response_changed_data():
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "totalSize": 1,
+                "done": True,
+                "records": [{"Id": "co123", "Name": "u123", "object_type__c": "user", "crud__c": "create"}]
+            }
+            return response
+
+        # Mock the get create user API response
+        def mock_response_user_data():
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "totalSize": 1,
+                "done": True,
+                "records": [{
+                    "attributes": "",
+                    "Id": "u123",
+                    "first_name__c": "Will",
+                    "last_name__c": "This Crash",
+                    "email__c": "will.thiscrash@mail.com",
+                    "telephone__c": "+32467179912",
+                    "birthday__c": "2024-04-14",
+                    "country__c": "Belgium",
+                    "state__c": "Brussels",
+                    "city__c": "Brussels",
+                    "zip__c": 1000.0,
+                    "street__c": "Nijverheidskaai",
+                    "house_number__c": 170.0,
+                    "company_email__c": "will.thiscrash@company.com",
+                    "company_id__c": "a03Qy000004wqlVIAQ",
+                    "source__c": "salesforce",
+                    "user_role__c": "speaker",
+                    "invoice__c": "BE00 0000 0000 0000",
+                    "calendar_link__c": "www.example.com"
+                }]
+            }
+            return response
+        
+        # Mock the masteruuid API response
+        mock_masteruuid_response = MagicMock()
+        mock_masteruuid_response.status_code = 200
+        mock_masteruuid_response.json.return_value = {
+            "success": True,
+            "MasterUuid": 'MASTERUUID-12345',
+            "UUID": "MASTERUUID-12345"
+        }
+
+        # The expected assertion message
+        expected_message = '<user><routing_key>user.crm</routing_key><crud_operation>create</crud_operation><id>MASTERUUID-12345</id><first_name>will</first_name><last_name>this crash</last_name><email>will.thiscrash@mail.com</email><telephone>+32467179912</telephone><birthday>2024-04-14</birthday><address><country>belgium</country><state>brussels</state><city>brussels</city><zip>1000</zip><street>nijverheidskaai</street><house_number>170</house_number></address><company_email>will.thiscrash@company.com</company_email><company_id>MASTERUUID-12345</company_id><source>salesforce</source><user_role>speaker</user_role><invoice>be00 0000 0000 0000</invoice><calendar_link>www.example.com</calendar_link></user>'
+
         with (
-            patch('src.API.requests.get', side_effect=[MockResponseChangedData(), MockResponseUserData()]),
+            patch('src.API.requests.get', side_effect=[mock_response_changed_data(), mock_response_user_data()]),
             patch('src.xml_parser.requests.post') as mock_request_post,
             patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)),
             patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'})
         ):
-            # Mock the get updated objects API response
-            mock_masteruuid_response = MagicMock()
-            mock_masteruuid_response.status_code = 200
-            mock_masteruuid_response.json.return_value = {
-                "success": True,
-                "MasterUuid": 'MASTERUUID-12345',
-                "UUID": "MASTERUUID-12345"
-            }
+            channel: BlockingChannel = self.configure_rabbitMQ()
             mock_request_post.return_value = mock_masteruuid_response
 
-            # The expected assertion message
-            expected_message = '<user><routing_key>user.crm</routing_key><crud_operation>create</crud_operation><id>MASTERUUID-12345</id><first_name>will</first_name><last_name>this crash</last_name><email>will.thiscrash@mail.com</email><telephone>+32467179912</telephone><birthday>2024-04-14</birthday><address><country>belgium</country><state>brussels</state><city>brussels</city><zip>1000</zip><street>nijverheidskaai</street><house_number>170</house_number></address><company_email>will.thiscrash@company.com</company_email><company_id>MASTERUUID-12345</company_id><source>salesforce</source><user_role>speaker</user_role><invoice>be00 0000 0000 0000</invoice><calendar_link>www.example.com</calendar_link></user>'
-
-            channel: BlockingChannel = self.configure_rabbitMQ()
-
             def run_publisher():
-                with patch('src.API.requests.get', side_effect=[MockResponseChangedData(), MockResponseUserData()]), \
+                with patch('src.API.requests.get', side_effect=[mock_response_changed_data(), mock_response_user_data()]), \
                         patch('src.xml_parser.requests.post', mock_request_post), \
                         patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)), \
                         patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'}):
@@ -71,8 +113,6 @@ class TestPublisher(unittest.TestCase):
             self.callback_event.wait(timeout=10)
 
             # Assert that the message is the same as the expected message
-            print(self.rabbitmq_message)
-            print(expected_message)
             self.assertEqual(self.rabbitmq_message, expected_message)
 
     def start_consuming(self, channel):
@@ -108,23 +148,6 @@ class TestPublisher(unittest.TestCase):
     def callback(self, ch, method, properties, body):
         self.rabbitmq_message = body.decode()
         self.callback_event.set()
-
-class MockResponseChangedData:
-    def __init__(self):
-        self.status_code = 200
-        self.json = MagicMock(return_value={"totalSize": 1, "done": True, "records": [{"Id": "co123", "Name": "u123", "object_type__c": "user", "crud__c": "create"}]})
-
-    def raise_for_status(self):
-        pass
-
-
-class MockResponseUserData:
-    def __init__(self):
-        self.status_code = 200
-        self.json = MagicMock(return_value={"totalSize": 1, "done": True, "records": [{"attributes":"", "Id": "u123", "first_name__c": "Will", "last_name__c": "This Crash", "email__c": "will.thiscrash@mail.com", "telephone__c": "+32467179912", "birthday__c": "2024-04-14", "country__c": "Belgium", "state__c": "Brussels", "city__c": "Brussels", "zip__c": 1000.0, "street__c": "Nijverheidskaai", "house_number__c": 170.0, "company_email__c": "will.thiscrash@company.com", "company_id__c": "a03Qy000004wqlVIAQ", "source__c": "salesforce", "user_role__c": "speaker", "invoice__c": "BE00 0000 0000 0000", "calendar_link__c": "www.example.com"}]})
-
-    def raise_for_status(self):
-        pass
 
 if __name__ == "__main__":
     unittest.main()
