@@ -9,12 +9,7 @@ import pika
 from pika.adapters.blocking_connection import BlockingChannel
 from testcontainers.rabbitmq import RabbitMqContainer
 
-if os.path.isdir('/app'):
-    sys.path.append('/app')
-else:
-    local_dir = os.path.dirname(os.path.realpath(__file__))
-    sys.path.append(local_dir)
-
+sys.path.append('./')
 import src.consumer as consumer
 import config.secrets as secrets
 

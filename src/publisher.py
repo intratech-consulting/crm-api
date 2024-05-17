@@ -19,8 +19,14 @@ from logger import init_logger
 TEAM = 'crm'
 
 def main():
+     # Connect to RabbitMQ
     credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.PORT, credentials=credentials))
+    except Exception as e:
+        logger.error(f"Failed to connect to RabbitMQ: {e}")
+        log(logger, "CONSUMER", f"Failed to connect to RabbitMQ: {e}", error='true')
+        sys.exit(1)
     channel = connection.channel()
     channel.exchange_declare(exchange="amq.topic", exchange_type="topic", durable=True)
 
@@ -111,7 +117,7 @@ def main():
 
         except Exception as e:
             logger.error(f"An error occurred while processing the message: {e}")
-            log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'An error occurred while processing "{changed_object['crud_operation']} {changed_object['object_type']}": {e}', 'true')
+            log(logger, f'PUBLISHER: {changed_object["crud_operation"]} {changed_object["object_type"]}', f'An error occurred while processing "{changed_object["crud_operation"]} {changed_object["object_type"]}": {e}', 'true')
 
         time.sleep(30)
 
