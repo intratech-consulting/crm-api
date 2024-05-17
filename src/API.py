@@ -263,7 +263,7 @@ def get_updated_company(id=None):
     
 # Get a event by id api call
 def get_new_event(event_id=None):
-    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,title__c,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+event__c+WHERE+Id+=+\'{event_id}\''
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
@@ -276,7 +276,7 @@ def get_new_event(event_id=None):
     
 # Get updated event fields from changedSalesforce data
 def get_updated_event(id=None):
-    url = secrets.DOMAIN_NAME + f'query?q=SELECT+date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+title__c,date__c,start_time__c,end_time__c,location__c,user_id__c,company_id__c,max_registrations__c,available_seats__c,description__c+FROM+changed_object__c+WHERE+Id=\'{id}\''
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
