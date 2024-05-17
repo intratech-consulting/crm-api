@@ -1,324 +1,174 @@
 #!/usr/bin/env python
-import logging
-import colorlog
 import pika, sys, os
 import xml.etree.ElementTree as ET
 
-import requests
-import json
 sys.path.append('/app')
 import config.secrets as secrets
-import src.API as API
+from monitoring import log
+from API import *
 from uuidapi import *
-
+from xml_parser import *
+from logger import init_logger
 
 def main():
+    # Global variables
+    TEAM = 'crm'
+
+    # Connect to RabbitMQ
     credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
+    channel.queue_declare(queue=TEAM, durable=True)   
 
-    team_name = 'crm'
-
-    channel.queue_declare(queue=team_name, durable=True)
-
+    # Callback function
     def callback(ch, method, properties, body):
 
-        # Parces the xml string
+        # Parce XML
         xml_string = body
         xml_string = xml_string.decode().strip()
+
+        # Get MATCH CASE attributes
         root = ET.fromstring(xml_string)
         crud_operation = root.find('crud_operation').text
         logger.info(f"Received a {crud_operation} request for {root.tag}")
         logger.debug(f"Message: {xml_string}")
 
-        match root.tag, crud_operation:
-            case 'user', 'create':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == "crud_operation":
-                            continue
-                        elif child.tag == "address":
-                            for address_field in child:
-                                variables[address_field.tag] = address_field.text
-                        elif child.tag == "company_id":
-                            if(child.text is not None):
-                                variables[child.tag] = get_service_id(team_name, child.text)
-                        else:
-                            variables[child.tag] = child.text
-                    service_id = API.add_user(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service="crm", service_id=service_id)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+        try:
+            variables = {}
+            # MATCH CASE
+            match root.tag, crud_operation:
+                # Case: create user request from RabbitMQ
+                case 'user', 'create':
+                    read_xml_user(variables, root)
+                    payload = write_xml_user(**variables)
+                    service_id = add_user(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
 
-            case 'user', 'update':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == "crud_operation":
-                            continue
-                        elif child.tag == "id" or child.tag == "company_id":
-                            if(child.text is not None):
-                                variables[child.tag] = get_service_id(team_name, child.text)
-                            else:
-                                variables[child.tag] = ""
-                        elif child.tag == "address":
-                            for address_field in child:
-                                variables[address_field.tag] = "" if address_field.text == None else address_field.text
-                        else:
-                            variables[child.tag] = "" if child.text == None else child.text
-                    API.update_user(**variables)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                # Case: update user request from RabbitMQ
+                case 'user', 'update':
+                    read_xml_user(variables, root)
+                    payload = write_xml_user(**variables)
+                    update_user(variables['id'], payload)
 
-            case 'user', 'delete':
-                try:
+                # Case: delete user request from RabbitMQ
+                case 'user', 'delete':
+                    master_uuid = root.find('id').text
+                    service_id = get_service_id(master_uuid, TEAM)
+                    if service_id is not None:
+                        delete_user(service_id)
+                        delete_service_id(master_uuid, TEAM)
+
+                # Case: create company request from RabbitMQ
+                case 'company', 'create':
+                    read_xml_company(variables, root)
+                    payload = write_xml_company(**variables)
+                    service_id = add_company(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
+
+                # Case: update company request from RabbitMQ
+                case 'company', 'update':
+                    read_xml_company(variables, root)
+                    payload = write_xml_company(**variables)
+                    update_company(variables['id'], payload)
+
+                # Case: delete company request from RabbitMQ
+                case 'company', 'delete':
                     master_uuid = root.find('id').text
                     service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
                     if service_id is not None:
-                        API.delete_user(service_id)
-                        delete_service_id(master_uuid=master_uuid, service=team_name)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                        delete_company(service_id)
+                        delete_service_id(master_uuid, TEAM)
 
-            case 'company', 'create':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == "crud_operation":
-                            continue
-                        if child.tag == "address":
-                            for address_field in child:
-                                variables[address_field.tag] = address_field.text
-                        elif child.tag == "logo":
-                            pass
-                        else:
-                            variables[child.tag] = child.text
-                    service_id = API.add_company(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                # Case: create event request from RabbitMQ
+                case 'event', 'create':
+                    read_xml_event(variables, root)
+                    payload = write_xml_event(**variables)
+                    service_id = add_event(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
 
-            case 'company', 'update':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == "crud_operation" or child.tag == "logo":
-                            continue
-                        elif child.tag == "id":
-                            variables[child.tag] = get_service_id(team_name, child.text)
-                        elif child.tag == "address":
-                            for address_field in child:
-                                variables[address_field.tag] = "" if address_field.text == None else address_field.text
-                        else:
-                            variables[child.tag] = "" if child.text == None else child.text
-                    API.update_company(**variables)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                # Case: update event request from RabbitMQ
+                case 'event', 'update':
+                    read_xml_event(variables, root)
+                    payload = write_xml_event(**variables)
+                    update_event(variables['id'], payload)
 
-
-            case 'company', 'delete':
-                try:
+                # Case: delete event request from RabbitMQ
+                case 'event', 'delete':
                     master_uuid = root.find('id').text
-                    service_id = get_service_id(service_name="crm", master_uuid=master_uuid)
+                    service_id = get_service_id(master_uuid, TEAM)
                     if service_id is not None:
-                        API.delete_company(service_id)
-                        delete_service_id(master_uuid=master_uuid, service=team_name)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                        delete_event(service_id)
+                        delete_service_id(master_uuid, TEAM)
+    
+                # Case: create attendance request from RabbitMQ
+                case 'attendance', 'create':
+                    read_xml_attendance(variables, root)
+                    payload = write_xml_attendance(**variables)
+                    service_id = add_attendance(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
 
-            case 'event', 'create':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == "crud_operation":
-                            continue
-                        if child.tag == "speaker":
-                            for speaker_field in child:
-                                variables[speaker_field.tag] = speaker_field.text
-                        else:
-                            variables[child.tag] = child.text.strip()
-                    service_id = API.add_event(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                # Case: update attendance request from RabbitMQ
+                case 'attendance', 'update':
+                    read_xml_attendance(variables, root)
+                    payload = write_xml_attendance(**variables)
+                    update_attendance(variables['id'], payload)
 
-            case 'event', 'update':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == "crud_operation":
-                            continue
-                        elif child.tag == "id":
-                            variables[child.tag] = get_service_id(team_name, child.text)
-                        elif child.tag == "speaker":
-                            for speaker_field in child:
-                                variables[speaker_field.tag] = "" if speaker_field.text == None else speaker_field.text
-                        elif child.tag == "max_registrations" or child.tag == "available_seats":
-                            variables[child.tag] = "" if child.text == None else str(int(child.text))
-                        else:
-                            variables[child.tag] = "" if child.text == None else child.text
-                    API.update_event(**variables)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
-
-            case 'event', 'delete':
-                try:
+                # Case: delete attendance request from RabbitMQ
+                case 'attendance', 'delete':
                     master_uuid = root.find('id').text
-                    service_id = get_service_id(service_name=team_name, master_uuid=master_uuid)
-                    API.delete_event(service_id)
-                    delete_service_id(master_uuid=master_uuid, service=team_name)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                    service_id = get_service_id(master_uuid, TEAM)
+                    if service_id is not None:
+                        delete_attendance(service_id)
+                        delete_service_id(master_uuid, TEAM)
 
-            case 'attendance', 'create':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == 'crud_operation' or child.tag == "id":
-                            pass
+                # Case: create product request from RabbitMQ
+                case 'product', 'create':
+                    read_xml_product(variables, root)
+                    payload = write_xml_product(**variables)
+                    logger.debug(f"Payload: {payload}")
+                    service_id = add_product(payload)
+                    add_service_id(root.find('id').text, service_id, TEAM)
+
+                # Case: update product request from RabbitMQ
+                case 'product', 'update':
+                    read_xml_product(variables, root)
+                    payload = write_xml_product(**variables)
+                    update_product(variables['id'], payload)
+
+                # Case: create order request from RabbitMQ (STILL NEEDS REFACTORING)
+                case 'order', 'create':
+                    read_xml_order(variables, root)
+                    for product in variables['products']:
+                        order_id, old_amount = get_order(variables['user_id'], product['product_id'])
+                        logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
+                        if order_id is not None:
+                            payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
+                            update_order(order_id, payload)
                         else:
-                            variables[child.tag] = child.text.strip()
-                    service_id = API.add_attendance(**variables)
-                    add_service_id(master_uuid=root.find('id').text, service=team_name, service_id=service_id)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+                            payload = write_xml_order(variables['user_id'], **product)
+                            add_order(payload)
 
-            case 'attendance', 'update':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "routing_key" or child.tag == "crud_operation":
-                            continue
-                        elif child.tag == "id":
-                            variables[child.tag] = get_service_id(team_name, child.text)
-                        else:
-                            variables[child.tag] = "" if child.text == None else child.text
-                    API.update_attendance(**variables)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
-            case 'attendance', 'delete':
-                try:
-                    master_uuid = root.find('id').text
-                    service_id = get_service_id(service_name=team_name, master_uuid=master_uuid)
-                    API.delete_attendance(service_id)
-                    delete_service_id(master_uuid=master_uuid, service=team_name)
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed {e}")
+            # Acknowledge the message
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            logger.info(f'Processed {crud_operation} request for {root.tag}')
+            log(logger, f"CONSUMER: {root.tag}.{crud_operation}", f"Processed {crud_operation} request for {root.tag}")
 
-            case 'order', 'create':
-                try:
-                    variables = {}
-                    for child in root:
-                        if child.tag == "user_id":
-                            variables["user_id"] = child.text.strip()
-                        elif child.tag == "products":
-                            product_id = None
-                            product_name = None
-                            for product in child:
-                                for product_field in product:
-                                    if product_field.tag == "id":
-                                        product_id = product_field.text.strip()
-                                    elif product_field.tag == "name":
-                                        product_name = product_field.text.strip()
-                                    elif product_field.tag == "amount":
-                                        variables["amount"] = product_field.text.strip()
+        # Handle exceptions from the consumer
+        except Exception as e:
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+            logger.error(f'Failed to process {crud_operation} request for {root.tag}: {e}')
+            log(logger, f"CONSUMER: {root.tag}.{crud_operation}", f"Failed to process {crud_operation} request for {root.tag}: {e}", error='true')
 
-                                # Happens after every product
-                                if not API.product_exists(product_id):
-                                    product_id = API.add_product(product_name)
-                                variables["product"] = product_id
-
-                                order_id, old_amount = API.get_order(variables["user_id"], variables["product"])
-                                if order_id is not None:
-                                    new_amount = str(int(old_amount) + int(variables["amount"]))
-                                    API.update_order(order_id, new_amount)
-                                else:
-                                    API.add_order(**variables)
-
-                        else:
-                            pass
-
-                    ch.basic_ack(delivery_tag=method.delivery_tag)
-                    logger.info("Request Succeeded")
-                except Exception as e:
-                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                    logger.error(f"Request Failed: {e}")
-
-            case _:
-                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-                logger.error("This message is not valid")
-
-    channel.basic_consume(queue=team_name, on_message_callback=callback, auto_ack=False)
-
+    # Start consuming messages
+    channel.basic_consume(queue=TEAM, on_message_callback=callback, auto_ack=False)
     logger.info("Waiting for messages to receive. To exit press CTRL+C")
     channel.start_consuming()
 
-def initialize_logger(logger):
-    # Set level for the logger
-    logger.setLevel(logging.DEBUG)
-
-    # Create a color formatter
-    formatter = colorlog.ColoredFormatter(
-        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
-        log_colors={
-            'DEBUG':    'cyan',
-            'INFO':     'green',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'red,bg_white',
-        },
-    )
-
-    # Create a stream handler and set the formatter
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    logger.addHandler(handler)
-
 if __name__ == '__main__':
     # Create a custom logger
-    logger = colorlog.getLogger(__name__)
-    initialize_logger(logger)
+    logger = init_logger("__consumer__")
     try:
-        API.authenticate()
+        authenticate()
         main()
     except Exception as e:
         logger.error(f"Failed to start consumer: {e}")
