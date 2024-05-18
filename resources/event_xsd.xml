@@ -26,6 +26,7 @@
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
+                <xs:element name="title" type="xs:string" nillable="true"/>
                 <xs:element name="date">
                     <xs:simpleType>
                         <xs:union>
