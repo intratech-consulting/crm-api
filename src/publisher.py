@@ -4,7 +4,11 @@ from lxml import etree
 import xml.etree.ElementTree as ET
 import time
 
-sys.path.append('/app')
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
 import config.secrets as secrets
 from monitoring import log
 from API import *
@@ -15,8 +19,14 @@ from logger import init_logger
 TEAM = 'crm'
 
 def main():
-    credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
+     # Connect to RabbitMQ
+    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.PORT, credentials=credentials))
+    except Exception as e:
+        logger.error(f"Failed to connect to RabbitMQ: {e}")
+        log(logger, "CONSUMER", f"Failed to connect to RabbitMQ: {e}", error='true')
+        sys.exit(1)
     channel = connection.channel()
     channel.exchange_declare(exchange="amq.topic", exchange_type="topic", durable=True)
 
@@ -72,7 +82,7 @@ def main():
                     case 'event', 'update':
                         updated_fields = get_updated_event(changed_object['changed_object_id'])
                         updated_values = get_updated_values(f"query?q=SELECT+{','.join(updated_fields)}+FROM+event__c+WHERE+Id+=+'{changed_object['changed_object_name']}'")
-                        message = update_xml_event(rc, changed_object['crud_operation'], changed_object['changed_object_name'], updated_values)        
+                        message = update_xml_event(rc, changed_object['crud_operation'], changed_object['changed_object_name'], updated_values)
                         xsd_tree = etree.parse('./resources/event_xsd.xml')
 
                     case 'event', 'delete':
@@ -98,16 +108,17 @@ def main():
                 xml_doc = etree.fromstring(message.encode())
                 if not schema.validate(xml_doc):
                     logger.error('Invalid XML')
+                    logger.error(schema.error_log)
                 else:
                     logger.info('Object sent successfully')
                     delete_change_object(changed_object['changed_object_id'])
 
                     channel.basic_publish(exchange='amq.topic', routing_key=rc, body=message)
                     log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'Succesfully published "{changed_object['crud_operation']} {changed_object['object_type']}" on RabbitMQ!')
-                            
+
         except Exception as e:
             logger.error(f"An error occurred while processing the message: {e}")
-            log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'An error occurred while processing "{changed_object['crud_operation']} {changed_object['object_type']}": {e}', 'true')
+            log(logger, f'PUBLISHER: {changed_object["crud_operation"]} {changed_object["object_type"]}', f'An error occurred while processing "{changed_object["crud_operation"]} {changed_object["object_type"]}": {e}', 'true')
 
         time.sleep(120)
 
