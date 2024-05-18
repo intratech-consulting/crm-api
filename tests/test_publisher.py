@@ -191,8 +191,13 @@ class TestPublisher(unittest.TestCase):
             self.callback_event.wait(timeout=10)
 
             # Assert that the message is the same as the expected message
-            self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
-            print(f"{text_colors.HEADER}##### Test 1 passed #####{text_colors.ENDC}")
+            try:
+                self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
+            except AssertionError:
+                print(f"{text_colors.FAIL}##### Test 1 failed #####{text_colors.ENDC}")
+                raise
+            else:
+                print(f"{text_colors.OKGREEN}##### Test 1 passed #####{text_colors.ENDC}")
 
     def test_user_update(self):
         # Mock the get updated objects API response
@@ -263,7 +268,32 @@ class TestPublisher(unittest.TestCase):
         }
 
         # The expected assertion message
-        expected_message = '<user><routing_key>user.crm</routing_key><crud_operation>update</crud_operation><id>MASTERUUID-12345</id><first_name></first_name><last_name>This Crash</last_name><email></email><telephone>+32467179912</telephone><birthday></birthday><address><country></country><state></state><city></city><zip></zip><street></street><house_number>170</house_number></address><company_email></company_email><company_id></company_id><source></source><user_role></user_role><invoice></invoice><calendar_link></calendar_link></user>'
+        expected_message = '''
+        <user>
+            <routing_key>user.crm</routing_key>
+            <crud_operation>update</crud_operation>
+            <id>MASTERUUID-12345</id>
+            <first_name></first_name>
+            <last_name>This Crash</last_name>
+            <email></email>
+            <telephone>+32467179912</telephone>
+            <birthday></birthday>
+            <address>
+                <country></country>
+                <state></state>
+                <city></city>
+                <zip></zip>
+                <street></street>
+                <house_number>170</house_number>
+            </address>
+            <company_email></company_email>
+            <company_id></company_id>
+            <source></source>
+            <user_role></user_role>
+            <invoice></invoice>
+            <calendar_link></calendar_link>
+        </user>
+        '''
 
         with (
             patch('src.API.requests.get', side_effect=[mock_response_changed_data(), mock_response_changed_user_data_columns(), mock_response_user_data()]),
@@ -294,8 +324,103 @@ class TestPublisher(unittest.TestCase):
             self.callback_event.wait(timeout=10)
 
             # Assert that the message is the same as the expected message
-            self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
-            print(f"{text_colors.HEADER}##### Test 2 passed #####{text_colors.ENDC}")
+            try:
+                self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
+            except AssertionError:
+                print(f"{text_colors.FAIL}##### Test 2 failed #####{text_colors.ENDC}")
+                raise
+            else:
+                print(f"{text_colors.OKGREEN}##### Test 2 passed #####{text_colors.ENDC}")
+
+    def test_user_delete(self):
+        # Mock the get updated objects API response
+        mock_change_data_response = MagicMock()
+        mock_change_data_response.status_code = 200
+        mock_change_data_response.json.return_value = {
+            "totalSize": 1,
+            "done": True,
+            "records": [{
+                "Id": "co123",
+                "Name": "u123",
+                "object_type__c": "user",
+                "crud__c": "delete"
+            }]
+        }
+        
+        # Mock the masteruuid API response
+        mock_masteruuid_response = MagicMock()
+        mock_masteruuid_response.status_code = 200
+        mock_masteruuid_response.json.return_value = {
+            "success": True,
+            "MasterUuid": 'MASTERUUID-12345',
+            "UUID": "MASTERUUID-12345"
+        }
+
+        # The expected assertion message
+        expected_message = '''
+        <user>
+            <routing_key>user.crm</routing_key>
+            <crud_operation>delete</crud_operation>
+            <id>MASTERUUID-12345</id>
+            <first_name></first_name>
+            <last_name></last_name>
+            <email></email>
+            <telephone></telephone>
+            <birthday></birthday>
+            <address>
+                <country></country>
+                <state></state>
+                <city></city>
+                <zip></zip>
+                <street></street>
+                <house_number></house_number>
+            </address>
+            <company_email></company_email>
+            <company_id></company_id>
+            <source></source>
+            <user_role></user_role>
+            <invoice></invoice>
+            <calendar_link></calendar_link>
+        </user>
+        '''
+
+        with (
+            patch('src.API.requests.get') as mock_request_changed_data,
+            patch('src.xml_parser.requests.post') as mock_request_post,
+            patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)),
+            patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'})
+        ):
+            channel: BlockingChannel = self.configure_rabbitMQ()
+            mock_request_changed_data.return_value = mock_change_data_response
+            mock_request_post.return_value = mock_masteruuid_response
+
+            def run_publisher():
+                with patch('src.API.requests.get', mock_request_changed_data), \
+                        patch('src.xml_parser.requests.post', mock_request_post), \
+                        patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)), \
+                        patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'}):
+                    publisher.main()
+
+            publisher_thread = threading.Thread(target=run_publisher)
+            publisher_thread.daemon = True
+            publisher_thread.start()
+
+            # Consume the message from RabbitMQ in a separate thread
+            consume_thread = threading.Thread(target=self.start_consuming, args=(channel,))
+            consume_thread.daemon = True
+            consume_thread.start()
+
+            # Wait for the callback to be called
+            self.callback_event.wait(timeout=10)
+
+            # Assert that the message is the same as the expected message
+            try:
+                self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
+            except AssertionError:
+                print(f"{text_colors.FAIL}##### Test 3 failed #####{text_colors.ENDC}")
+                raise
+            else:
+                print(f"{text_colors.OKGREEN}##### Test 3 passed #####{text_colors.ENDC}")
     
 
 if __name__ == "__main__":
