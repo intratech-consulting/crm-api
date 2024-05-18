@@ -4,7 +4,7 @@ import logging
 
 def configure_logger(logger):
     # Set level for the logger
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.WARNING)
 
     # Create a color formatter
     formatter = colorlog.ColoredFormatter(

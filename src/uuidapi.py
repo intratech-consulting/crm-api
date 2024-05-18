@@ -1,8 +1,14 @@
+import os
+
 import requests
 import json
 import sys
 
-sys.path.append('/app')
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
 import config.secrets as secrets
 
 headers = {
@@ -17,7 +23,6 @@ def create_master_uuid(service_id, service_name):
         "Service": service_name
     }
     response = requests.post(url, headers=headers, data=json.dumps(payload))
-    print(response.json(), response.status_code)
     if response.status_code == 200 and response.json().get("success") or response.status_code == 201 and response.json().get("success"):
         return response.json().get("MasterUuid")
     else:
@@ -32,7 +37,6 @@ def get_service_id(master_uuid, service_name):
     }
     response = requests.post(url, headers=headers, data=json.dumps(payload))
     if response.status_code == 200:
-        print(response.json()[service_name])
         return response.json()[service_name]
     else:
         return None
@@ -62,7 +66,6 @@ def add_service_id(master_uuid, service_id, service):
     if response.status_code == 200:
         return response.json()
     elif response.status_code == 201:
-        print(response.content)
         return response.json()
     else:
         return None

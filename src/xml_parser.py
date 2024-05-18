@@ -1,9 +1,13 @@
+import os
 from datetime import datetime
 import sys
 import xml.etree.ElementTree as ET
 
-sys.path.append('/app')
-import config.secrets as secrets
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
 from uuidapi import *
 
 TEAM = 'crm'
@@ -16,42 +20,45 @@ def read_xml_user(variables, root):
             for address_field in child:
                 variables[address_field.tag] = address_field.text
         elif child.tag == "id" or child.tag == "company_id":
-            if(child.text is not None):
+            if (child.text is not None):
                 variables[child.tag] = get_service_id(child.text, TEAM)
             else:
                 variables[child.tag] = None
         else:
             variables[child.tag] = child.text
 
-def write_xml_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street, house_number, company_email, company_id, source, user_role, invoice, calendar_link):
+
+def write_xml_user(id, first_name, last_name, email, telephone, birthday, country, state, city, zip, street,
+                   house_number, company_email, company_id, source, user_role, invoice, calendar_link):
     return '''
         <user__c>
             {}
         </user__c>
         '''.format(
-            ''.join([
-                f'<{field}__c>{value}</{field}__c>'
-                for field, value in {
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "email": email,
-                    "telephone": telephone,
-                    "birthday": birthday,
-                    "country": country,
-                    "state": state,
-                    "city": city,
-                    "zip": zip,
-                    "street": street,
-                    "house_number": house_number,
-                    "company_email": company_email,
-                    "company_id": company_id,
-                    "source": source,
-                    "user_role": user_role,
-                    "invoice": invoice,
-                    "calendar_link": calendar_link,
-                }.items() if value != '' and value != None
-            ])
-        )
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "telephone": telephone,
+                "birthday": birthday,
+                "country": country,
+                "state": state,
+                "city": city,
+                "zip": zip,
+                "street": street,
+                "house_number": house_number,
+                "company_email": company_email,
+                "company_id": company_id,
+                "source": source,
+                "user_role": user_role,
+                "invoice": invoice,
+                "calendar_link": calendar_link,
+            }.items() if value != '' and value != None
+        ])
+    )
+
 
 def create_xml_user(data):
     user_data = data[0]
@@ -74,7 +81,7 @@ def create_xml_user(data):
             field_element.text = "" if value == None else get_master_uuid(str(value), TEAM)
         elif field == "birthday__c":
             field_element = ET.SubElement(root, "birthday")
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
             address_element = ET.SubElement(root, "address")
         elif field == "house_number__c" or field == "zip__c":
             sub_field = field.split("__")[0]
@@ -83,13 +90,14 @@ def create_xml_user(data):
         elif field in address_fields and address_element is not None:
             sub_field = field.split("__")[0]
             sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(value).lower()
+            sub_field_element.text = "" if value == None else str(value)
         else:
             field_name = field.split("__")[0]
             field_element = ET.SubElement(root, field_name)
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
 
     return ET.tostring(root, encoding="unicode", method="xml")
+
 
 def update_xml_user(rc, crud, id, updated_values):
     master_id = get_master_uuid(id, TEAM)
@@ -146,6 +154,7 @@ def update_xml_user(rc, crud, id, updated_values):
     </user>'''
 
 
+
 def read_xml_company(variables, root):
     for child in root:
         if child.tag == "routing_key" or child.tag == "crud_operation":
@@ -160,29 +169,31 @@ def read_xml_company(variables, root):
         else:
             variables[child.tag] = child.text
 
+
 def write_xml_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
     return '''
         <company__c>
             {}
         </company__c>
         '''.format(
-            ''.join([
-                f'<{field}__c>{value}</{field}__c>'
-                for field, value in {
-                    "name": name,
-                    "email": email,
-                    "telephone": telephone,
-                    "country": country,
-                    "state": state,
-                    "city": city,
-                    "zip": zip,
-                    "street": street,
-                    "house_number": house_number,
-                    "type": type,
-                    "invoice": invoice,
-                }.items() if value != '' and value != None
-            ])
-        )
+        ''.join([
+            f'<{field}__c>{value}</{field}__c>'
+            for field, value in {
+                "name": name,
+                "email": email,
+                "telephone": telephone,
+                "country": country,
+                "state": state,
+                "city": city,
+                "zip": zip,
+                "street": street,
+                "house_number": house_number,
+                "type": type,
+                "invoice": invoice,
+            }.items() if value != '' and value != None
+        ])
+    )
+
 
 def create_xml_company(data):
     company_data = data[0]
@@ -200,9 +211,12 @@ def create_xml_company(data):
         elif field == "Id":
             field_element = ET.SubElement(root, "id")
             field_element.text = "" if value == None else create_master_uuid(str(value), TEAM)
+        elif field == "Name":
+            field_element = ET.SubElement(root, "name")
+            field_element.text = "" if value == None else str(value)
         elif field == "telephone__c":
             field_element = ET.SubElement(root, "telephone")
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
             field_element = ET.SubElement(root, "logo")
             field_element.text = ""
             address_element = ET.SubElement(root, "address")
@@ -213,13 +227,14 @@ def create_xml_company(data):
         elif field in address_fields and address_element is not None:
             sub_field = field.split("__")[0]
             sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(value).lower()
+            sub_field_element.text = "" if value == None else str(value)
         else:
             field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, str(field_name).lower())
-            field_element.text = "" if value == None else str(value).lower()
+            field_element = ET.SubElement(root, str(field_name))
+            field_element.text = "" if value == None else str(value)
 
     return ET.tostring(root, encoding="unicode", method="xml")
+
 
 def update_xml_company(rc, crud, id, updated_values):
     master_id = get_master_uuid(id, TEAM)
@@ -262,6 +277,7 @@ def update_xml_company(rc, crud, id, updated_values):
         <invoice>{invoice__c}</invoice>
     </company>'''
 
+
 def read_xml_event(variables, root):
     for child in root:
         if child.tag == "routing_key" or child.tag == "crud_operation":
@@ -285,7 +301,8 @@ def write_xml_event(id, title, date, start_time, end_time, location, user_id, co
             for field, value in {
                 "title": title,
                 "date": date,
-                "start_time": "" if start_time == None else datetime.strptime(start_time, '%H:%M:%S').strftime('%H:%M:%S'),
+                "start_time": "" if start_time == None else datetime.strptime(start_time, '%H:%M:%S').strftime(
+                    '%H:%M:%S'),
                 "end_time": "" if end_time == None else datetime.strptime(end_time, '%H:%M:%S').strftime('%H:%M:%S'),
                 "location": location,
                 "user_id": user_id,
@@ -296,6 +313,7 @@ def write_xml_event(id, title, date, start_time, end_time, location, user_id, co
             }.items() if value != '' and value != None
         ])
     )
+
 
 def create_xml_event(data):
     event_data = data[0]
@@ -318,7 +336,7 @@ def create_xml_event(data):
             field_element.text = "" if value == None else str(value).split(".")[0]
         elif field == "location__c":
             field_element = ET.SubElement(root, "location")
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
             speaker_element = ET.SubElement(root, "speaker")
         elif field in speaker_fields and speaker_element is not None:
             sub_field = field.split("__")[0]
@@ -329,16 +347,17 @@ def create_xml_event(data):
             field_element.text = "" if value == None else str(int(value))
         else:
             field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, str(field_name).lower())
+            field_element = ET.SubElement(root, str(field_name))
             field_element.text = "" if value == None else str(value)
 
     return ET.tostring(root, encoding="unicode", method="xml")
+
 
 def update_xml_event(rc, crud, id, updated_values):
     master_id = get_master_uuid(id, TEAM)
     if crud == 'delete':
         delete_service_id(master_id, TEAM)
-    title = updated_values.get('title__c', '')
+    title__c = updated_values.get('title__c', '')
     date__c = updated_values.get('date__c', '')
     start_time__c = updated_values.get('start_time__c', '')
     if start_time__c != '':
@@ -365,7 +384,7 @@ def update_xml_event(rc, crud, id, updated_values):
         <routing_key>{rc}</routing_key>
         <crud_operation>{crud}</crud_operation>
         <id>{master_id}</id>
-        <title>{title}</title>
+        <title>{title__c}</title>
         <date>{date__c}</date>
         <start_time>{start_time__c}</start_time>
         <end_time>{end_time__c}</end_time>
@@ -379,12 +398,14 @@ def update_xml_event(rc, crud, id, updated_values):
         <description>{description__c}</description>
     </event>'''
 
+
 def read_xml_attendance(variables, root):
     for child in root:
         if child.tag == "routing_key" or child.tag == 'crud_operation':
             continue
         else:
             variables[child.tag] = get_service_id(child.text, TEAM)
+
 
 def write_xml_attendance(id, user_id, event_id):
     return '''
@@ -400,6 +421,7 @@ def write_xml_attendance(id, user_id, event_id):
             }.items() if value != '' and value != None
         ])
     )
+
 
 def create_xml_attendance(data):
     event_data = data[0]
@@ -421,6 +443,7 @@ def create_xml_attendance(data):
 
     return ET.tostring(root, encoding="unicode", method="xml")
 
+
 def update_xml_attendance(rc, crud, id, updated_values):
     master_id = get_master_uuid(id, TEAM)
     if crud == 'delete':
@@ -441,6 +464,7 @@ def update_xml_attendance(rc, crud, id, updated_values):
         <event_id>{event_id}</event_id>
     </attendance>'''
 
+
 def read_xml_product(variables, root):
     for child in root:
         if child.tag == "routing_key" or child.tag == 'crud_operation':
@@ -449,6 +473,7 @@ def read_xml_product(variables, root):
             variables[child.tag] = get_service_id(child.text, TEAM)
         elif child.tag == "name":
             variables[child.tag] = child.text
+
 
 def write_xml_product(id, name):
     return '''
@@ -464,10 +489,11 @@ def write_xml_product(id, name):
         ])
     )
 
+
 def read_xml_order(variables, root):
     for child in root:
         if child.tag == "user_id":
-            variables[child.tag] =  get_service_id(child.text.strip(), TEAM)
+            variables[child.tag] = get_service_id(child.text.strip(), TEAM)
         elif child.tag == "products":
             products = []
             for product in child.findall('product'):
@@ -479,6 +505,7 @@ def read_xml_order(variables, root):
                         product_details["amount"] = product_field.text.strip()
                 products.append(product_details)
             variables["products"] = products
+
 
 def write_xml_order(user_id, product_id, amount):
     return '''
@@ -496,6 +523,7 @@ def write_xml_order(user_id, product_id, amount):
         ])
     )
 
+
 def write_xml_existing_order(amount):
     return '''
     <order__c>
@@ -509,6 +537,7 @@ def write_xml_existing_order(amount):
             }.items() if value != '' and value != None
         ])
     )
+
 
 def read_xml_changed_data(variables, root):
     changed_object = []
@@ -525,6 +554,7 @@ def read_xml_changed_data(variables, root):
                 details["crud_operation"] = field.text
         changed_object.append(details)
     variables["changed_data"] = changed_object
+
 
 def create_xml_changed_data(data):
     root = ET.Element("ChangedData")
