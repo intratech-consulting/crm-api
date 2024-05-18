@@ -35,6 +35,7 @@ def main():
         try:
             updates = get_changed_data()
             if updates is None:
+                time.sleep(30)
                 continue
 
             changed_objects = {}
