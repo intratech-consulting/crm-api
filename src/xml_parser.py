@@ -211,9 +211,12 @@ def create_xml_company(data):
         elif field == "Id":
             field_element = ET.SubElement(root, "id")
             field_element.text = "" if value == None else create_master_uuid(str(value), TEAM)
+        elif field == "Name":
+            field_element = ET.SubElement(root, "name")
+            field_element.text = "" if value == None else str(value)
         elif field == "telephone__c":
             field_element = ET.SubElement(root, "telephone")
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
             field_element = ET.SubElement(root, "logo")
             field_element.text = ""
             address_element = ET.SubElement(root, "address")
@@ -224,11 +227,11 @@ def create_xml_company(data):
         elif field in address_fields and address_element is not None:
             sub_field = field.split("__")[0]
             sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(value).lower()
+            sub_field_element.text = "" if value == None else str(value)
         else:
             field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, str(field_name).lower())
-            field_element.text = "" if value == None else str(value).lower()
+            field_element = ET.SubElement(root, str(field_name))
+            field_element.text = "" if value == None else str(value)
 
     return ET.tostring(root, encoding="unicode", method="xml")
 
