@@ -18,7 +18,6 @@ def main():
     TEAM = 'crm'
 
     # Connect to RabbitMQ
-    #credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
     credentials = pika.PlainCredentials('user', 'password')
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
