@@ -237,7 +237,6 @@ def get_updated_user(id=None):
     response.raise_for_status()
     data = response.json().get("records", [])
     if data:
-        logger.debug(f"Updated user fields: {data}")
         return [key for obj in data for key, value in obj.items() if isinstance(value, bool) and value]
 
 # Get a company by id api call

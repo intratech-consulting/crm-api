@@ -81,7 +81,7 @@ def create_xml_user(data):
             field_element.text = "" if value == None else get_master_uuid(str(value), TEAM)
         elif field == "birthday__c":
             field_element = ET.SubElement(root, "birthday")
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
             address_element = ET.SubElement(root, "address")
         elif field == "house_number__c" or field == "zip__c":
             sub_field = field.split("__")[0]
@@ -90,11 +90,11 @@ def create_xml_user(data):
         elif field in address_fields and address_element is not None:
             sub_field = field.split("__")[0]
             sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(value).lower()
+            sub_field_element.text = "" if value == None else str(value)
         else:
             field_name = field.split("__")[0]
             field_element = ET.SubElement(root, field_name)
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
 
     return ET.tostring(root, encoding="unicode", method="xml")
 
