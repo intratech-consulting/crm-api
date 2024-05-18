@@ -291,7 +291,7 @@ def read_xml_event(variables, root):
             variables[child.tag] = child.text
 
 
-def write_xml_event(id, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats,
+def write_xml_event(id, title, date, start_time, end_time, location, user_id, company_id, max_registrations, available_seats,
                     description):
     return '''
     <event__c>
@@ -301,6 +301,7 @@ def write_xml_event(id, date, start_time, end_time, location, user_id, company_i
         ''.join([
             f'<{field}__c>{value}</{field}__c>'
             for field, value in {
+                "title": title,
                 "date": date,
                 "start_time": "" if start_time == None else datetime.strptime(start_time, '%H:%M:%S').strftime(
                     '%H:%M:%S'),
@@ -337,7 +338,7 @@ def create_xml_event(data):
             field_element.text = "" if value == None else str(value).split(".")[0]
         elif field == "location__c":
             field_element = ET.SubElement(root, "location")
-            field_element.text = "" if value == None else str(value).lower()
+            field_element.text = "" if value == None else str(value)
             speaker_element = ET.SubElement(root, "speaker")
         elif field in speaker_fields and speaker_element is not None:
             sub_field = field.split("__")[0]
@@ -348,8 +349,8 @@ def create_xml_event(data):
             field_element.text = "" if value == None else str(int(value))
         else:
             field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, str(field_name).lower())
-            field_element.text = "" if value == None else str(value).lower()
+            field_element = ET.SubElement(root, str(field_name))
+            field_element.text = "" if value == None else str(value)
 
     return ET.tostring(root, encoding="unicode", method="xml")
 
@@ -358,6 +359,7 @@ def update_xml_event(rc, crud, id, updated_values):
     master_id = get_master_uuid(id, TEAM)
     if crud == 'delete':
         delete_service_id(master_id, TEAM)
+    title__c = updated_values.get('title__c', '')
     date__c = updated_values.get('date__c', '')
     start_time__c = updated_values.get('start_time__c', '')
     if start_time__c != '':
@@ -384,6 +386,7 @@ def update_xml_event(rc, crud, id, updated_values):
         <routing_key>{rc}</routing_key>
         <crud_operation>{crud}</crud_operation>
         <id>{master_id}</id>
+        <title>{title__c}</title>
         <date>{date__c}</date>
         <start_time>{start_time__c}</start_time>
         <end_time>{end_time__c}</end_time>

@@ -108,6 +108,7 @@ def main():
                 xml_doc = etree.fromstring(message.encode())
                 if not schema.validate(xml_doc):
                     logger.error('Invalid XML')
+                    logger.error(schema.error_log)
                 else:
                     logger.info('Object sent successfully')
                     delete_change_object(changed_object['changed_object_id'])

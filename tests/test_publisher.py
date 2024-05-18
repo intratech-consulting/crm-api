@@ -755,5 +755,323 @@ class TestPublisher(unittest.TestCase):
                 print(f"{text_colors.OKGREEN}##### Test 6 passed #####{text_colors.ENDC}")
     
 
+    ###########################
+    ## Test functions events ##
+    ###########################
+    def test_7_event_create(self):
+        # Mock the get updated objects API response
+        def mock_response_changed_data():
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "totalSize": 1,
+                "done": True,
+                "records": [{
+                    "Id": "co123",
+                    "Name": "e123",
+                    "object_type__c": "event",
+                    "crud__c": "create"
+                }]
+            }
+            return response
+
+        # Mock the get create event API response
+        def mock_response_event_data():
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "totalSize": 1,
+                "done": True,
+                "records": [{
+                    "attributes": "",
+                    "Id": "e123",
+                    "title__c": "Introduction to XML",
+                    "date__c": "2024-05-31",
+                    "start_time__c": "09:00:00.000Z",
+                    "end_time__c": "11:00:00.000Z",
+                    "location__c": "Aula 8",
+                    "user_id__c": "u123",
+                    "company_id__c": "c123",
+                    "max_registrations__c": 200.0,
+                    "available_seats__c": 150.0,
+                    "description__c": "Introduction to XML"
+                }]
+            }
+            return response
+        
+        # Mock the masteruuid API response
+        mock_masteruuid_response = MagicMock()
+        mock_masteruuid_response.status_code = 200
+        mock_masteruuid_response.json.return_value = {
+            "success": True,
+            "MasterUuid": 'MASTERUUID-12345',
+            "UUID": "MASTERUUID-12345"
+        }
+
+        # The expected assertion message
+        expected_message = '''
+        <event>
+            <routing_key>event.crm</routing_key>
+            <crud_operation>create</crud_operation>
+            <id>MASTERUUID-12345</id>
+            <title>Introduction to XML</title>
+            <date>2024-05-31</date>
+            <start_time>09:00:00</start_time>
+            <end_time>11:00:00</end_time>
+            <location>Aula 8</location>
+            <speaker>
+                <user_id>MASTERUUID-12345</user_id>
+                <company_id>MASTERUUID-12345</company_id> 
+            </speaker>
+            <max_registrations>200</max_registrations>
+            <available_seats>150</available_seats>
+            <description>Introduction to XML</description>
+        </event>
+        '''
+
+        with (
+            patch('src.API.requests.get', side_effect=[mock_response_changed_data(), mock_response_event_data()]),
+            patch('src.xml_parser.requests.post') as mock_request_post,
+            patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)),
+            patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'})
+        ):
+            channel: BlockingChannel = self.configure_rabbitMQ()
+            mock_request_post.return_value = mock_masteruuid_response
+
+            def run_publisher():
+                with patch('src.API.requests.get', side_effect=[mock_response_changed_data(), mock_response_event_data()]), \
+                        patch('src.xml_parser.requests.post', mock_request_post), \
+                        patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)), \
+                        patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'}):
+                    publisher.main()
+
+            publisher_thread = threading.Thread(target=run_publisher)
+            publisher_thread.daemon = True
+            publisher_thread.start()
+
+            # Consume the message from RabbitMQ in a separate thread
+            consume_thread = threading.Thread(target=self.start_consuming, args=(channel,))
+            consume_thread.daemon = True
+            consume_thread.start()
+
+            # Wait for the callback to be called
+            self.callback_event.wait(timeout=10)
+
+            # Assert that the message is the same as the expected message
+            try:
+                self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
+            except AssertionError:
+                print(f"{text_colors.FAIL}##### Test 7 failed #####{text_colors.ENDC}")
+                raise
+            else:
+                print(f"{text_colors.OKGREEN}##### Test 7 passed #####{text_colors.ENDC}")
+
+    def test_8_event_update(self):
+        # Mock the get updated objects API response
+        def mock_response_changed_data():
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "totalSize": 1,
+                "done": True,
+                "records": [{
+                    "Id": "co123",
+                    "Name": "e123",
+                    "object_type__c": "event",
+                    "crud__c": "update"
+                }]
+            }
+            return response# Mock the get update event API response
+        
+        def mock_response_changed_event_data_columns():
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "totalSize": 1,
+                "done": True,
+                "records": [{
+                    "attributes": "",
+                    "Id": "co123",
+                    "title__c": False,
+                    "date__c": False,
+                    "start_time__c": True,
+                    "end_time__c": False,
+                    "location__c": False,
+                    "user_id__c": False,
+                    "company_id__c": False,
+                    "max_registrations__c": False,
+                    "available_seats__c": True,
+                    "description__c": True
+                }]
+            }
+            return response
+
+        # Mock the get update event API response
+        def mock_response_event_data():
+            response = MagicMock()
+            response.status_code = 200
+            response.json.return_value = {
+                "totalSize": 1,
+                "done": True,
+                "records": [{
+                    "attributes": "",
+                    "Id": "u123",
+                    "start_time__c": "08:00:00.000Z",
+                    "available_seats__c": 100.0,
+                    "description__c": "This is an introduction to XML"
+                }]
+            }
+            return response
+        
+        # Mock the masteruuid API response
+        mock_masteruuid_response = MagicMock()
+        mock_masteruuid_response.status_code = 200
+        mock_masteruuid_response.json.return_value = {
+            "success": True,
+            "MasterUuid": 'MASTERUUID-12345',
+            "UUID": "MASTERUUID-12345"
+        }
+
+        # The expected assertion message
+        expected_message = '''
+        <event>
+            <routing_key>event.crm</routing_key>
+            <crud_operation>update</crud_operation>
+            <id>MASTERUUID-12345</id>
+            <title></title>
+            <date></date>
+            <start_time>08:00:00</start_time>
+            <end_time></end_time>
+            <location></location>
+            <speaker>
+                <user_id></user_id>
+                <company_id></company_id> 
+            </speaker>
+            <max_registrations></max_registrations>
+            <available_seats>100</available_seats>
+            <description>This is an introduction to XML</description>
+        </event>
+        '''
+
+        with (
+            patch('src.API.requests.get', side_effect=[mock_response_changed_data(), mock_response_changed_event_data_columns(), mock_response_event_data()]),
+            patch('src.xml_parser.requests.post') as mock_request_post,
+            patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)),
+            patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'})
+        ):
+            channel: BlockingChannel = self.configure_rabbitMQ()
+            mock_request_post.return_value = mock_masteruuid_response
+
+            def run_publisher():
+                with patch('src.API.requests.get', side_effect=[mock_response_changed_data(), mock_response_changed_event_data_columns(), mock_response_event_data()]), \
+                        patch('src.xml_parser.requests.post', mock_request_post), \
+                        patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)), \
+                        patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'}):
+                    publisher.main()
+
+            publisher_thread = threading.Thread(target=run_publisher)
+            publisher_thread.daemon = True
+            publisher_thread.start()
+
+            # Consume the message from RabbitMQ in a separate thread
+            consume_thread = threading.Thread(target=self.start_consuming, args=(channel,))
+            consume_thread.daemon = True
+            consume_thread.start()
+
+            # Wait for the callback to be called
+            self.callback_event.wait(timeout=10)
+
+            # Assert that the message is the same as the expected message
+            try:
+                self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
+            except AssertionError:
+                print(f"{text_colors.FAIL}##### Test 8 failed #####{text_colors.ENDC}")
+                raise
+            else:
+                print(f"{text_colors.OKGREEN}##### Test 8 passed #####{text_colors.ENDC}")
+
+    def test_9_event_delete(self):
+        # Mock the get updated objects API response
+        mock_change_data_response = MagicMock()
+        mock_change_data_response.status_code = 200
+        mock_change_data_response.json.return_value = {
+            "totalSize": 1,
+            "done": True,
+            "records": [{
+                "Id": "co123",
+                "Name": "e123",
+                "object_type__c": "event",
+                "crud__c": "delete"
+            }]
+        }
+        
+        # Mock the masteruuid API response
+        mock_masteruuid_response = MagicMock()
+        mock_masteruuid_response.status_code = 200
+        mock_masteruuid_response.json.return_value = {
+            "success": True,
+            "MasterUuid": 'MASTERUUID-12345',
+            "UUID": "MASTERUUID-12345"
+        }
+
+        # The expected assertion message
+        expected_message = '''
+        <event>
+            <routing_key>event.crm</routing_key>
+            <crud_operation>delete</crud_operation>
+            <id>MASTERUUID-12345</id>
+            <title></title>
+            <date></date>
+            <start_time></start_time>
+            <end_time></end_time>
+            <location></location>
+            <speaker>
+                <user_id></user_id>
+                <company_id></company_id> 
+            </speaker>
+            <max_registrations></max_registrations>
+            <available_seats></available_seats>
+            <description></description>
+        </event>
+        '''
+
+        with (
+            patch('src.API.requests.get') as mock_request_changed_data,
+            patch('src.xml_parser.requests.post') as mock_request_post,
+            patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)),
+            patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'})
+        ):
+            channel: BlockingChannel = self.configure_rabbitMQ()
+            mock_request_changed_data.return_value = mock_change_data_response
+            mock_request_post.return_value = mock_masteruuid_response
+
+            def run_publisher():
+                with patch('src.API.requests.get', mock_request_changed_data), \
+                        patch('src.xml_parser.requests.post', mock_request_post), \
+                        patch('src.publisher.delete_change_object', return_value=MagicMock(status_code=201)), \
+                        patch('src.publisher.log', return_value={'success': True, 'message': 'Log successfully added.'}):
+                    publisher.main()
+
+            publisher_thread = threading.Thread(target=run_publisher)
+            publisher_thread.daemon = True
+            publisher_thread.start()
+
+            # Consume the message from RabbitMQ in a separate thread
+            consume_thread = threading.Thread(target=self.start_consuming, args=(channel,))
+            consume_thread.daemon = True
+            consume_thread.start()
+
+            # Wait for the callback to be called
+            self.callback_event.wait(timeout=10)
+
+            # Assert that the message is the same as the expected message
+            try:
+                self.assertEqual(''.join((self.rabbitmq_message).split()), ''.join(expected_message.split()))
+            except AssertionError:
+                print(f"{text_colors.FAIL}##### Test 9 failed #####{text_colors.ENDC}")
+                raise
+            else:
+                print(f"{text_colors.OKGREEN}##### Test 9 passed #####{text_colors.ENDC}")
+
 if __name__ == "__main__":
     unittest.main()
