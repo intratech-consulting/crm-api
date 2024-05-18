@@ -12,6 +12,7 @@ from monitoring import log
 from API import *
 from xml_parser import *
 from logger import init_logger
+from config.secrets import *
 
 def main():
     # Global variables
