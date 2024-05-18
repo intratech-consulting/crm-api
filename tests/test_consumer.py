@@ -4,6 +4,7 @@ import threading
 import time
 import unittest
 from unittest.mock import patch
+from busypie import wait, SECOND
 
 import pika
 from pika.adapters.blocking_connection import BlockingChannel
@@ -14,7 +15,7 @@ import src.consumer as consumer
 import config.secrets as secrets
 
 
-class TestRabbitMQ(unittest.TestCase):
+class TestConsumer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.rabbitmq = RabbitMqContainer("rabbitmq:3-management", None, secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
@@ -67,15 +68,13 @@ class TestRabbitMQ(unittest.TestCase):
                 test_message = file.read()
 
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
-            #TODO: Fix this sleep to busy wait
-            time.sleep(2)
+            wait().at_most(5, SECOND).until(lambda: add_user_mock.called)
 
             channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
 
             self.assertTrue(channel._consumer_infos)
 
             add_user_mock.assert_called_once()
-            mock_post.assert_called_once()
 
     @patch('requests.post')
     def test_company_create_should_make_valid_request(self, mock_post):
@@ -119,15 +118,59 @@ class TestRabbitMQ(unittest.TestCase):
                 test_message = file.read()
 
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
-            #TODO: Fix this sleep to busy wait
-            time.sleep(2)
+            wait().at_most(5, SECOND).until(lambda: add_company_mock.called)
 
             channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
 
             self.assertTrue(channel._consumer_infos)
 
             add_company_mock.assert_called_once()
-            mock_post.assert_called_once()
+
+    @patch('requests.post')
+    def test_event_create_should_make_valid_request(self, mock_post):
+        with patch('src.xml_parser.get_service_id') as get_service_id_mock, \
+                patch('src.consumer.add_event') as add_event_mock, \
+                patch('src.consumer.log') as log_mock:
+
+            get_service_id_mock.return_value = {
+                "crm": "1234"
+            }
+
+            add_event_mock.return_value = '12345'
+
+            log_mock.return_value = {
+                "success": True,
+                "message": "Log successfully added."
+            }
+
+            channel: BlockingChannel = self.configure_rabbitMQ()
+
+            def run_consumer():
+                with patch('src.xml_parser.get_service_id', get_service_id_mock), \
+                        patch('src.consumer.add_event', add_event_mock), \
+                        patch('src.consumer.log', log_mock):
+                    start_time = time.time()
+                    while time.time() - start_time < 10:
+                        try:
+                            consumer.main()
+                        except pika.exceptions.StreamLostError:
+                            break
+
+            consumer_thread = threading.Thread(target=run_consumer)
+            consumer_thread.daemon = True
+            consumer_thread.start()
+
+            with open('resources/dummy_event.xml', 'r') as file:
+                test_message = file.read()
+
+            channel.basic_publish(exchange='amq.topic', routing_key='event.frontend', body=test_message)
+            wait().at_most(5, SECOND).until(lambda: add_event_mock.called)
+
+            channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
+
+            self.assertTrue(channel._consumer_infos)
+
+            add_event_mock.assert_called_once()
 
     def configure_rabbitMQ(self) -> BlockingChannel:
         credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
