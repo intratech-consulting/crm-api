@@ -1,0 +1,19 @@
+<company>
+    <routing_key>company.frontend</routing_key>
+    <crud_operation>create</crud_operation>
+    <id>01234</id>
+    <name>Erasmushogeschool Brussel</name>
+    <email>info@ehb.be</email>
+    <telephone>0479444444</telephone>
+    <logo>example.png</logo>
+    <address>
+        <country>Belgium</country>
+        <state>Brussels</state>
+        <city>Brussels</city>
+        <zip>1000</zip>
+        <street>Nijverheidskaai</street>
+        <house_number>170</house_number>
+    </address>
+    <type>customer</type>
+    <invoice>BE00 0000 0000 0000</invoice>
+</company>

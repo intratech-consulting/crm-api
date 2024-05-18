@@ -1,0 +1,16 @@
+<event>
+    <routing_key>event.crm</routing_key>
+    <crud_operation>create</crud_operation>
+    <id>146461</id>
+    <date>2024-04-01</date>
+    <start_time>09:00:00</start_time>
+    <end_time>11:00:00</end_time>
+    <location>Room 101</location>
+    <speaker>
+        <user_id>a04Qy000000DtgDIAS</user_id>
+        <company_id>a03Qy000004NW3RIAW</company_id>
+    </speaker>
+    <max_registrations>50</max_registrations>
+    <available_seats>25</available_seats>
+    <description>Introduction to XML</description>
+</event>
