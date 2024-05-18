@@ -24,6 +24,7 @@ def main():
         try:
             updates = get_changed_data()
             if updates is None:
+                time.sleep(30)
                 continue
 
             changed_objects = {}
@@ -109,7 +110,7 @@ def main():
             logger.error(f"An error occurred while processing the message: {e}")
             log(logger, f'PUBLISHER: {changed_object['crud_operation']} {changed_object['object_type']}', f'An error occurred while processing "{changed_object['crud_operation']} {changed_object['object_type']}": {e}', 'true')
 
-        time.sleep(120)
+        time.sleep(30)
 
 if __name__ == '__main__':
     # Create a custom logger
