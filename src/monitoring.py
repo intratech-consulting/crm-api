@@ -11,7 +11,7 @@ from logger import init_logger
 TEAM = 'crm'
 
 def heartbeat(timestamp):
-    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
+    credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
     channel.queue_declare(queue='heartbeat_queue', durable=True)
@@ -37,7 +37,7 @@ def heartbeat(timestamp):
     channel.basic_publish(exchange='', routing_key='heartbeat_queue', body=heartbeat_xml)
 
 def log(logger, process, message, error='false'):
-    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
+    credentials = pika.PlainCredentials('user', 'password')
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     channel = connection.channel()
     channel.exchange_declare(exchange="amq.topic", exchange_type="topic", durable=True)

@@ -20,9 +20,9 @@ TEAM = 'crm'
 
 def main():
      # Connect to RabbitMQ
-    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
+    credentials = pika.PlainCredentials('user', 'password')
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.RABBITMQ_PORT, credentials=credentials))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     except Exception as e:
         logger.error(f"Failed to connect to RabbitMQ: {e}")
         log(logger, "CONSUMER", f"Failed to connect to RabbitMQ: {e}", error='true')
