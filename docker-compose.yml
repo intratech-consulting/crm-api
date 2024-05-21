@@ -8,5 +8,8 @@ services:
     ports:
       - "9966:9966"
     restart: unless-stopped
+    environment:
+      - uid=1000
+      - gid=1000
     volumes:
       - ~/logs/crm:/var/log
