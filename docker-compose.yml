@@ -9,4 +9,4 @@ services:
       - "9966:9966"
     restart: unless-stopped
     volumes:
-      - ~/logs/crm:/var/logs
+      - ~/logs/crm:/var/log
