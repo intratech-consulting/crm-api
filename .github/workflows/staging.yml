@@ -9,7 +9,7 @@ on:
 jobs:
   deploy:
     name: Deploy to Staging
-    runs-on: [self-hosted]
+    runs-on: [crm]
     environment: staging
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
