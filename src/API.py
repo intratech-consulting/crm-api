@@ -241,7 +241,7 @@ def get_updated_user(id=None):
 
 # Get a company by id api call
 def get_new_company(company_id=None):
-    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,Name,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,name__c,email__c,telephone__c,country__c,state__c,city__c,zip__c,street__c,house_number__c,type__c,invoice__c+FROM+Company__c+WHERE+Id+=+\'{company_id}\''
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN
     }
