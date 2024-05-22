@@ -45,6 +45,7 @@ def decode(schema, payload):
     return reader.read(decoder)
 
 def handle_change_event(change_event):
+    logger.warning(change_event)
     # RabbitMQ Connection
     credentials = pika.PlainCredentials('user', 'password')
     try:
@@ -88,6 +89,7 @@ def handle_change_event(change_event):
         schema = etree.XMLSchema(xsd_tree)
         xml_doc = etree.fromstring(message.encode())
 
+        logger.debug(f"Message: {message}")
         if not schema.validate(xml_doc):
             logger.warning('Invalid XML. Not sending to queue.')
             message = None

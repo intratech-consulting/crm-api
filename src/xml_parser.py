@@ -71,8 +71,10 @@ def create_xml_user(user, routing_key, crud_operation):
 
     id_element = ET.SubElement(user_element, "id")
     uuid = user.get("id", "")
-    if uuid:
+    if uuid and crud_operation != "create":
         uuid = get_master_uuid(uuid, TEAM)
+    if uuid and crud_operation == "create":
+        uuid = create_master_uuid(uuid, TEAM)
     id_element.text = uuid
 
     first_name_element = ET.SubElement(user_element, "first_name")
@@ -88,7 +90,10 @@ def create_xml_user(user, routing_key, crud_operation):
     telephone_element.text = user.get("telephone", "")
 
     birthday_element = ET.SubElement(user_element, "birthday")
-    birthday_element.text = user.get("birthday", "")
+    birthday = user.get("birthday", "")
+    if birthday:
+        birthday = datetime.fromtimestamp(int(birthday) / 1000).strftime('%Y-%m-%d')
+    birthday_element.text = birthday
 
     address_element = ET.SubElement(user_element, "address")
 
@@ -191,8 +196,10 @@ def create_xml_company(company, routing_key, crud_operation):
 
     id_element = ET.SubElement(company_element, "id")
     ucid = company.get("id", "")
-    if ucid:
+    if ucid and crud_operation != "create":
         ucid = get_master_uuid(ucid, TEAM)
+    if ucid and crud_operation == "create":
+        ucid = create_master_uuid(ucid, TEAM)
     id_element.text = ucid
 
     name_element = ET.SubElement(company_element, "name")
@@ -290,8 +297,10 @@ def create_xml_event(event, routing_key, crud_operation):
 
     id_element = ET.SubElement(event_element, "id")
     ueid = event.get("id", "")
-    if ueid:
+    if ueid and crud_operation != "create":
         ueid = get_master_uuid(ueid, TEAM)
+    if ueid and crud_operation == "create":
+        ueid = create_master_uuid(ueid, TEAM)
     id_element.text = ueid
 
     title_element = ET.SubElement(event_element, "title")
@@ -385,8 +394,10 @@ def create_xml_attendance(attendance, routing_key, crud_operation):
 
     id_element = ET.SubElement(attendance_element, "id")
     uaid = attendance.get("id", "")
-    if uaid:
+    if uaid and crud_operation != "create":
         uaid = get_master_uuid(uaid, TEAM)
+    if uaid and crud_operation == "create":
+        uaid = create_master_uuid(uaid, TEAM)
     id_element.text = uaid
 
     user_id_element = ET.SubElement(attendance_element, "user_id")
