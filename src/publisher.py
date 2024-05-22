@@ -45,7 +45,6 @@ def decode(schema, payload):
     return reader.read(decoder)
 
 def handle_change_event(change_event):
-    logger.warning(change_event)
     # RabbitMQ Connection
     credentials = pika.PlainCredentials('user', 'password')
     try:
@@ -95,6 +94,7 @@ def handle_change_event(change_event):
             message = None
 
         if message:
+            logger.info(f"Publishing message to {rc} with routing key {rc}")
             channel.basic_publish(exchange="amq.topic", routing_key=rc, body=message)
 
     except Exception as e:
