@@ -72,7 +72,7 @@ def create_xml_user(user, routing_key, crud_operation):
     id_element = ET.SubElement(user_element, "id")
     uuid = user.get("id", "")
     if uuid:
-        get_master_uuid(uuid, TEAM)
+        uuid = get_master_uuid(uuid, TEAM)
     id_element.text = uuid
 
     first_name_element = ET.SubElement(user_element, "first_name")
@@ -102,13 +102,19 @@ def create_xml_user(user, routing_key, crud_operation):
     city_element.text = user.get("city", "")
 
     zip_element = ET.SubElement(address_element, "zip")
-    zip_element.text = user.get("zip", "")
+    zip = user.get("zip", "")
+    if zip:
+        zip = str(int(zip))
+    zip_element.text = zip
 
     street_element = ET.SubElement(address_element, "street")
     street_element.text = user.get("street", "")
 
     house_number_element = ET.SubElement(address_element, "house_number")
-    house_number_element.text = user.get("house_number", "")
+    house_number = user.get("house_number", "")
+    if house_number:
+        house_number = str(int(house_number))
+    house_number_element.text = house_number
 
     company_email_element = ET.SubElement(user_element, "company_email")
     company_email_element.text = user.get("company_email", "")
@@ -116,7 +122,7 @@ def create_xml_user(user, routing_key, crud_operation):
     company_id_element = ET.SubElement(user_element, "company_id")
     ucid = user.get("company_id", "")
     if ucid:
-        get_master_uuid(ucid, TEAM)
+        ucid = get_master_uuid(ucid, TEAM)
     company_id_element.text = ucid
 
     source_element = ET.SubElement(user_element, "source")
@@ -186,7 +192,7 @@ def create_xml_company(company, routing_key, crud_operation):
     id_element = ET.SubElement(company_element, "id")
     ucid = company.get("id", "")
     if ucid:
-        get_master_uuid(ucid, TEAM)
+        ucid = get_master_uuid(ucid, TEAM)
     id_element.text = ucid
 
     name_element = ET.SubElement(company_element, "name")
@@ -213,13 +219,19 @@ def create_xml_company(company, routing_key, crud_operation):
     city_element.text = company.get("city", "")
 
     zip_element = ET.SubElement(address_element, "zip")
-    zip_element.text = company.get("zip", "")
+    zip = company.get("zip", "")
+    if zip:
+        zip = str(int(zip))
+    zip_element.text = zip
 
     street_element = ET.SubElement(address_element, "street")
     street_element.text = company.get("street", "")
 
     house_number_element = ET.SubElement(address_element, "house_number")
-    house_number_element.text = company.get("house_number", "")
+    house_number = company.get("house_number", "")
+    if house_number:
+        house_number = str(int(house_number))
+    house_number_element.text = house_number
 
     type_element = ET.SubElement(company_element, "type")
     type_element.text = company.get("type", "")
@@ -279,20 +291,29 @@ def create_xml_event(event, routing_key, crud_operation):
     id_element = ET.SubElement(event_element, "id")
     ueid = event.get("id", "")
     if ueid:
-        get_master_uuid(ueid, TEAM)
+        ueid = get_master_uuid(ueid, TEAM)
     id_element.text = ueid
 
     title_element = ET.SubElement(event_element, "title")
     title_element.text = event.get("title", "")
 
     date_element = ET.SubElement(event_element, "date")
-    date_element.text = event.get("date", "")
+    date = event.get("date", "")
+    if date:
+        date = datetime.fromtimestamp(int(date) / 1000).strftime('%Y-%m-%d')
+    date_element.text = date
 
     start_time_element = ET.SubElement(event_element, "start_time")
-    start_time_element.text = event.get("start_time", "")
+    start_time = event.get("start_time", "")
+    if start_time:
+        start_time = datetime.fromtimestamp(int(start_time) / 1000).strftime('%H:%M:%S')
+    start_time_element.text = start_time
 
     end_time_element = ET.SubElement(event_element, "end_time")
-    end_time_element.text = event.get("end_time", "")
+    end_time = event.get("end_time", "")
+    if end_time:
+        end_time = datetime.fromtimestamp(int(end_time) / 1000).strftime('%H:%M:%S')
+    end_time_element.text = end_time
 
     location_element = ET.SubElement(event_element, "location")
     location_element.text = event.get("location", "")
@@ -302,20 +323,26 @@ def create_xml_event(event, routing_key, crud_operation):
     user_id_element = ET.SubElement(speaker_element, "user_id")
     uuid = event.get("speaker", "")
     if uuid:
-        get_master_uuid(uuid, TEAM)
+        uuid = get_master_uuid(uuid, TEAM)
     user_id_element.text = uuid
 
-    company_id_element = ET.SubElement(event_element, "company_id")
+    company_id_element = ET.SubElement(speaker_element, "company_id")
     ucid = event.get("company_id", "")
     if ucid:
-        get_master_uuid(ucid, TEAM)
+        ucid = get_master_uuid(ucid, TEAM)
     company_id_element.text = ucid
 
     max_registrations_element = ET.SubElement(event_element, "max_registrations")
-    max_registrations_element.text = event.get("max_registrations", "")
+    max_registrations = event.get("max_registrations", "")
+    if max_registrations:
+        max_registrations = str(int(max_registrations))
+    max_registrations_element.text = max_registrations
 
     available_seats_element = ET.SubElement(event_element, "available_seats")
-    available_seats_element.text = event.get("available_seats", "")
+    available_seats = event.get("available_seats", "")
+    if available_seats:
+        available_seats = str(int(available_seats))
+    available_seats_element.text = available_seats
 
     description_element = ET.SubElement(event_element, "description")
     description_element.text = event.get("description", "")
@@ -359,19 +386,19 @@ def create_xml_attendance(attendance, routing_key, crud_operation):
     id_element = ET.SubElement(attendance_element, "id")
     uaid = attendance.get("id", "")
     if uaid:
-        get_master_uuid(uaid, TEAM)
+        uaid = get_master_uuid(uaid, TEAM)
     id_element.text = uaid
 
     user_id_element = ET.SubElement(attendance_element, "user_id")
     uuid = attendance.get("user_id", "")
     if uuid:
-        get_master_uuid(uuid, TEAM)
+        uuid = get_master_uuid(uuid, TEAM)
     user_id_element.text = uuid
 
     event_id_element = ET.SubElement(attendance_element, "event_id")
     ueid = attendance.get("event_id", "")
     if ueid:
-        get_master_uuid(ueid, TEAM)
+        ueid = get_master_uuid(ueid, TEAM)
     event_id_element.text = ueid
 
     return ET.tostring(attendance_element, encoding="utf-8").decode("utf-8")

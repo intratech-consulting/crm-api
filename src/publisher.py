@@ -87,11 +87,11 @@ def handle_change_event(change_event):
 
         schema = etree.XMLSchema(xsd_tree)
         xml_doc = etree.fromstring(message.encode())
+
         if not schema.validate(xml_doc):
             logger.warning('Invalid XML. Not sending to queue.')
             message = None
 
-        logger.warning(f"message: {message}, rc: {rc}")
         if message:
             channel.basic_publish(exchange="amq.topic", routing_key=rc, body=message)
 
