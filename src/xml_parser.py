@@ -60,99 +60,89 @@ def write_xml_user(id, first_name, last_name, email, telephone, birthday, countr
     )
 
 
-def create_xml_user(data):
-    user_data = data[0]
-    root = ET.Element("user")
+def create_xml_user(user, routing_key, crud_operation):
+    user_element = ET.Element("user")
+    
+    routing_key_element = ET.SubElement(user_element, "routing_key")
+    routing_key_element.text = routing_key
+    
+    crud_operation_element = ET.SubElement(user_element, "crud_operation")
+    crud_operation_element.text = crud_operation
 
-    address_element = None
-    address_fields = ["country__c", "state__c", "city__c", "zip__c", "street__c", "house_number__c"]
+    id_element = ET.SubElement(user_element, "id")
+    uuid = user.get("id", "")
+    if uuid and crud_operation != "create":
+        uuid = get_master_uuid(uuid, TEAM)
+    if uuid and crud_operation == "create":
+        uuid = create_master_uuid(uuid, TEAM)
+    id_element.text = uuid
 
-    for field, value in user_data.items():
-        if field == "attributes":
-            field_element = ET.SubElement(root, "routing_key")
-            field_element.text = "user.crm"
-            field_element = ET.SubElement(root, "crud_operation")
-            field_element.text = "create"
-        elif field == "Id":
-            field_element = ET.SubElement(root, "id")
-            field_element.text = "" if value == None else create_master_uuid(str(value), TEAM)
-        elif field == "company_id__c":
-            field_element = ET.SubElement(root, "company_id")
-            field_element.text = "" if value == None else get_master_uuid(str(value), TEAM)
-        elif field == "birthday__c":
-            field_element = ET.SubElement(root, "birthday")
-            field_element.text = "" if value == None else str(value)
-            address_element = ET.SubElement(root, "address")
-        elif field == "house_number__c" or field == "zip__c":
-            sub_field = field.split("__")[0]
-            sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(int(value))
-        elif field in address_fields and address_element is not None:
-            sub_field = field.split("__")[0]
-            sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(value)
-        else:
-            field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, field_name)
-            field_element.text = "" if value == None else str(value)
+    first_name_element = ET.SubElement(user_element, "first_name")
+    first_name_element.text = user.get("first_name", "")
 
-    return ET.tostring(root, encoding="unicode", method="xml")
+    last_name_element = ET.SubElement(user_element, "last_name")
+    last_name_element.text = user.get("last_name", "")
 
+    email_element = ET.SubElement(user_element, "email")
+    email_element.text = user.get("email", "")
 
-def update_xml_user(rc, crud, id, updated_values):
-    master_id = get_master_uuid(id, TEAM)
-    if crud == 'delete':
-        delete_service_id(master_id, TEAM)
-    first_name__c = updated_values.get('first_name__c', '')
-    last_name__c = updated_values.get('last_name__c', '')
-    email__c = updated_values.get('email__c', '')
-    telephone__c = updated_values.get('telephone__c', '')
-    birthday__c = updated_values.get('birthday__c', '')
-    country__c = updated_values.get('country__c', '')
-    state__c = updated_values.get('state__c', '')
-    city__c = updated_values.get('city__c', '')
-    zip__c = updated_values.get('zip__c', '')
-    if zip__c != '':
-        zip__c = str(int(zip__c))
-    street__c = updated_values.get('street__c', '')
-    house_number__c = updated_values.get('house_number__c', '')
-    if house_number__c != '':
-        house_number__c = str(int(house_number__c))
-    company_email__c = updated_values.get('company_email__c', '')
-    company_id__c = updated_values.get('company_id__c', '')
-    if company_id__c != '':
-        company_id__c = get_master_uuid(company_id__c, TEAM)
-    source__c = updated_values.get('source__c', '')
-    user_role__c = updated_values.get('user_role__c', '')
-    invoice__c = updated_values.get('invoice__c', '')
-    calendar_link__c = updated_values.get('calendar_link__c', '')
+    telephone_element = ET.SubElement(user_element, "telephone")
+    telephone_element.text = user.get("telephone", "")
 
-    return f'''
-    <user>
-        <routing_key>{rc}</routing_key>
-        <crud_operation>{crud}</crud_operation>
-        <id>{master_id}</id>
-        <first_name>{first_name__c}</first_name>
-        <last_name>{last_name__c}</last_name>
-        <email>{email__c}</email>
-        <telephone>{telephone__c}</telephone>
-        <birthday>{birthday__c}</birthday>
-        <address>
-            <country>{country__c}</country>
-            <state>{state__c}</state>
-            <city>{city__c}</city>
-            <zip>{zip__c}</zip>
-            <street>{street__c}</street>
-            <house_number>{house_number__c}</house_number>
-        </address>
-        <company_email>{company_email__c}</company_email>
-        <company_id>{company_id__c}</company_id>
-        <source>{source__c}</source>
-        <user_role>{user_role__c}</user_role>
-        <invoice>{invoice__c}</invoice>
-        <calendar_link>{calendar_link__c}</calendar_link>
-    </user>'''
+    birthday_element = ET.SubElement(user_element, "birthday")
+    birthday = user.get("birthday", "")
+    if birthday:
+        birthday = datetime.fromtimestamp(int(birthday) / 1000).strftime('%Y-%m-%d')
+    birthday_element.text = birthday
 
+    address_element = ET.SubElement(user_element, "address")
+
+    country_element = ET.SubElement(address_element, "country")
+    country_element.text = user.get("country", "")
+
+    state_element = ET.SubElement(address_element, "state")
+    state_element.text = user.get("state", "")
+
+    city_element = ET.SubElement(address_element, "city")
+    city_element.text = user.get("city", "")
+
+    zip_element = ET.SubElement(address_element, "zip")
+    zip = user.get("zip", "")
+    if zip:
+        zip = str(int(zip))
+    zip_element.text = zip
+
+    street_element = ET.SubElement(address_element, "street")
+    street_element.text = user.get("street", "")
+
+    house_number_element = ET.SubElement(address_element, "house_number")
+    house_number = user.get("house_number", "")
+    if house_number:
+        house_number = str(int(house_number))
+    house_number_element.text = house_number
+
+    company_email_element = ET.SubElement(user_element, "company_email")
+    company_email_element.text = user.get("company_email", "")
+
+    company_id_element = ET.SubElement(user_element, "company_id")
+    ucid = user.get("company_id", "")
+    if ucid:
+        ucid = get_master_uuid(ucid, TEAM)
+    company_id_element.text = ucid
+
+    source_element = ET.SubElement(user_element, "source")
+    source_element.text = user.get("source", "")
+
+    user_role_element = ET.SubElement(user_element, "user_role")
+    user_role_element.text = user.get("user_role", "")
+
+    invoice_element = ET.SubElement(user_element, "invoice")
+    invoice_element.text = user.get("invoice", "")
+
+    calendar_link_element = ET.SubElement(user_element, "calendar_link")
+    calendar_link_element.text = user.get("calendar_link", "")
+
+    return ET.tostring(user_element, encoding="utf-8").decode("utf-8")
 
 
 def read_xml_company(variables, root):
@@ -195,87 +185,68 @@ def write_xml_company(id, name, email, telephone, country, state, city, zip, str
     )
 
 
-def create_xml_company(data):
-    company_data = data[0]
-    root = ET.Element("company")
+def create_xml_company(company, routing_key, crud_operation):
+    company_element = ET.Element("company")
+    
+    routing_key_element = ET.SubElement(company_element, "routing_key")
+    routing_key_element.text = routing_key
+    
+    crud_operation_element = ET.SubElement(company_element, "crud_operation")
+    crud_operation_element.text = crud_operation
 
-    address_element = None
-    address_fields = ["country__c", "state__c", "city__c", "zip__c", "street__c", "house_number__c"]
+    id_element = ET.SubElement(company_element, "id")
+    ucid = company.get("id", "")
+    if ucid and crud_operation != "create":
+        ucid = get_master_uuid(ucid, TEAM)
+    if ucid and crud_operation == "create":
+        ucid = create_master_uuid(ucid, TEAM)
+    id_element.text = ucid
 
-    for field, value in company_data.items():
-        if field == "attributes":
-            field_element = ET.SubElement(root, "routing_key")
-            field_element.text = "company.crm"
-            field_element = ET.SubElement(root, "crud_operation")
-            field_element.text = "create"
-        elif field == "Id":
-            field_element = ET.SubElement(root, "id")
-            field_element.text = "" if value == None else create_master_uuid(str(value), TEAM)
-        elif field == "Name":
-            field_element = ET.SubElement(root, "name")
-            field_element.text = "" if value == None else str(value)
-        elif field == "telephone__c":
-            field_element = ET.SubElement(root, "telephone")
-            field_element.text = "" if value == None else str(value)
-            field_element = ET.SubElement(root, "logo")
-            field_element.text = ""
-            address_element = ET.SubElement(root, "address")
-        elif field == "house_number__c" or field == "zip__c":
-            sub_field = field.split("__")[0]
-            sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(int(value))
-        elif field in address_fields and address_element is not None:
-            sub_field = field.split("__")[0]
-            sub_field_element = ET.SubElement(address_element, sub_field)
-            sub_field_element.text = "" if value == None else str(value)
-        else:
-            field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, str(field_name))
-            field_element.text = "" if value == None else str(value)
+    name_element = ET.SubElement(company_element, "name")
+    name_element.text = company.get("name", "")
 
-    return ET.tostring(root, encoding="unicode", method="xml")
+    email_element = ET.SubElement(company_element, "email")
+    email_element.text = company.get("email", "")
 
+    telephone_element = ET.SubElement(company_element, "telephone")
+    telephone_element.text = company.get("telephone", "")
 
-def update_xml_company(rc, crud, id, updated_values):
-    master_id = get_master_uuid(id, TEAM)
-    if crud == 'delete':
-        delete_service_id(master_id, TEAM)
-    name__c = updated_values.get('Name', '')
-    email__c = updated_values.get('email__c', '')
-    telephone__c = updated_values.get('telephone__c', '')
-    country__c = updated_values.get('country__c', '')
-    state__c = updated_values.get('state__c', '')
-    city__c = updated_values.get('city__c', '')
-    zip__c = updated_values.get('zip__c', '')
-    if zip__c != '':
-        zip__c = str(int(zip__c))
-    street__c = updated_values.get('street__c', '')
-    house_number__c = updated_values.get('house_number__c', '')
-    if house_number__c != '':
-        house_number__c = str(int(house_number__c))
-    type__c = updated_values.get('type__c', '')
-    invoice__c = updated_values.get('invoice__c', '')
+    logo_element = ET.SubElement(company_element, "logo")
+    logo_element.text = company.get("logo", "")
 
-    return f'''
-    <company>
-        <routing_key>{rc}</routing_key>
-        <crud_operation>{crud}</crud_operation>
-        <id>{master_id}</id>
-        <name>{name__c}</name>
-        <email>{email__c}</email>
-        <telephone>{telephone__c}</telephone>
-        <logo></logo>
-        <address>
-            <country>{country__c}</country>
-            <state>{state__c}</state>
-            <city>{city__c}</city>
-            <zip>{zip__c}</zip>
-            <street>{street__c}</street>
-            <house_number>{house_number__c}</house_number>
-        </address>
-        <type>{type__c}</type>
-        <invoice>{invoice__c}</invoice>
-    </company>'''
+    address_element = ET.SubElement(company_element, "address")
+
+    country_element = ET.SubElement(address_element, "country")
+    country_element.text = company.get("country", "")
+
+    state_element = ET.SubElement(address_element, "state")
+    state_element.text = company.get("state", "")
+
+    city_element = ET.SubElement(address_element, "city")
+    city_element.text = company.get("city", "")
+
+    zip_element = ET.SubElement(address_element, "zip")
+    zip = company.get("zip", "")
+    if zip:
+        zip = str(int(zip))
+    zip_element.text = zip
+
+    street_element = ET.SubElement(address_element, "street")
+    street_element.text = company.get("street", "")
+
+    house_number_element = ET.SubElement(address_element, "house_number")
+    house_number = company.get("house_number", "")
+    if house_number:
+        house_number = str(int(house_number))
+    house_number_element.text = house_number
+
+    type_element = ET.SubElement(company_element, "type")
+    type_element.text = company.get("type", "")
+
+    invoice_element = ET.SubElement(company_element, "invoice")
+    invoice_element.text = company.get("invoice", "")
+
+    return ET.tostring(company_element, encoding="utf-8").decode("utf-8")
 
 
 def read_xml_event(variables, root):
@@ -315,88 +286,77 @@ def write_xml_event(id, title, date, start_time, end_time, location, user_id, co
     )
 
 
-def create_xml_event(data):
-    event_data = data[0]
-    root = ET.Element("event")
+def create_xml_event(event, routing_key, crud_operation):
+    event_element = ET.Element("event")
+    
+    routing_key_element = ET.SubElement(event_element, "routing_key")
+    routing_key_element.text = routing_key
+    
+    crud_operation_element = ET.SubElement(event_element, "crud_operation")
+    crud_operation_element.text = crud_operation
 
-    speaker_element = None
-    speaker_fields = ["user_id__c", "company_id__c"]
+    id_element = ET.SubElement(event_element, "id")
+    ueid = event.get("id", "")
+    if ueid and crud_operation != "create":
+        ueid = get_master_uuid(ueid, TEAM)
+    if ueid and crud_operation == "create":
+        ueid = create_master_uuid(ueid, TEAM)
+    id_element.text = ueid
 
-    for field, value in event_data.items():
-        if field == "attributes":
-            field_element = ET.SubElement(root, "routing_key")
-            field_element.text = "event.crm"
-            field_element = ET.SubElement(root, "crud_operation")
-            field_element.text = "create"
-        elif field == "Id":
-            field_element = ET.SubElement(root, "id")
-            field_element.text = "" if value == None else create_master_uuid(str(value), TEAM)
-        elif field == "start_time__c" or field == "end_time__c":
-            field_element = ET.SubElement(root, field.split("__")[0])
-            field_element.text = "" if value == None else str(value).split(".")[0]
-        elif field == "location__c":
-            field_element = ET.SubElement(root, "location")
-            field_element.text = "" if value == None else str(value)
-            speaker_element = ET.SubElement(root, "speaker")
-        elif field in speaker_fields and speaker_element is not None:
-            sub_field = field.split("__")[0]
-            sub_field_element = ET.SubElement(speaker_element, sub_field)
-            sub_field_element.text = "" if value == None else get_master_uuid(str(value), TEAM)
-        elif field == "max_registrations__c" or field == "available_seats__c":
-            field_element = ET.SubElement(root, field.split("__")[0])
-            field_element.text = "" if value == None else str(int(value))
-        else:
-            field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, str(field_name))
-            field_element.text = "" if value == None else str(value)
+    title_element = ET.SubElement(event_element, "title")
+    title_element.text = event.get("title", "")
 
-    return ET.tostring(root, encoding="unicode", method="xml")
+    date_element = ET.SubElement(event_element, "date")
+    date = event.get("date", "")
+    if date:
+        date = datetime.fromtimestamp(int(date) / 1000).strftime('%Y-%m-%d')
+    date_element.text = date
 
+    start_time_element = ET.SubElement(event_element, "start_time")
+    start_time = event.get("start_time", "")
+    if start_time:
+        start_time = datetime.fromtimestamp(int(start_time) / 1000).strftime('%H:%M:%S')
+    start_time_element.text = start_time
 
-def update_xml_event(rc, crud, id, updated_values):
-    master_id = get_master_uuid(id, TEAM)
-    if crud == 'delete':
-        delete_service_id(master_id, TEAM)
-    title__c = updated_values.get('title__c', '')
-    date__c = updated_values.get('date__c', '')
-    start_time__c = updated_values.get('start_time__c', '')
-    if start_time__c != '':
-        start_time__c = start_time__c.split(".")[0]
-    end_time__c = updated_values.get('end_time__c', '')
-    if end_time__c != '':
-        end_time__c = end_time__c.split(".")[0]
-    location__c = updated_values.get('location__c', '')
-    user_id__c = updated_values.get('user_id__c', '')
-    if user_id__c != '':
-        user_id__c = get_master_uuid(user_id__c, TEAM)
-    company_id__c = updated_values.get('company_id__c', '')
-    if company_id__c != '':
-        company_id__c = get_master_uuid(company_id__c, TEAM)
-    max_registrations__c = updated_values.get('max_registrations__c', '')
-    if max_registrations__c != '':
-        max_registrations__c = str(int(max_registrations__c))
-    available_seats__c = updated_values.get('available_seats__c', '')
-    if available_seats__c != '':
-        available_seats__c = str(int(available_seats__c))
-    description__c = updated_values.get('description__c', '')
-    return f'''
-    <event>
-        <routing_key>{rc}</routing_key>
-        <crud_operation>{crud}</crud_operation>
-        <id>{master_id}</id>
-        <title>{title__c}</title>
-        <date>{date__c}</date>
-        <start_time>{start_time__c}</start_time>
-        <end_time>{end_time__c}</end_time>
-        <location>{location__c}</location>
-        <speaker>
-            <user_id>{user_id__c}</user_id>
-            <company_id>{company_id__c}</company_id>
-        </speaker>
-        <max_registrations>{max_registrations__c}</max_registrations>
-        <available_seats>{available_seats__c}</available_seats>
-        <description>{description__c}</description>
-    </event>'''
+    end_time_element = ET.SubElement(event_element, "end_time")
+    end_time = event.get("end_time", "")
+    if end_time:
+        end_time = datetime.fromtimestamp(int(end_time) / 1000).strftime('%H:%M:%S')
+    end_time_element.text = end_time
+
+    location_element = ET.SubElement(event_element, "location")
+    location_element.text = event.get("location", "")
+
+    speaker_element = ET.SubElement(event_element, "speaker")
+
+    user_id_element = ET.SubElement(speaker_element, "user_id")
+    uuid = event.get("speaker", "")
+    if uuid:
+        uuid = get_master_uuid(uuid, TEAM)
+    user_id_element.text = uuid
+
+    company_id_element = ET.SubElement(speaker_element, "company_id")
+    ucid = event.get("company_id", "")
+    if ucid:
+        ucid = get_master_uuid(ucid, TEAM)
+    company_id_element.text = ucid
+
+    max_registrations_element = ET.SubElement(event_element, "max_registrations")
+    max_registrations = event.get("max_registrations", "")
+    if max_registrations:
+        max_registrations = str(int(max_registrations))
+    max_registrations_element.text = max_registrations
+
+    available_seats_element = ET.SubElement(event_element, "available_seats")
+    available_seats = event.get("available_seats", "")
+    if available_seats:
+        available_seats = str(int(available_seats))
+    available_seats_element.text = available_seats
+
+    description_element = ET.SubElement(event_element, "description")
+    description_element.text = event.get("description", "")
+
+    return ET.tostring(event_element, encoding="utf-8").decode("utf-8")
 
 
 def read_xml_attendance(variables, root):
@@ -423,46 +383,36 @@ def write_xml_attendance(id, user_id, event_id):
     )
 
 
-def create_xml_attendance(data):
-    event_data = data[0]
-    root = ET.Element("attendance")
+def create_xml_attendance(attendance, routing_key, crud_operation):
+    attendance_element = ET.Element("attendance")
+    
+    routing_key_element = ET.SubElement(attendance_element, "routing_key")
+    routing_key_element.text = routing_key
+    
+    crud_operation_element = ET.SubElement(attendance_element, "crud_operation")
+    crud_operation_element.text = crud_operation
 
-    for field, value in event_data.items():
-        if field == "attributes":
-            field_element = ET.SubElement(root, "routing_key")
-            field_element.text = "attendance.crm"
-            field_element = ET.SubElement(root, "crud_operation")
-            field_element.text = "create"
-        elif field == "Id":
-            field_element = ET.SubElement(root, "id")
-            field_element.text = "" if value == None else create_master_uuid(str(value), TEAM)
-        else:
-            field_name = field.split("__")[0]
-            field_element = ET.SubElement(root, str(field_name).lower())
-            field_element.text = "" if value == None else get_master_uuid(str(value), TEAM)
+    id_element = ET.SubElement(attendance_element, "id")
+    uaid = attendance.get("id", "")
+    if uaid and crud_operation != "create":
+        uaid = get_master_uuid(uaid, TEAM)
+    if uaid and crud_operation == "create":
+        uaid = create_master_uuid(uaid, TEAM)
+    id_element.text = uaid
 
-    return ET.tostring(root, encoding="unicode", method="xml")
+    user_id_element = ET.SubElement(attendance_element, "user_id")
+    uuid = attendance.get("user_id", "")
+    if uuid:
+        uuid = get_master_uuid(uuid, TEAM)
+    user_id_element.text = uuid
 
+    event_id_element = ET.SubElement(attendance_element, "event_id")
+    ueid = attendance.get("event_id", "")
+    if ueid:
+        ueid = get_master_uuid(ueid, TEAM)
+    event_id_element.text = ueid
 
-def update_xml_attendance(rc, crud, id, updated_values):
-    master_id = get_master_uuid(id, TEAM)
-    if crud == 'delete':
-        delete_service_id(master_id, TEAM)
-    user_id = updated_values.get('user_id__c', '')
-    if user_id != '':
-        user_id = get_master_uuid(user_id, TEAM)
-    event_id = updated_values.get('event_id__c', '')
-    if event_id != '':
-        event_id = get_master_uuid(event_id, TEAM)
-
-    return f'''
-    <attendance>
-        <routing_key>{rc}</routing_key>
-        <crud_operation>{crud}</crud_operation>
-        <id>{master_id}</id>
-        <user_id>{user_id}</user_id>
-        <event_id>{event_id}</event_id>
-    </attendance>'''
+    return ET.tostring(attendance_element, encoding="utf-8").decode("utf-8")
 
 
 def read_xml_product(variables, root):
@@ -539,32 +489,15 @@ def write_xml_existing_order(amount):
     )
 
 
-def read_xml_changed_data(variables, root):
-    changed_object = []
-    for child in root:
-        details = {}
-        for field in child:
-            if field.tag == "Id":
-                details["changed_object_id"] = field.text
-            elif field.tag == "Name":
-                details["changed_object_name"] = field.text
-            elif field.tag == "object_type__c":
-                details["object_type"] = field.text
-            elif field.tag == "crud__c":
-                details["crud_operation"] = field.text
-        changed_object.append(details)
-    variables["changed_data"] = changed_object
+def get_changed_values(object):
+    excluded_fields = {"OwnerId", "Name", "RecordTypeId", "CreatedDate", "CreatedById", "LastModifiedDate", "LastModifiedById"}
+    result = {}
+    result["id"] = object["ChangeEventHeader"]["recordIds"][0]
 
-
-def create_xml_changed_data(data):
-    root = ET.Element("ChangedData")
-
-    for record in data:
-        changed_element = ET.SubElement(root, "ChangedObject__c")
-        for field, value in record.items():
-            if field == "attributes":
-                continue
-            field_element = ET.SubElement(changed_element, field)
-            field_element.text = str(value)
-
-    return ET.tostring(root, encoding="unicode", method="xml")
+    for key, value in object.items():
+        if key not in excluded_fields and value is not None and key != "ChangeEventHeader":
+            if key.endswith('__c'):
+                key = key[:-3]
+            result[key] = value
+    
+    return result

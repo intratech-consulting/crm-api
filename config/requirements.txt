@@ -7,3 +7,6 @@ responses
 lxml
 testcontainers
 colorlog
+avro
+grpcio
+grpcio-tools
