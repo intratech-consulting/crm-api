@@ -8,3 +8,6 @@ lxml
 testcontainers
 colorlog
 busypie
+avro
+grpcio
+grpcio-tools

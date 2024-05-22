@@ -11,7 +11,7 @@ COPY . .
 RUN ls -la
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r config/requirements.txt
+RUN pip install -r config/requirements.txt
 
 # Copy supervisord configuration file
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf

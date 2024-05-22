@@ -12,15 +12,16 @@ from monitoring import log
 from API import *
 from xml_parser import *
 from logger import init_logger
+from config.secrets import *
 
 def main():
     # Global variables
     TEAM = 'crm'
 
     # Connect to RabbitMQ
-    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
+    credentials = pika.PlainCredentials('user', 'password')
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.PORT, credentials=credentials))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
     except Exception as e:
         logger.error(f"Failed to connect to RabbitMQ: {e}")
         log(logger, "CONSUMER", f"Failed to connect to RabbitMQ: {e}", error='true')

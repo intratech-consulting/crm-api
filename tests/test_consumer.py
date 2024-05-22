@@ -175,9 +175,9 @@ class TestConsumer(unittest.TestCase):
     def configure_rabbitMQ(self) -> BlockingChannel:
         credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
         mapped_port = self.rabbitmq.get_exposed_port(5672)
-        secrets.PORT = mapped_port
+        secrets.RABBITMQ_PORT = mapped_port
         connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='localhost', port=secrets.PORT, credentials=credentials))
+            pika.ConnectionParameters(host='localhost', port=secrets.RABBITMQ_PORT, credentials=credentials))
         channel = connection.channel()
 
         exchange_name = 'amq.topic'
