@@ -2,6 +2,7 @@
     <routing_key>event.crm</routing_key>
     <crud_operation>create</crud_operation>
     <id>146461</id>
+    <title>testevent</title>
     <date>2024-04-01</date>
     <start_time>09:00:00</start_time>
     <end_time>11:00:00</end_time>
