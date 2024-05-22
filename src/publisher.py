@@ -66,33 +66,42 @@ def handle_change_event(change_event):
 
         match object_type:
             case 'user':
-                message = create_xml_user(changed_fields, rc, crud_operation)
+                message, uuid = create_xml_user(changed_fields, rc, crud_operation)
                 xsd_tree = etree.parse('./resources/user_xsd.xml')
 
             case 'company':
-                message = create_xml_company(changed_fields, rc, crud_operation)
+                message, uuid = create_xml_company(changed_fields, rc, crud_operation)
                 xsd_tree = etree.parse('./resources/company_xsd.xml')
 
             case 'event':
-                message = create_xml_event(changed_fields, rc, crud_operation)
+                message, uuid = create_xml_event(changed_fields, rc, crud_operation)
                 xsd_tree = etree.parse('./resources/event_xsd.xml')
 
             case 'attendance':
-                message = create_xml_attendance(changed_fields, rc, crud_operation)
+                message, uuid = create_xml_attendance(changed_fields, rc, crud_operation)
                 xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
         schema = etree.XMLSchema(xsd_tree)
         xml_doc = etree.fromstring(message.encode())
 
         logger.debug(f"Message: {message}")
+
+        if not uuid:
+            logger.warning('No UUID found. Not sending to queue.')
+            log(logger, f'PUBLISHER: {crud_operation} {object_type}', 'No UUID found. Not sending to queue.', 'true')
+            return
+
         if not schema.validate(xml_doc):
             logger.warning('Invalid XML. Not sending to queue.')
-            message = None
+            log(logger, f'PUBLISHER: {crud_operation} {object_type}', f'Invalid XML. Not sending to queue.', 'true')
+            return
 
         if message:
-            logger.info(f"Publishing message to {rc} with routing key {rc}")
+            logger.debug(f"Publishing message to {rc} with routing key {rc}")
             channel = authenticate_rabbitmq()
             channel.basic_publish(exchange="amq.topic", routing_key=rc, body=message)
+            logger.info(f"Successfully published {crud_operation} {object_type} with UUID {uuid} as\n{message}")
+            log(logger, f'PUBLISHER: {crud_operation} {object_type}', f'Successfully published {crud_operation} {object_type} with UUID {uuid}', 'false')
 
     except Exception as e:
         logger.error(f"An error occurred while processing the message: {e}")

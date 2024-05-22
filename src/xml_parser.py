@@ -142,7 +142,7 @@ def create_xml_user(user, routing_key, crud_operation):
     calendar_link_element = ET.SubElement(user_element, "calendar_link")
     calendar_link_element.text = user.get("calendar_link", "")
 
-    return ET.tostring(user_element, encoding="utf-8").decode("utf-8")
+    return ET.tostring(user_element, encoding="utf-8").decode("utf-8"), uuid
 
 
 def read_xml_company(variables, root):
@@ -246,7 +246,7 @@ def create_xml_company(company, routing_key, crud_operation):
     invoice_element = ET.SubElement(company_element, "invoice")
     invoice_element.text = company.get("invoice", "")
 
-    return ET.tostring(company_element, encoding="utf-8").decode("utf-8")
+    return ET.tostring(company_element, encoding="utf-8").decode("utf-8"), ucid
 
 
 def read_xml_event(variables, root):
@@ -356,7 +356,7 @@ def create_xml_event(event, routing_key, crud_operation):
     description_element = ET.SubElement(event_element, "description")
     description_element.text = event.get("description", "")
 
-    return ET.tostring(event_element, encoding="utf-8").decode("utf-8")
+    return ET.tostring(event_element, encoding="utf-8").decode("utf-8"), ueid
 
 
 def read_xml_attendance(variables, root):
@@ -412,7 +412,7 @@ def create_xml_attendance(attendance, routing_key, crud_operation):
         ueid = get_master_uuid(ueid, TEAM)
     event_id_element.text = ueid
 
-    return ET.tostring(attendance_element, encoding="utf-8").decode("utf-8")
+    return ET.tostring(attendance_element, encoding="utf-8").decode("utf-8"), uaid
 
 
 def read_xml_product(variables, root):

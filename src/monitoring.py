@@ -63,7 +63,7 @@ def log(logger, process, message, error='false'):
         return
 
     channel.basic_publish(exchange='amq.topic', routing_key='logs', body=loggin_xml)
-    logger.info('Sent logs to controlroom.')
+    logger.debug('Sent logs to controlroom.')
 
 if __name__ == '__main__':
     # Create a custom logger
