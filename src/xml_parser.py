@@ -330,7 +330,7 @@ def create_xml_event(event, routing_key, crud_operation):
     speaker_element = ET.SubElement(event_element, "speaker")
 
     user_id_element = ET.SubElement(speaker_element, "user_id")
-    uuid = event.get("speaker", "")
+    uuid = event.get("user_id", "")
     if uuid:
         uuid = get_master_uuid(uuid, TEAM)
     user_id_element.text = uuid
