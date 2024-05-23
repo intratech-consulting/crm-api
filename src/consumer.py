@@ -90,6 +90,7 @@ def main():
 
                 # Case: create event request from RabbitMQ
                 case 'event', 'create':
+                    logger.debug("Creating event request from RabbitMQ")
                     read_xml_event(variables, root)
                     payload = write_xml_event(**variables)
                     service_id = add_event(payload)

@@ -28,8 +28,17 @@ class TestConsumer(unittest.TestCase):
     def tearDownClass(cls):
         cls.rabbitmq.stop()
 
+    def setUp(self):
+        self.stop = threading.Event()
+        self.consumer_thread = None
+
+    def tearDown(self):
+        if self.consumer_thread and self.consumer_thread.is_alive():
+            self.stop.set()
+            self.consumer_thread.join()
+
     @patch('requests.post')
-    def test_user_create_should_make_valid_request(self, mock_post):
+    def test_01_user_create_should_make_valid_request(self, mock_post):
         with (patch('src.consumer.add_service_id') as add_service_id_mock,
               patch('src.xml_parser.get_service_id') as get_service_id_mock,
               patch('src.consumer.add_user') as add_user_mock,
@@ -56,16 +65,15 @@ class TestConsumer(unittest.TestCase):
                         patch('src.xml_parser.get_service_id', get_service_id_mock), \
                         patch('src.consumer.add_user', add_user_mock), \
                         patch('src.consumer.log', log_mock):
-                    start_time = time.time()
-                    while time.time() - start_time < 10:
+                    while not self.stop.is_set():
                         try:
                             consumer.main()
                         except pika.exceptions.StreamLostError:
                             break
 
-            consumer_thread = threading.Thread(target=run_consumer)
-            consumer_thread.daemon = True
-            consumer_thread.start()
+            self.consumer_thread = threading.Thread(target=run_consumer)
+            self.consumer_thread.daemon = True
+            self.consumer_thread.start()
 
             with open('resources/dummy_user.xml', 'r') as file:
                 test_message = file.read()
@@ -73,14 +81,11 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_user_mock.called)
 
-            channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
-
             self.assertTrue(channel._consumer_infos)
-
             add_user_mock.assert_called_once()
 
     @patch('requests.post')
-    def test_user_update_should_make_valid_request(self, mock_post):
+    def test_02_user_update_should_make_valid_request(self, mock_post):
         with (patch('src.consumer.add_service_id') as add_service_id_mock,
               patch('src.xml_parser.get_service_id') as get_service_id_mock,
               patch('src.consumer.update_user') as update_user_mock,
@@ -107,16 +112,15 @@ class TestConsumer(unittest.TestCase):
                         patch('src.xml_parser.get_service_id', get_service_id_mock), \
                         patch('src.consumer.update_user', update_user_mock), \
                         patch('src.consumer.log', log_mock):
-                    start_time = time.time()
-                    while time.time() - start_time < 10:
+                    while not self.stop.is_set():
                         try:
                             consumer.main()
                         except pika.exceptions.StreamLostError:
                             break
 
-            consumer_thread = threading.Thread(target=run_consumer)
-            consumer_thread.daemon = True
-            consumer_thread.start()
+            self.consumer_thread = threading.Thread(target=run_consumer)
+            self.consumer_thread.daemon = True
+            self.consumer_thread.start()
 
             with open('resources/dummy_user.xml', 'r') as file:
                 tree = ET.parse(file)
@@ -126,16 +130,13 @@ class TestConsumer(unittest.TestCase):
                 test_message = ET.tostring(root, encoding='unicode')
 
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
-            time.sleep(3)
-
-            channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
+            wait().at_most(5, SECOND).until(lambda: update_user_mock.called)
 
             self.assertTrue(channel._consumer_infos)
-
             update_user_mock.assert_called_once()
 
     @patch('requests.post')
-    def test_company_create_should_make_valid_request(self, mock_post):
+    def test_03_company_create_should_make_valid_request(self, mock_post):
         with patch('src.consumer.add_service_id') as add_service_id_mock, \
                 patch('src.xml_parser.get_service_id') as get_service_id_mock, \
                 patch('src.consumer.add_company') as add_company_mock, \
@@ -161,16 +162,15 @@ class TestConsumer(unittest.TestCase):
                 with patch('src.consumer.add_service_id', add_service_id_mock), \
                         patch('src.xml_parser.get_service_id', get_service_id_mock), \
                         patch('src.consumer.add_company', add_company_mock):
-                    start_time = time.time()
-                    while time.time() - start_time < 10:
+                    while not self.stop.is_set():
                         try:
                             consumer.main()
                         except pika.exceptions.StreamLostError:
                             break
 
-            consumer_thread = threading.Thread(target=run_consumer)
-            consumer_thread.daemon = True
-            consumer_thread.start()
+            self.consumer_thread = threading.Thread(target=run_consumer)
+            self.consumer_thread.daemon = True
+            self.consumer_thread.start()
 
             with open('resources/dummy_company.xml', 'r') as file:
                 test_message = file.read()
@@ -178,17 +178,70 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_company_mock.called)
 
-            channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
-
             self.assertTrue(channel._consumer_infos)
-
             add_company_mock.assert_called_once()
 
     @patch('requests.post')
-    def test_event_create_should_make_valid_request(self, mock_post):
-        with patch('src.xml_parser.get_service_id') as get_service_id_mock, \
-                patch('src.consumer.add_event') as add_event_mock, \
+    def test_04_company_update_should_make_valid_request(self, mock_post):
+        with patch('src.consumer.add_service_id') as add_service_id_mock, \
+                patch('src.xml_parser.get_service_id') as get_service_id_mock, \
+                patch('src.consumer.update_company') as update_company_mock, \
                 patch('src.consumer.log') as log_mock:
+
+            get_service_id_mock.return_value = {
+                "crm": "1234"
+            }
+            add_service_id_mock.return_value = {
+                "success": True,
+                "message": "Service ID successfully added."
+            }
+            update_company_mock.return_value = '12345'
+
+            log_mock.return_value = {
+                "success": True,
+                "message": "Log successfully added."
+            }
+
+            channel: BlockingChannel = self.configure_rabbitMQ()
+
+            def run_consumer():
+                with patch('src.consumer.add_service_id', add_service_id_mock), \
+                        patch('src.xml_parser.get_service_id', get_service_id_mock), \
+                        patch('src.consumer.update_company', update_company_mock):
+                    while not self.stop.is_set():
+                        try:
+                            consumer.main()
+                        except pika.exceptions.StreamLostError:
+                            break
+
+            self.consumer_thread = threading.Thread(target=run_consumer)
+            self.consumer_thread.daemon = True
+            self.consumer_thread.start()
+
+            with open('resources/dummy_company.xml', 'r') as file:
+                tree = ET.parse(file)
+                root = tree.getroot()
+                crud_operation = root.find('crud_operation')
+                crud_operation.text = 'update'
+                test_message = ET.tostring(root, encoding='unicode')
+
+            channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
+            wait().at_most(5, SECOND).until(lambda: update_company_mock.called)
+
+            self.assertTrue(channel._consumer_infos)
+            update_company_mock.assert_called_once()
+
+    @patch('requests.post')
+    def test_05_event_create_should_make_valid_request(self, mock_post):
+        with (patch('src.consumer.add_service_id') as add_service_id_mock, \
+              patch('src.xml_parser.get_service_id') as get_service_id_mock, \
+              patch('src.consumer.add_event') as add_event_mock, \
+              patch('src.consumer.log') as log_mock):
+
+            add_service_id_mock.return_value = {
+                "success": True,
+                "message": "Service ID successfully added."
+            }
 
             get_service_id_mock.return_value = {
                 "crm": "1234"
@@ -204,19 +257,19 @@ class TestConsumer(unittest.TestCase):
             channel: BlockingChannel = self.configure_rabbitMQ()
 
             def run_consumer():
-                with patch('src.xml_parser.get_service_id', get_service_id_mock), \
+                with patch('src.consumer.add_service_id', add_service_id_mock), \
+                        patch('src.xml_parser.get_service_id', get_service_id_mock), \
                         patch('src.consumer.add_event', add_event_mock), \
                         patch('src.consumer.log', log_mock):
-                    start_time = time.time()
-                    while time.time() - start_time < 10:
+                    while not self.stop.is_set():
                         try:
                             consumer.main()
                         except pika.exceptions.StreamLostError:
                             break
 
-            consumer_thread = threading.Thread(target=run_consumer)
-            consumer_thread.daemon = True
-            consumer_thread.start()
+            self.consumer_thread = threading.Thread(target=run_consumer)
+            self.consumer_thread.daemon = True
+            self.consumer_thread.start()
 
             with open('resources/dummy_event.xml', 'r') as file:
                 test_message = file.read()
@@ -224,10 +277,7 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='event.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_event_mock.called)
 
-            channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
-
             self.assertTrue(channel._consumer_infos)
-
             add_event_mock.assert_called_once()
 
     def configure_rabbitMQ(self) -> BlockingChannel:
