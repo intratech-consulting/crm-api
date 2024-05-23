@@ -4,6 +4,9 @@ import threading
 import time
 import unittest
 from unittest.mock import patch
+from xml.etree import ElementTree as ET
+
+import requests
 from busypie import wait, SECOND
 
 import pika
@@ -75,6 +78,61 @@ class TestConsumer(unittest.TestCase):
             self.assertTrue(channel._consumer_infos)
 
             add_user_mock.assert_called_once()
+
+    @patch('requests.post')
+    def test_user_update_should_make_valid_request(self, mock_post):
+        with (patch('src.consumer.add_service_id') as add_service_id_mock,
+              patch('src.xml_parser.get_service_id') as get_service_id_mock,
+              patch('src.consumer.update_user') as update_user_mock,
+              patch('src.consumer.log') as log_mock):
+
+            get_service_id_mock.return_value = {
+                "crm": "1234"
+            }
+            add_service_id_mock.return_value = {
+                "success": True,
+                "message": "Service ID successfully added."
+            }
+            update_user_mock.return_value = '12345'
+
+            log_mock.return_value = {
+                "success": True,
+                "message": "Log successfully added."
+            }
+
+            channel: BlockingChannel = self.configure_rabbitMQ()
+
+            def run_consumer():
+                with patch('src.consumer.add_service_id', add_service_id_mock), \
+                        patch('src.xml_parser.get_service_id', get_service_id_mock), \
+                        patch('src.consumer.update_user', update_user_mock), \
+                        patch('src.consumer.log', log_mock):
+                    start_time = time.time()
+                    while time.time() - start_time < 10:
+                        try:
+                            consumer.main()
+                        except pika.exceptions.StreamLostError:
+                            break
+
+            consumer_thread = threading.Thread(target=run_consumer)
+            consumer_thread.daemon = True
+            consumer_thread.start()
+
+            with open('resources/dummy_user.xml', 'r') as file:
+                tree = ET.parse(file)
+                root = tree.getroot()
+                crud_operation = root.find('crud_operation')
+                crud_operation.text = 'update'
+                test_message = ET.tostring(root, encoding='unicode')
+
+            channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
+            time.sleep(3)
+
+            channel.basic_consume(queue='crm', on_message_callback=self.callback, auto_ack=False)
+
+            self.assertTrue(channel._consumer_infos)
+
+            update_user_mock.assert_called_once()
 
     @patch('requests.post')
     def test_company_create_should_make_valid_request(self, mock_post):
@@ -176,8 +234,7 @@ class TestConsumer(unittest.TestCase):
         credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
         mapped_port = self.rabbitmq.get_exposed_port(5672)
         secrets.RABBITMQ_PORT = mapped_port
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='localhost', port=secrets.RABBITMQ_PORT, credentials=credentials))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.RABBITMQ_PORT, credentials=credentials))
         channel = connection.channel()
 
         exchange_name = 'amq.topic'
