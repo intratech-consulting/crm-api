@@ -15,15 +15,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup ssh-agent
+        run: |
+          $(ssh-agent -s)
+          ssh-add ~/.ssh/github_intratechconsulting
+
       - name: Test consumer
         run: |
           cd ~/pipeline/crm/crm-api
+          git checkout staging
           git pull
           python -m unittest tests/test_consumer.py
 
       - name: Test publisher
         run: |
           cd ~/pipeline/crm/crm-api
+          git checkout staging
           git pull
           python -m unittest tests/test_publisher.py
 
