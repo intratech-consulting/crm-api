@@ -1,10 +1,19 @@
 import colorlog
 import logging
+import os, sys
+
+if os.path.isdir('/app'):
+    sys.path.append('/app')
+else:
+    local_dir = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(local_dir)
+
+from config.secrets import LOGGING_LEVEL
 
 
 def configure_logger(logger):
     # Set level for the logger
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.getLevelName(LOGGING_LEVEL))
 
     # Create a color formatter
     formatter = colorlog.ColoredFormatter(
