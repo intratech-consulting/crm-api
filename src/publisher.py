@@ -45,11 +45,12 @@ def decode(schema, payload):
     return reader.read(decoder)
 
 def authenticate_rabbitmq():
-    credentials = pika.PlainCredentials('user', 'password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
+    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.RABBITMQ_PORT, credentials=credentials))
     channel = connection.channel()
     channel.exchange_declare(exchange='amq.topic', exchange_type='topic', durable=True)
     return channel
+
 
 def handle_change_event(change_event):
     change_event_header = change_event['ChangeEventHeader']
@@ -81,6 +82,7 @@ def handle_change_event(change_event):
                 message, uuid = create_xml_attendance(changed_fields, rc, crud_operation)
                 xsd_tree = etree.parse('./resources/attendance_xsd.xml')
 
+        logger.debug(f"Message: {message}")
         schema = etree.XMLSchema(xsd_tree)
         xml_doc = etree.fromstring(message.encode())
 
@@ -97,7 +99,6 @@ def handle_change_event(change_event):
             return
 
         if message:
-            logger.debug(f"Publishing message to {rc} with routing key {rc}")
             channel = authenticate_rabbitmq()
             channel.basic_publish(exchange="amq.topic", routing_key=rc, body=message)
             logger.info(f"Successfully published {crud_operation} {object_type} with UUID {uuid} as\n{message}")
@@ -116,8 +117,8 @@ if __name__ == '__main__':
         with grpc.secure_channel('api.pubsub.salesforce.com:7443', creds) as channel:
             authmetadata = (
                 ('accesstoken', secrets.ACCESS_TOKEN),
-                ('instanceurl', 'https://erasmushogeschoolbrussel4-dev-ed.develop.my.salesforce.com'),
-                ('tenantid', '00DQy0000050h7YMAQ')
+                ('instanceurl', secrets.INSTANCEURL),
+                ('tenantid', secrets.TENANT_ID)
             )
             stub = pb2_grpc.PubSubStub(channel)
 
