@@ -1,5 +1,5 @@
 <user>
-    <routing_key>user.crm</routing_key>
+    <routing_key>user.frontend</routing_key>
     <crud_operation>create</crud_operation>
     <id>0c3096a2-af0e-4f61-97eb-4323344ef0ec</id>
     <first_name>John</first_name>

@@ -1,0 +1,16 @@
+<order>
+    <routing_key>order.crm</routing_key>
+    <crud_operation>create</crud_operation>
+    <id>123</id>
+    <user_id>1234</user_id>
+    <company_id>3210</company_id>
+    <products>
+        <product>
+            <product_id>1234</product_id>
+            <name>Coca Cola</name>
+            <amount>5</amount>
+        </product>
+    </products>
+    <total_price>260.00</total_price>
+    <status>paid</status>
+</order>
