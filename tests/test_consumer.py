@@ -32,6 +32,10 @@ class TestConsumer(unittest.TestCase):
         self.stop = threading.Event()
         self.consumer_thread = None
 
+    def tearDown(self):
+        if self.consumer_thread:
+            self.stop.set()
+
     @patch('requests.post')
     def test_01_user_create_should_make_valid_request(self, mock_post):
         with (patch('src.consumer.add_service_id') as add_service_id_mock,
@@ -75,8 +79,6 @@ class TestConsumer(unittest.TestCase):
 
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_user_mock.called)
-
-            self.stop.set()
 
             add_user_mock.assert_called_once()
 
@@ -128,11 +130,67 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: update_user_mock.called)
 
-            self.stop.set()
             update_user_mock.assert_called_once()
 
     @patch('requests.post')
-    def test_03_company_create_should_make_valid_request(self, mock_post):
+    def test_03_user_delete_should_make_valid_request(self, mock_post):
+        with (patch('src.consumer.add_service_id') as add_service_id_mock,
+              patch('src.xml_parser.get_service_id') as get_service_id_mock,
+              patch('src.consumer.delete_user') as delete_user_mock,
+              patch('src.consumer.log') as log_mock):
+
+            get_service_id_mock.return_value = {
+                "crm": "1234"
+            }
+            add_service_id_mock.return_value = {
+                "success": True,
+                "message": "Service ID successfully added."
+            }
+
+            log_mock.return_value = {
+                "success": True,
+                "message": "Log successfully added."
+            }
+
+            channel: BlockingChannel = self.configure_rabbitMQ()
+
+            def run_consumer():
+                with patch('src.consumer.add_service_id', add_service_id_mock), \
+                        patch('src.xml_parser.get_service_id', get_service_id_mock), \
+                        patch('src.consumer.delete_user', delete_user_mock), \
+                        patch('src.consumer.log', log_mock):
+                    while not self.stop.is_set():
+                        try:
+                            consumer.main()
+                        except pika.exceptions.StreamLostError:
+                            break
+
+            self.consumer_thread = threading.Thread(target=run_consumer)
+            self.consumer_thread.daemon = True
+            self.consumer_thread.start()
+
+            with open('resources/dummy_user.xml', 'r') as file:
+                tree = ET.parse(file)
+                root = tree.getroot()
+
+                # Set crud_operation to 'delete'
+                crud_operation = root.find('crud_operation')
+                crud_operation.text = 'delete'
+
+                # Set all other fields to empty, except for 'crud_operation' and 'id'
+                for elem in root.iter():
+                    if elem.tag not in ['crud_operation', 'id', 'routing_key']:
+                        elem.text = ''
+
+                test_message = ET.tostring(root, encoding='unicode')
+
+            channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
+            wait().at_most(5, SECOND).until(lambda: delete_user_mock.called)
+
+            delete_user_mock.assert_called_once()
+
+    @patch('requests.post')
+    def test_04_company_create_should_make_valid_request(self, mock_post):
         with patch('src.consumer.add_service_id') as add_service_id_mock, \
                 patch('src.xml_parser.get_service_id') as get_service_id_mock, \
                 patch('src.consumer.add_company') as add_company_mock, \
@@ -174,11 +232,10 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_company_mock.called)
 
-            self.stop.set()
             add_company_mock.assert_called_once()
 
     @patch('requests.post')
-    def test_04_company_update_should_make_valid_request(self, mock_post):
+    def test_05_company_update_should_make_valid_request(self, mock_post):
         with patch('src.consumer.add_service_id') as add_service_id_mock, \
                 patch('src.xml_parser.get_service_id') as get_service_id_mock, \
                 patch('src.consumer.update_company') as update_company_mock, \
@@ -224,11 +281,10 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: update_company_mock.called)
 
-            self.stop.set()
             update_company_mock.assert_called_once()
 
     @patch('requests.post')
-    def test_05_event_create_should_make_valid_request(self, mock_post):
+    def test_06_event_create_should_make_valid_request(self, mock_post):
         with (patch('src.consumer.add_service_id') as add_service_id_mock, \
               patch('src.xml_parser.get_service_id') as get_service_id_mock, \
               patch('src.consumer.add_event') as add_event_mock, \
@@ -273,7 +329,6 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='event.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_event_mock.called)
 
-            self.stop.set()
             add_event_mock.assert_called_once()
 
     def configure_rabbitMQ(self) -> BlockingChannel:
