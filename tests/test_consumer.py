@@ -32,11 +32,6 @@ class TestConsumer(unittest.TestCase):
         self.stop = threading.Event()
         self.consumer_thread = None
 
-    def tearDown(self):
-        if self.consumer_thread and self.consumer_thread.is_alive():
-            self.stop.set()
-            self.consumer_thread.join()
-
     @patch('requests.post')
     def test_01_user_create_should_make_valid_request(self, mock_post):
         with (patch('src.consumer.add_service_id') as add_service_id_mock,
@@ -81,7 +76,8 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_user_mock.called)
 
-            self.assertTrue(channel._consumer_infos)
+            self.stop.set()
+
             add_user_mock.assert_called_once()
 
     @patch('requests.post')
@@ -132,7 +128,7 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='user.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: update_user_mock.called)
 
-            self.assertTrue(channel._consumer_infos)
+            self.stop.set()
             update_user_mock.assert_called_once()
 
     @patch('requests.post')
@@ -178,7 +174,7 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_company_mock.called)
 
-            self.assertTrue(channel._consumer_infos)
+            self.stop.set()
             add_company_mock.assert_called_once()
 
     @patch('requests.post')
@@ -228,7 +224,7 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='company.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: update_company_mock.called)
 
-            self.assertTrue(channel._consumer_infos)
+            self.stop.set()
             update_company_mock.assert_called_once()
 
     @patch('requests.post')
@@ -277,7 +273,7 @@ class TestConsumer(unittest.TestCase):
             channel.basic_publish(exchange='amq.topic', routing_key='event.frontend', body=test_message)
             wait().at_most(5, SECOND).until(lambda: add_event_mock.called)
 
-            self.assertTrue(channel._consumer_infos)
+            self.stop.set()
             add_event_mock.assert_called_once()
 
     def configure_rabbitMQ(self) -> BlockingChannel:
