@@ -7,7 +7,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    name: Test
+    runs-on: [crm]
+    environment: dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Test consumer
+        run: |
+          cd ~/pipeline/crm/crm-api
+          git pull
+          python -m unittest tests/test_consumer.py
+
+      - name: Test publisher
+        run: |
+          cd ~/pipeline/crm/crm-api
+          git pull
+          python -m unittest tests/test_publisher.py
+
   deploy:
+    needs: test
     name: Deploy to dev
     runs-on: [crm]
     environment: dev
