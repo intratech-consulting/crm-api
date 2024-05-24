@@ -12,21 +12,22 @@ from monitoring import log
 from API import *
 from xml_parser import *
 from logger import init_logger
+from config.secrets import *
 
 def main():
     # Global variables
     TEAM = 'crm'
 
     # Connect to RabbitMQ
-    credentials = pika.PlainCredentials('user', 'password')
+    credentials = pika.PlainCredentials(secrets.RABBITMQ_USER, secrets.RABBITMQ_PASSWORD)
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, credentials=credentials))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=secrets.HOST, port=secrets.RABBITMQ_PORT, credentials=credentials))
     except Exception as e:
         logger.error(f"Failed to connect to RabbitMQ: {e}")
         log(logger, "CONSUMER", f"Failed to connect to RabbitMQ: {e}", error='true')
         sys.exit(1)
     channel = connection.channel()
-    channel.queue_declare(queue=TEAM, durable=True)   
+    channel.queue_declare(queue=TEAM, durable=True)
 
     # Callback function
     def callback(ch, method, properties, body):
@@ -89,6 +90,7 @@ def main():
 
                 # Case: create event request from RabbitMQ
                 case 'event', 'create':
+                    logger.debug("Creating event request from RabbitMQ")
                     read_xml_event(variables, root)
                     payload = write_xml_event(**variables)
                     service_id = add_event(payload)
