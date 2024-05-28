@@ -61,11 +61,12 @@ def main():
 
                 # Case: delete user request from RabbitMQ
                 case 'user', 'delete':
-                    master_uuid = root.find('id').text
-                    service_id = get_service_id(master_uuid, TEAM)
-                    if service_id is not None:
-                        delete_user(service_id)
-                        delete_service_id(master_uuid, TEAM)
+                    if root.find('routing_key').text == "user.facturatie":
+                        master_uuid = root.find('id').text
+                        service_id = get_service_id(master_uuid, TEAM)
+                        if service_id is not None:
+                            delete_user(service_id)
+                            delete_service_id(master_uuid, TEAM)
 
                 # Case: create company request from RabbitMQ
                 case 'company', 'create':

@@ -160,7 +160,7 @@ def read_xml_company(variables, root):
             variables[child.tag] = child.text
 
 
-def write_xml_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
+def write_xml_company(id, name, email, telephone, country, state, city, zip, street, house_number, sponsor, invoice):
     return '''
         <company__c>
             {}
@@ -178,7 +178,7 @@ def write_xml_company(id, name, email, telephone, country, state, city, zip, str
                 "zip": zip,
                 "street": street,
                 "house_number": house_number,
-                "type": type,
+                "sponsor": sponsor,
                 "invoice": invoice,
             }.items() if value != '' and value != None
         ])
@@ -240,8 +240,8 @@ def create_xml_company(company, routing_key, crud_operation):
         house_number = str(int(house_number))
     house_number_element.text = house_number
 
-    type_element = ET.SubElement(company_element, "type")
-    type_element.text = company.get("type", "")
+    type_element = ET.SubElement(company_element, "sponsor")
+    type_element.text = str(company.get("sponsor", "")).lower()
 
     invoice_element = ET.SubElement(company_element, "invoice")
     invoice_element.text = company.get("invoice", "")
