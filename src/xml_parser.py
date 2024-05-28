@@ -241,7 +241,7 @@ def create_xml_company(company, routing_key, crud_operation):
     house_number_element.text = house_number
 
     type_element = ET.SubElement(company_element, "sponsor")
-    type_element.text = company.get("sponsor", "")
+    type_element.text = str(company.get("sponsor", "")).lower()
 
     invoice_element = ET.SubElement(company_element, "invoice")
     invoice_element.text = company.get("invoice", "")
