@@ -61,7 +61,7 @@ def main():
 
                 # Case: delete user request from RabbitMQ
                 case 'user', 'delete':
-                    if root.find('routing_key').text == "user.factturatie":
+                    if root.find('routing_key').text == "user.facturatie":
                         master_uuid = root.find('id').text
                         service_id = get_service_id(master_uuid, TEAM)
                         if service_id is not None:
