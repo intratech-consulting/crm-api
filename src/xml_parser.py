@@ -160,7 +160,7 @@ def read_xml_company(variables, root):
             variables[child.tag] = child.text
 
 
-def write_xml_company(id, name, email, telephone, country, state, city, zip, street, house_number, type, invoice):
+def write_xml_company(id, name, email, telephone, country, state, city, zip, street, house_number, sponsor, invoice):
     return '''
         <company__c>
             {}
@@ -178,7 +178,7 @@ def write_xml_company(id, name, email, telephone, country, state, city, zip, str
                 "zip": zip,
                 "street": street,
                 "house_number": house_number,
-                "type": type,
+                "sponsor": sponsor,
                 "invoice": invoice,
             }.items() if value != '' and value != None
         ])
@@ -240,8 +240,8 @@ def create_xml_company(company, routing_key, crud_operation):
         house_number = str(int(house_number))
     house_number_element.text = house_number
 
-    type_element = ET.SubElement(company_element, "type")
-    type_element.text = company.get("type", "")
+    type_element = ET.SubElement(company_element, "sponsor")
+    type_element.text = str(company.get("sponsor", "")).lower()
 
     invoice_element = ET.SubElement(company_element, "invoice")
     invoice_element.text = company.get("invoice", "")
@@ -442,8 +442,11 @@ def write_xml_product(id, name):
 
 def read_xml_order(variables, root):
     for child in root:
-        if child.tag == "user_id":
-            variables[child.tag] = get_service_id(child.text.strip(), TEAM)
+        if child.tag == "user_id" or child.tag == "company_id":
+            if (child.text is not None):
+                variables[child.tag] = get_service_id(child.text, TEAM)
+            else:
+                variables[child.tag] = ""
         elif child.tag == "products":
             products = []
             for product in child.findall('product'):
@@ -457,7 +460,7 @@ def read_xml_order(variables, root):
             variables["products"] = products
 
 
-def write_xml_order(user_id, product_id, amount):
+def write_xml_order(user_id, company_id, product_id, amount):
     return '''
     <order__c>
         {}
@@ -467,6 +470,7 @@ def write_xml_order(user_id, product_id, amount):
             f'<{field}__c>{value}</{field}__c>'
             for field, value in {
                 "user_id": user_id,
+                "company_id": company_id,
                 "product_id": product_id,
                 "amount": amount,
             }.items() if value != '' and value != None

@@ -61,11 +61,12 @@ def main():
 
                 # Case: delete user request from RabbitMQ
                 case 'user', 'delete':
-                    master_uuid = root.find('id').text
-                    service_id = get_service_id(master_uuid, TEAM)
-                    if service_id is not None:
-                        delete_user(service_id)
-                        delete_service_id(master_uuid, TEAM)
+                    if root.find('routing_key').text == "user.facturatie":
+                        master_uuid = root.find('id').text
+                        service_id = get_service_id(master_uuid, TEAM)
+                        if service_id is not None:
+                            delete_user(service_id)
+                            delete_service_id(master_uuid, TEAM)
 
                 # Case: create company request from RabbitMQ
                 case 'company', 'create':
@@ -145,18 +146,31 @@ def main():
                     payload = write_xml_product(**variables)
                     update_product(variables['id'], payload)
 
-                # Case: create order request from RabbitMQ (STILL NEEDS REFACTORING)
+                # Case: create order request from RabbitMQ
                 case 'order', 'create':
                     read_xml_order(variables, root)
-                    for product in variables['products']:
-                        order_id, old_amount = get_order(variables['user_id'], product['product_id'])
-                        logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
-                        if order_id is not None:
-                            payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
-                            update_order(order_id, payload)
-                        else:
-                            payload = write_xml_order(variables['user_id'], **product)
-                            add_order(payload)
+                    if variables['user_id'] is not None and variables['user_id'] is not '':
+                        logger.debug(f"User ID: {variables['user_id']}")
+                        for product in variables['products']:
+                            order_id, old_amount = get_order_user(variables['user_id'], product['product_id'])
+                            logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
+                            if order_id is not None:
+                                payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
+                                update_order(order_id, payload)
+                            else:
+                                payload = write_xml_order(variables['user_id'], '', **product)
+                                add_order(payload)
+                    elif variables['company_id'] is not None and variables['company_id'] is not '':
+                        logger.debug(f"Company ID: {variables['company_id']}")
+                        for product in variables['products']:
+                            order_id, old_amount = get_order_company(variables['company_id'], product['product_id'])
+                            logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
+                            if order_id is not None:
+                                payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
+                                update_order(order_id, payload)
+                            else:
+                                payload = write_xml_order('', variables['company_id'], **product)
+                                add_order(payload)
 
             # Acknowledge the message
             ch.basic_ack(delivery_tag=method.delivery_tag)

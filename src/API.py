@@ -194,9 +194,25 @@ def update_order(id, payload):
     }
     requests.patch(url, headers=headers, data=payload)
 
-# Get order to change amount
-def get_order(user_id, product_id):
+# Get order from user to change amount
+def get_order_user(user_id, product_id):
     url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+user_id__c=\'{user_id}\'AND+product_id__c=\'{product_id}\''
+    headers = {
+        'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
+        'Content-Type': 'application/xml'
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    data = response.json().get("records", [])
+
+    if data:
+        return data[0]['Id'], data[0]['amount__c']
+    else:
+        return None, None
+    
+# Get order from company to change amount
+def get_order_company(company_id, product_id):
+    url = secrets.DOMAIN_NAME + f'query?q=SELECT+Id,amount__c+FROM+order__c+WHERE+company_id__c=\'{company_id}\'AND+product_id__c=\'{product_id}\''
     headers = {
         'Authorization': 'Bearer ' + secrets.ACCESS_TOKEN,
         'Content-Type': 'application/xml'
