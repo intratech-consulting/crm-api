@@ -157,7 +157,7 @@ def main():
                                 payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
                                 update_order(order_id, payload)
                             else:
-                                payload = write_xml_order(variables['user_id'], **product)
+                                payload = write_xml_order(variables['user_id'], '', **product)
                                 add_order(payload)
                     elif 'company_id' in variables:
                         for product in variables['products']:
@@ -167,7 +167,7 @@ def main():
                                 payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
                                 update_order(order_id, payload)
                             else:
-                                payload = write_xml_order(variables['company_id'], **product)
+                                payload = write_xml_order('', variables['company_id'], **product)
                                 add_order(payload)
 
             # Acknowledge the message
