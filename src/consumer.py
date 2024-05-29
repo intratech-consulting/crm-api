@@ -149,15 +149,26 @@ def main():
                 # Case: create order request from RabbitMQ (STILL NEEDS REFACTORING)
                 case 'order', 'create':
                     read_xml_order(variables, root)
-                    for product in variables['products']:
-                        order_id, old_amount = get_order(variables['user_id'], product['product_id'])
-                        logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
-                        if order_id is not None:
-                            payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
-                            update_order(order_id, payload)
-                        else:
-                            payload = write_xml_order(variables['user_id'], **product)
-                            add_order(payload)
+                    if 'user_id' in variables:
+                        for product in variables['products']:
+                            order_id, old_amount = get_order_user(variables['user_id'], product['product_id'])
+                            logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
+                            if order_id is not None:
+                                payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
+                                update_order(order_id, payload)
+                            else:
+                                payload = write_xml_order(variables['user_id'], **product)
+                                add_order(payload)
+                    elif 'company_id' in variables:
+                        for product in variables['products']:
+                            order_id, old_amount = get_order_company(variables['company_id'], product['product_id'])
+                            logger.debug(f"Order ID: {order_id}, Old Amount: {old_amount}")
+                            if order_id is not None:
+                                payload = write_xml_existing_order(str(int(product['amount']) + int(old_amount)))
+                                update_order(order_id, payload)
+                            else:
+                                payload = write_xml_order(variables['company_id'], **product)
+                                add_order(payload)
 
             # Acknowledge the message
             ch.basic_ack(delivery_tag=method.delivery_tag)
