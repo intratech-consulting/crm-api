@@ -149,7 +149,7 @@ def main():
                 # Case: create order request from RabbitMQ (STILL NEEDS REFACTORING)
                 case 'order', 'create':
                     read_xml_order(variables, root)
-                    if 'user_id' in variables:
+                    if variables['user_id'] is not None:
                         logger.debug(f"User ID: {variables['user_id']}")
                         for product in variables['products']:
                             order_id, old_amount = get_order_user(variables['user_id'], product['product_id'])
@@ -160,7 +160,7 @@ def main():
                             else:
                                 payload = write_xml_order(variables['user_id'], '', **product)
                                 add_order(payload)
-                    elif 'company_id' in variables:
+                    elif variables['company_id'] is not None:
                         logger.debug(f"Company ID: {variables['company_id']}")
                         for product in variables['products']:
                             order_id, old_amount = get_order_company(variables['company_id'], product['product_id'])
