@@ -112,7 +112,7 @@ def create_xml_user(user, routing_key, crud_operation):
                 "user_role": user.get("user_role", ""),
                 "invoice": user.get("invoice", ""),
                 "calendar_link": user.get("calendar_link", "")
-            }.items() if value != '' and value != None
+            }.items()
         ])
     ), uuid
 
