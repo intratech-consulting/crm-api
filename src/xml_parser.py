@@ -87,11 +87,30 @@ def create_xml_user(user, routing_key, crud_operation):
     if ucid:
         ucid = get_master_uuid(ucid, TEAM)
 
-    return '''
+    address_block = '''
+        <address>
+            {}
+        </address>
+    '''.format(
+        ''.join([
+            f'<{field}>{value}</{field}>'
+            for field, value in {
+                "country": user.get("country", ""),
+                "state": user.get("state", ""),
+                "city": user.get("city", ""),
+                "zip": zip,
+                "street": user.get("street", ""),
+                "house_number": house_number
+            }.items()
+        ])
+    )
+    user_block = '''
         <user>
             {}
+            {}
+            {}
         </user>
-        '''.format(
+    '''.format(
         ''.join([
             f'<{field}>{value}</{field}>'
             for field, value in {
@@ -102,13 +121,13 @@ def create_xml_user(user, routing_key, crud_operation):
                 "last_name": user.get("last_name", ""),
                 "email": user.get("email", ""),
                 "telephone": user.get("telephone", ""),
-                "birthday": birthday,
-                "country": user.get("country", ""),
-                "state": user.get("state", ""),
-                "city": user.get("city", ""),
-                "zip": zip,
-                "street": user.get("street", ""),
-                "house_number": house_number,
+                "birthday": birthday
+            }.items()
+        ]),
+        address_block,
+        ''.join([
+            f'<{field}>{value}</{field}>'
+            for field, value in {
                 "company_email": user.get("company_email", ""),
                 "company_id": ucid,
                 "source": user.get("source", ""),
@@ -117,7 +136,9 @@ def create_xml_user(user, routing_key, crud_operation):
                 "calendar_link": user.get("calendar_link", "")
             }.items()
         ])
-    ), uuid
+    )
+
+    return user_block, uuid
 
 
 def read_xml_company(variables, root):
