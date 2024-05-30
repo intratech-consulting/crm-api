@@ -68,6 +68,8 @@ def handle_change_event(change_event):
         match object_type:
             case 'user':
                 message, uuid = create_xml_user(changed_fields, rc, crud_operation)
+                logger.debug(f"Message: {message}")
+                logger.debug(f"UUID: {uuid}")
                 xsd_tree = etree.parse('./resources/user_xsd.xml')
 
             case 'company':

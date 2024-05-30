@@ -61,88 +61,84 @@ def write_xml_user(id, first_name, last_name, email, telephone, birthday, countr
 
 
 def create_xml_user(user, routing_key, crud_operation):
-    user_element = ET.Element("user")
-    
-    routing_key_element = ET.SubElement(user_element, "routing_key")
-    routing_key_element.text = routing_key
-    
-    crud_operation_element = ET.SubElement(user_element, "crud_operation")
-    crud_operation_element.text = crud_operation
-
-    id_element = ET.SubElement(user_element, "id")
+    # Convert into right format
+    # Convert into right format
     uuid = user.get("id", "")
     if uuid and crud_operation != "create":
         uuid = get_master_uuid(uuid, TEAM)
     if uuid and crud_operation == "create":
         uuid = create_master_uuid(uuid, TEAM)
-    id_element.text = uuid
 
-    first_name_element = ET.SubElement(user_element, "first_name")
-    first_name_element.text = user.get("first_name", "")
 
-    last_name_element = ET.SubElement(user_element, "last_name")
-    last_name_element.text = user.get("last_name", "")
-
-    email_element = ET.SubElement(user_element, "email")
-    email_element.text = user.get("email", "")
-
-    telephone_element = ET.SubElement(user_element, "telephone")
-    telephone_element.text = user.get("telephone", "")
-
-    birthday_element = ET.SubElement(user_element, "birthday")
     birthday = user.get("birthday", "")
     if birthday:
         birthday = datetime.fromtimestamp(int(birthday) / 1000).strftime('%Y-%m-%d')
-    birthday_element.text = birthday
 
-    address_element = ET.SubElement(user_element, "address")
 
-    country_element = ET.SubElement(address_element, "country")
-    country_element.text = user.get("country", "")
-
-    state_element = ET.SubElement(address_element, "state")
-    state_element.text = user.get("state", "")
-
-    city_element = ET.SubElement(address_element, "city")
-    city_element.text = user.get("city", "")
-
-    zip_element = ET.SubElement(address_element, "zip")
     zip = user.get("zip", "")
     if zip:
         zip = str(int(zip))
-    zip_element.text = zip
 
-    street_element = ET.SubElement(address_element, "street")
-    street_element.text = user.get("street", "")
-
-    house_number_element = ET.SubElement(address_element, "house_number")
     house_number = user.get("house_number", "")
     if house_number:
         house_number = str(int(house_number))
-    house_number_element.text = house_number
 
-    company_email_element = ET.SubElement(user_element, "company_email")
-    company_email_element.text = user.get("company_email", "")
-
-    company_id_element = ET.SubElement(user_element, "company_id")
     ucid = user.get("company_id", "")
     if ucid:
         ucid = get_master_uuid(ucid, TEAM)
-    company_id_element.text = ucid
 
-    source_element = ET.SubElement(user_element, "source")
-    source_element.text = user.get("source", "")
+    address_block = '''
+        <address>
+            {}
+        </address>
+    '''.format(
+        ''.join([
+            f'<{field}>{value}</{field}>'
+            for field, value in {
+                "country": user.get("country", ""),
+                "state": user.get("state", ""),
+                "city": user.get("city", ""),
+                "zip": zip,
+                "street": user.get("street", ""),
+                "house_number": house_number
+            }.items()
+        ])
+    )
+    user_block = '''
+        <user>
+            {}
+            {}
+            {}
+        </user>
+    '''.format(
+        ''.join([
+            f'<{field}>{value}</{field}>'
+            for field, value in {
+                "routing_key": routing_key,
+                "crud_operation": crud_operation,
+                "id": uuid,
+                "first_name": user.get("first_name", ""),
+                "last_name": user.get("last_name", ""),
+                "email": user.get("email", ""),
+                "telephone": user.get("telephone", ""),
+                "birthday": birthday
+            }.items()
+        ]),
+        address_block,
+        ''.join([
+            f'<{field}>{value}</{field}>'
+            for field, value in {
+                "company_email": user.get("company_email", ""),
+                "company_id": ucid,
+                "source": user.get("source", ""),
+                "user_role": user.get("user_role", ""),
+                "invoice": user.get("invoice", ""),
+                "calendar_link": user.get("calendar_link", "")
+            }.items()
+        ])
+    )
 
-    user_role_element = ET.SubElement(user_element, "user_role")
-    user_role_element.text = user.get("user_role", "")
-
-    invoice_element = ET.SubElement(user_element, "invoice")
-    invoice_element.text = user.get("invoice", "")
-
-    calendar_link_element = ET.SubElement(user_element, "calendar_link")
-    calendar_link_element.text = user.get("calendar_link", "")
-
-    return ET.tostring(user_element, encoding="utf-8").decode("utf-8"), uuid
+    return user_block, uuid
 
 
 def read_xml_company(variables, root):
