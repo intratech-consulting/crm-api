@@ -1,0 +1,10 @@
+<product>
+    <routing_key>product.crm</routing_key>
+    <crud_operation>create</crud_operation>
+    <id>123</id>
+    <name>Coca Cola</name>
+    <price>2.50</price>
+    <amount>3</amount>
+    <category>Soft drinks</category>
+    <btw>0.50</btw>
+</product>

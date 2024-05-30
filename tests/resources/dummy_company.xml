@@ -14,6 +14,6 @@
         <street>Nijverheidskaai</street>
         <house_number>170</house_number>
     </address>
-    <type>customer</type>
+    <sponsor>true</sponsor>
     <invoice>BE00 0000 0000 0000</invoice>
 </company>

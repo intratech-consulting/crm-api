@@ -1,0 +1,7 @@
+<attendance>
+    <routing_key>attendance.crm</routing_key>
+    <crud_operation>create</crud_operation>
+    <id>123</id>
+    <user_id>0123</user_id>
+    <event_id>3210</event_id>
+</attendance>
