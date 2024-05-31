@@ -74,6 +74,8 @@ def handle_change_event(change_event):
 
             case 'company':
                 message, uuid = create_xml_company(changed_fields, rc, crud_operation)
+                logger.debug(f"Message: {message}")
+                logger.debug(f"UUID: {uuid}")
                 xsd_tree = etree.parse('./resources/company_xsd.xml')
 
             case 'event':
