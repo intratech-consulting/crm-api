@@ -62,18 +62,15 @@ def write_xml_user(id, first_name, last_name, email, telephone, birthday, countr
 
 def create_xml_user(user, routing_key, crud_operation):
     # Convert into right format
-    # Convert into right format
     uuid = user.get("id", "")
     if uuid and crud_operation != "create":
         uuid = get_master_uuid(uuid, TEAM)
     if uuid and crud_operation == "create":
         uuid = create_master_uuid(uuid, TEAM)
 
-
     birthday = user.get("birthday", "")
     if birthday:
         birthday = datetime.fromtimestamp(int(birthday) / 1000).strftime('%Y-%m-%d')
-
 
     zip = user.get("zip", "")
     if zip:
@@ -237,7 +234,7 @@ def create_xml_company(company, routing_key, crud_operation):
     house_number_element.text = house_number
 
     type_element = ET.SubElement(company_element, "sponsor")
-    type_element.text = str(company.get("sponsor", "")).lower()
+    type_element.text = str(company.get("sponsor", False)).lower()
 
     invoice_element = ET.SubElement(company_element, "invoice")
     invoice_element.text = company.get("invoice", "")
